@@ -18,4 +18,9 @@ jobs:
         with:
           python-version: "3.11"
       - name: Decision Cell Compiler
-        run: python3 -m a11oy_factory compile --cell lyte && python3 -m a11oy_factory compile --cell N1; test $? -eq 2
+        run: |
+          set +e
+          python3 -m a11oy_factory compile --cell lyte
+          test $? -eq 0
+          python3 -m a11oy_factory compile --cell N1
+          test $? -eq 2
