@@ -7,7 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from a11oy_factory.cells import CELLS, FRONTIERS, LYTE
+from a11oy_factory.cells import FRONTIERS, LYTE
 from a11oy_factory.compiler import compile_cell
 from a11oy_factory.jobs import JOBS, search_jobs
 
@@ -59,7 +59,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
         if path == "/api/cells":
-            cells = [CELLS[k].__dict__ for k in ["lyte"] + [f"N{n}" for n in range(1, 9)]]
+            cells = [LYTE.__dict__] + [c.__dict__ for c in FRONTIERS]
             self._send(200, json.dumps(cells).encode(), "application/json")
             return
         if path == "/api/jobs":
