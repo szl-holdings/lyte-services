@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlparse
 from a11oy_factory.cells import FRONTIERS, LYTE
 from a11oy_factory.compiler import compile_cell
 from a11oy_factory.jobs import JOBS, search_jobs
+from a11oy_factory.organs import act, roadmap
 
 HTML = Path(__file__).with_name("index.html")
 
@@ -49,6 +50,7 @@ class Handler(BaseHTTPRequestHandler):
                         "service": "lyte-services",
                         "bind": "BIND_AS_A11OY_PACKAGE",
                         "admitted": ["lyte"],
+                        "roadmap": "STARTED",
                         "flagship": "a11oy",
                         "frontiers": [c.id for c in FRONTIERS],
                         "lambda_status": "Conjecture 1",
@@ -69,6 +71,9 @@ class Handler(BaseHTTPRequestHandler):
             q = (qs.get("q") or [""])[0]
             self._send(200, json.dumps(search_jobs(q)).encode(), "application/json")
             return
+        if path == "/api/roadmap":
+            self._send(200, json.dumps(roadmap()).encode(), "application/json")
+            return
         self._send(404, b"not found", "text/plain")
 
     def do_POST(self) -> None:  # noqa: N802
@@ -85,6 +90,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/search":
             rec = search_jobs(str(data.get("q") or data.get("query") or ""))
+            self._send(200, json.dumps(rec).encode(), "application/json")
+            return
+        if path == "/api/act":
+            rec = act(str(data.get("cell") or ""), data.get("payload") if isinstance(data.get("payload"), dict) else data)
             self._send(200, json.dumps(rec).encode(), "application/json")
             return
         self._send(404, b"not found", "text/plain")

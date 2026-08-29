@@ -27,14 +27,16 @@
   <header>
     <p class="kicker">BIND_AS_A11OY_PACKAGE · not a flagship</p>
     <h1>Lyte Services</h1>
-    <p class="muted">The one admitted design-partner cell. Same factory compiler. Compiling Lyte returns ALLOW / STRUCTURAL-ONLY. N1–N21 stay named theatres and return BLOCKED. Energy is UNAVAILABLE. Formulas never grant authority.</p>
+    <p class="muted">The one admitted design-partner cell. Same factory compiler. Compiling Lyte returns ALLOW / STRUCTURAL-ONLY. N1–N25 roadmaps are STARTED as fail-closed organs and still return BLOCKED. Energy is UNAVAILABLE. Formulas never grant authority.</p>
     <p>
       <span class="chip">Lyte admitted</span>
+      <span class="chip">Roadmaps STARTED · not LIVE</span>
       <span class="chip">N1 Serve · N2 Graph · N3 Guard · N4 Mosaic</span>
       <span class="chip">N5 Lattice · N6 Cover · N7 Quant · N8 Title</span>
       <span class="chip">N9 Retrieve · N10 Observe · N11 Tune · N12 Schema</span>
       <span class="chip">N13 Energy · N14 Tool · N15 Memory · N16 Eval · N17 Mesh</span>
       <span class="chip">N18 Route · N19 Cache · N20 Voice · N21 Sandbox</span>
+      <span class="chip">N22 Identity · N23 Rails · N24 Browser · N25 Policy</span>
     </p>
   </header>
   <main>
@@ -64,7 +66,8 @@
     }
     async function compile(id) {
       const r = await fetch("/api/compile", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({cell:id, signal:"lyte window"}) });
-      out.textContent = JSON.stringify(await r.json(), null, 2);
+      const a = await fetch("/api/act", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({cell:id}) });
+      out.textContent = JSON.stringify({compile: await r.json(), act: await a.json()}, null, 2);
     }
     async function search() {
       const q = document.getElementById("q").value;
