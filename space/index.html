@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Lyte Services — BIND_AS_A11OY_PACKAGE</title>
+  <style>
+    :root { --bg:#07090d; --fg:#e8edf2; --muted:#8b95a3; --accent:#3af4c8; --gold:#e8c074; --line:rgba(232,237,242,.12); --surf:#0d1520; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 "Segoe UI",system-ui,sans-serif; }
+    header, main { max-width:980px; margin:0 auto; padding:24px 20px; }
+    h1 { font-family: Georgia, serif; font-weight:500; letter-spacing:-.03em; }
+    .kicker { font:11px/1 ui-monospace,Menlo,monospace; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+    .grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+    .card { background:var(--surf); border:1px solid var(--line); border-radius:16px; padding:14px; cursor:pointer; text-align:left; color:inherit; }
+    .card[data-admitted="true"] { border-color: var(--accent); }
+    a { color:var(--accent); }
+    pre { white-space:pre-wrap; word-break:break-word; font:12px/1.45 ui-monospace,Menlo,monospace; color:var(--gold); min-height:8rem; background:#101824; border:1px solid var(--line); padding:14px; }
+    .muted { color:var(--muted); font-size:13px; }
+    .chip { display:inline-block; border:1px solid var(--line); padding:3px 8px; font:10px ui-monospace,monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 6px 6px 0; }
+    input, button.run { background:#101824; color:var(--fg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 18px; }
+    .row input { flex:1; min-width:180px; }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="kicker">BIND_AS_A11OY_PACKAGE · not a flagship</p>
+    <h1>Lyte Services</h1>
+    <p class="muted">The one admitted design-partner cell. Same factory compiler. Compiling Lyte returns ALLOW / STRUCTURAL-ONLY. N1–N8 stay named theatres and return BLOCKED. Formulas never grant authority.</p>
+    <p>
+      <span class="chip">Lyte admitted</span>
+      <span class="chip">N1 Serve · N2 Graph · N3 Guard · N4 Mosaic</span>
+      <span class="chip">N5 Lattice · N6 Cover · N7 Quant · N8 Title</span>
+    </p>
+  </header>
+  <main>
+    <div class="row">
+      <input id="q" placeholder="search jobs — vllm, langgraph, guidewire, sigstore" aria-label="Search cited jobs"/>
+      <button class="run" id="searchBtn" type="button">Search catalog</button>
+    </div>
+    <div class="grid" id="cells"></div>
+    <section style="margin-top:16px">
+      <h2>Receipt</h2>
+      <pre id="out">select Lyte to compile, or a frontier to watch it fail closed</pre>
+    </section>
+    <p class="muted">Flagship: <a href="https://huggingface.co/spaces/SZLHOLDINGS/a11oy">a11oy</a>. Compiler: <a href="https://huggingface.co/spaces/SZLHOLDINGS/a11oy-factory">a11oy-factory</a>. Source: <a href="https://github.com/szl-holdings/lyte-services">szl-holdings/lyte-services</a>.</p>
+  </main>
+  <script>
+    const box = document.getElementById("cells");
+    const out = document.getElementById("out");
+    async function load() {
+      const cells = await (await fetch("/api/cells")).json();
+      box.innerHTML = cells.map(c =>
+        `<button class="card" data-id="${c.id}" data-admitted="${c.admitted}">
+           <b>${c.id} · ${c.title}</b>
+           <div class="muted">${c.job || (c.admitted ? "admitted" : "ROADMAP")}</div>
+         </button>`
+      ).join("");
+      box.querySelectorAll("button").forEach(b => b.onclick = () => compile(b.dataset.id));
+    }
+    async function compile(id) {
+      const r = await fetch("/api/compile", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({cell:id, signal:"lyte window"}) });
+      out.textContent = JSON.stringify(await r.json(), null, 2);
+    }
+    async function search() {
+      const q = document.getElementById("q").value;
+      const r = await fetch("/api/search?q=" + encodeURIComponent(q));
+      out.textContent = JSON.stringify(await r.json(), null, 2);
+    }
+    document.getElementById("searchBtn").onclick = search;
+    document.getElementById("q").addEventListener("keydown", e => { if (e.key === "Enter") search(); });
+    load().catch(err => { out.textContent = String(err); });
+  </script>
+</body>
+</html>
