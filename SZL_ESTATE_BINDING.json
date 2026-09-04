@@ -1,0 +1,12 @@
+{
+  "schema":"szl.estate.binding/v1",
+  "organ":"lyte",
+  "role":"business-and-agent-observability-body",
+  "canonical_contract":"https://github.com/szl-holdings/.github/blob/main/estate/alignment.v1.json",
+  "public_front_door":"https://a-11-oy.com",
+  "hub_surface":"SZLHOLDINGS/lyte",
+  "inherits":["a11oy-governance","hatun-policy-veto","second-brain-memory","szl-serve","szl-receipt","szl-frontier"],
+  "frontier_bindings":["granite-timeseries","neomme","fineweb-supernova"],
+  "model_authority":"proposal-only",
+  "production_requires":"replayable-telemetry-drift-gates-and-receipt"
+}
