@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PORT=7860 \
-    LYTE_STATE_PATH=/tmp/lyte-enterprise.sqlite3
+    LYTE_STATE_PATH=/tmp/lyte/enterprise.sqlite3
 ARG LYTE_SOURCE_REVISION=UNAVAILABLE
 ENV LYTE_SOURCE_REVISION=${LYTE_SOURCE_REVISION}
 
@@ -17,9 +17,10 @@ COPY lyte_api ./lyte_api
 COPY lyte_engine ./lyte_engine
 COPY lyte_runtime.py ./lyte_runtime.py
 COPY space ./space
-RUN printf '%s\n' "$LYTE_SOURCE_REVISION" > /app/source_revision.txt \
-    && useradd --create-home --uid 1000 --shell /usr/sbin/nologin lyte \
-    && chown -R lyte:lyte /app /tmp
+RUN useradd --create-home --uid 1000 --shell /usr/sbin/nologin lyte \
+    && install -d -o lyte -g lyte /tmp/lyte \
+    && printf '%s\n' "$LYTE_SOURCE_REVISION" > /app/source_revision.txt \
+    && chown -R lyte:lyte /app
 USER lyte
 
 EXPOSE 7860
