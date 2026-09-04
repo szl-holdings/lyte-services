@@ -1,0 +1,141 @@
+name: Lyte Enterprise runtime
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/enterprise-runtime.yml
+      - Dockerfile
+      - requirements*.txt
+      - a11oy_factory/**
+      - lyte_api/**
+      - lyte_engine/**
+      - lyte_runtime.py
+      - space/**
+      - tests/**
+      - README.md
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/enterprise-runtime.yml
+      - Dockerfile
+      - requirements*.txt
+      - a11oy_factory/**
+      - lyte_api/**
+      - lyte_engine/**
+      - lyte_runtime.py
+      - space/**
+      - tests/**
+      - README.md
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lyte-enterprise-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LYTE_STATE_PATH: /tmp/lyte-enterprise-ci.sqlite3
+
+jobs:
+  contract:
+    name: Import, formulas, memory, API, UI, and governance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.10"
+
+      - name: Install pinned runtime and test closure
+        run: >-
+          python -m pip install --disable-pip-version-check --no-cache-dir
+          -r requirements.txt -r requirements-test.txt
+
+      - name: Compile complete serving closure
+        run: >-
+          python -m compileall -q
+          a11oy_factory lyte_api lyte_engine lyte_runtime.py space tests
+
+      - name: Prove runtime and governance contracts
+        env:
+          LYTE_SOURCE_REVISION: ${{ github.sha }}
+        run: |
+          python -m pip check
+          python -c "import lyte_engine; from space.server import app; assert app.version == lyte_engine.VERSION"
+          python -m pytest tests -q
+
+  container:
+    name: Source-bound non-root container and route smoke
+    needs: contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Build exact source image
+        run: >-
+          docker build
+          --build-arg LYTE_SOURCE_REVISION="$GITHUB_SHA"
+          --file Dockerfile
+          --tag szl-lyte-enterprise:test
+          .
+
+      - name: Start and verify complete public contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          cid="$(docker run --detach --publish 127.0.0.1:7860:7860 szl-lyte-enterprise:test)"
+          trap 'docker logs "$cid" || true; docker rm --force "$cid" >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent --show-error http://127.0.0.1:7860/readyz >/tmp/ready.json; then
+              break
+            fi
+            if [ "$attempt" -eq 45 ]; then
+              echo '::error::Lyte readiness did not converge'
+              exit 1
+            fi
+            sleep 1
+          done
+          python - <<'PY'
+          import json, os
+          body = json.load(open('/tmp/ready.json', encoding='utf-8'))
+          assert body['ready'] is True
+          assert body['build']['state'] == 'OBSERVED'
+          assert body['build']['revision'] == os.environ['GITHUB_SHA']
+          assert body['source_binding']['bindings_agree'] is True
+          assert body['effectors_enabled'] is False
+          PY
+          for path in \
+            / /healthz /readyz /api/build-info /.well-known/szl-source.json /metrics \
+            /api/lyte/v3/catalog /api/lyte/v3/capabilities \
+            /api/lyte/v3/anatomy /api/lyte/v3/formulas \
+            /api/lyte/v3/sources /api/lyte/v3/scenario \
+            /api/cells /api/jobs /api/roadmap; do
+            curl --fail --silent --show-error "http://127.0.0.1:7860${path}" >/dev/null
+          done
+          test "$(docker inspect --format '{{.Config.User}}' "$cid")" = lyte
+          test -z "$(docker history --no-trunc szl-lyte-enterprise:test | grep -Ei 'hf_[A-Za-z0-9]{20,}|OPENAI_API_KEY=|GITHUB_READ_TOKEN=' || true)"

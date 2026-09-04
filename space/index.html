@@ -1,82 +1,421 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-lyte="signal-lattice-v3">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Lyte Services — BIND_AS_A11OY_PACKAGE</title>
-  <style>
-    :root { --bg:#07090d; --fg:#e8edf2; --muted:#8b95a3; --accent:#3af4c8; --gold:#e8c074; --line:rgba(232,237,242,.12); --surf:#0d1520; }
-    * { box-sizing: border-box; }
-    body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 "Segoe UI",system-ui,sans-serif; }
-    header, main { max-width:980px; margin:0 auto; padding:24px 20px; }
-    h1 { font-family: Georgia, serif; font-weight:500; letter-spacing:-.03em; }
-    .kicker { font:11px/1 ui-monospace,Menlo,monospace; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
-    .grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
-    .card { background:var(--surf); border:1px solid var(--line); border-radius:16px; padding:14px; cursor:pointer; text-align:left; color:inherit; }
-    .card[data-admitted="true"] { border-color: var(--accent); }
-    a { color:var(--accent); }
-    pre { white-space:pre-wrap; word-break:break-word; font:12px/1.45 ui-monospace,Menlo,monospace; color:var(--gold); min-height:8rem; background:#101824; border:1px solid var(--line); padding:14px; }
-    .muted { color:var(--muted); font-size:13px; }
-    .chip { display:inline-block; border:1px solid var(--line); padding:3px 8px; font:10px ui-monospace,monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 6px 6px 0; }
-    input, button.run { background:#101824; color:var(--fg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
-    .row { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 18px; }
-    .row input { flex:1; min-width:180px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Lyte Enterprise · Signal Lattice</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#030608;
+  --panel:#081014;
+  --panel2:#0d181d;
+  --ink:#f2f8f8;
+  --muted:#8da2a8;
+  --cyan:#55f4dc;
+  --blue:#63a9ff;
+  --violet:#aa83ff;
+  --lime:#bdf86f;
+  --warn:#ffc970;
+  --danger:#ff768f;
+  --line:color-mix(in srgb,var(--cyan) 20%,transparent);
+  --hair:rgb(255 255 255/.085);
+  --touch:44px;
+  --shadow:0 30px 100px rgb(0 0 0/.38);
+  --mono:ui-monospace,"Cascadia Code","SFMono-Regular",Consolas,monospace;
+  --sans:Inter,"Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box;min-inline-size:0}
+html{overflow-x:clip;background:var(--bg);scroll-padding-top:84px}
+body{
+  margin:0;min-height:100svh;overflow-x:clip;color:var(--ink);
+  font:15px/1.5 var(--sans);
+  background:
+    radial-gradient(circle at 76% -8%,rgb(85 244 220/.14),transparent 34rem),
+    radial-gradient(circle at 5% 65%,rgb(170 131 255/.09),transparent 30rem),
+    linear-gradient(180deg,#020406,var(--bg) 46%,#020506);
+}
+button,input,a{font:inherit}
+a{color:inherit;min-height:var(--touch);display:inline-flex;align-items:center}
+button{
+  min-height:var(--touch);border:1px solid var(--line);border-radius:999px;
+  padding:0 17px;background:color-mix(in srgb,var(--cyan) 9%,var(--panel));
+  color:var(--ink);font-weight:750;cursor:pointer
+}
+button:hover{background:color-mix(in srgb,var(--cyan) 16%,var(--panel))}
+button[disabled]{opacity:.52;cursor:wait}
+input{
+  width:100%;min-height:48px;border:1px solid var(--line);border-radius:13px;
+  background:#050a0d;color:var(--ink);padding:0 14px
+}
+:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+.skip{position:fixed;left:12px;top:-80px;z-index:30;background:#fff;color:#000;padding:10px 14px}
+.skip:focus{top:12px}
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.ambient::before{
+  content:"";position:absolute;inset:0;opacity:.27;
+  background-image:linear-gradient(var(--hair) 1px,transparent 1px),linear-gradient(90deg,var(--hair) 1px,transparent 1px);
+  background-size:72px 72px;mask-image:linear-gradient(to bottom,black,transparent 82%)
+}
+.ambient::after{
+  content:"";position:absolute;width:48vmin;aspect-ratio:1;border:1px solid var(--line);
+  border-radius:48% 52% 63% 37%;right:-8vmin;top:10vh;
+  box-shadow:0 0 0 8vmin transparent,0 0 0 calc(8vmin + 1px) var(--line),0 0 70px rgb(85 244 220/.12);
+  animation:drift 18s ease-in-out infinite alternate
+}
+@keyframes drift{to{transform:translate3d(-22px,30px,0) rotate(11deg)}}
+.shell{width:min(1440px,100%);margin:auto;padding:0 clamp(16px,4vw,60px) max(40px,env(safe-area-inset-bottom))}
+.topbar{
+  position:sticky;top:0;z-index:20;margin-inline:calc(clamp(16px,4vw,60px)*-1);
+  padding:max(10px,env(safe-area-inset-top)) clamp(16px,4vw,60px) 10px;
+  display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  border-bottom:1px solid var(--hair);background:rgb(3 6 8/.86);backdrop-filter:blur(18px)
+}
+.brand,.eyebrow,.label,.truth{
+  font:750 11px/1.35 var(--mono);letter-spacing:.13em;text-transform:uppercase
+}
+.brand,.eyebrow{color:var(--cyan)}
+.nav{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+.nav button{white-space:nowrap;background:transparent;color:var(--muted);border-color:transparent}
+.nav button[aria-selected="true"]{color:var(--ink);border-color:var(--line);background:rgb(85 244 220/.07)}
+.status{display:flex;gap:8px;align-items:center;color:var(--muted);font:700 11px/1 var(--mono)}
+.dot{width:8px;aspect-ratio:1;border-radius:50%;background:var(--warn);box-shadow:0 0 16px currentColor}
+.dot.ready{background:var(--cyan)}
+.hero{
+  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);
+  gap:clamp(30px,6vw,88px);align-items:end;padding:clamp(58px,9vw,122px) 0 42px
+}
+.hero h1{font-size:clamp(52px,8.7vw,126px);line-height:.82;letter-spacing:-.065em;margin:16px 0 24px;max-width:9ch}
+.hero h1 span{display:block;color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--cyan) 68%,white);text-shadow:0 0 45px rgb(85 244 220/.14)}
+.lede{font-size:clamp(17px,2vw,23px);color:var(--muted);max-width:64ch}
+.hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:27px}
+.hero-actions .primary{background:linear-gradient(120deg,var(--cyan),var(--blue));color:#03100e;border:0}
+.proofline{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.pill{padding:7px 11px;border:1px solid var(--hair);border-radius:999px;color:var(--muted);font:700 10px/1.3 var(--mono)}
+.instrument{
+  position:relative;min-height:450px;border:1px solid var(--line);border-radius:32px;
+  overflow:hidden;background:radial-gradient(circle at 50% 48%,rgb(85 244 220/.11),transparent 45%),linear-gradient(145deg,rgb(255 255 255/.035),transparent 55%),var(--panel);
+  box-shadow:var(--shadow)
+}
+.instrument-head{position:absolute;inset:18px 20px auto;display:flex;justify-content:space-between;gap:12px;z-index:3}
+.instrument svg{position:absolute;inset:48px 10px 20px;width:calc(100% - 20px);height:calc(100% - 68px)}
+.edge{stroke:color-mix(in srgb,var(--cyan) 35%,transparent);stroke-width:1.3;fill:none}
+.edge.hot{stroke:var(--warn);filter:drop-shadow(0 0 6px var(--warn))}
+.node circle{fill:#071116;stroke:var(--cyan);stroke-width:1.5}
+.node.hot circle{stroke:var(--danger);filter:drop-shadow(0 0 8px var(--danger))}
+.node.outcome circle{stroke:var(--violet)}
+.node.agent circle{stroke:var(--lime)}
+.node text{fill:var(--ink);font:700 11px var(--mono);pointer-events:none}
+.node{cursor:pointer}
+.node:focus{outline:none}
+.node:focus circle{stroke-width:4}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:10px 0 34px}
+.kpi,.lens,.card,.drawer,.tape-item{
+  border:1px solid var(--hair);border-radius:17px;background:linear-gradient(145deg,rgb(255 255 255/.025),transparent),var(--panel)
+}
+.kpi{padding:18px;min-height:130px}
+.kpi strong{display:block;font-size:clamp(27px,4vw,48px);line-height:1;margin:13px 0 8px;letter-spacing:-.045em}
+.kpi small{color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.55fr);gap:15px}
+.stage{min-height:660px}
+.view{display:none}
+.view.active{display:block}
+.section-head{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap;margin:0 0 17px}
+.section-head h2{font-size:clamp(32px,5vw,66px);line-height:.9;letter-spacing:-.052em;margin:8px 0}
+.section-head p{max-width:62ch;color:var(--muted);margin:0}
+.lenses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.lens{padding:17px;min-height:182px;display:flex;flex-direction:column}
+.lens .score{font-size:38px;letter-spacing:-.05em;margin:14px 0}
+.lens footer{margin-top:auto;display:flex;justify-content:space-between;gap:10px;color:var(--muted);font:700 10px var(--mono)}
+.meter{height:7px;border-radius:999px;background:#132027;overflow:hidden}
+.meter i{height:100%;display:block;width:0;background:linear-gradient(90deg,var(--danger),var(--warn),var(--cyan))}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{padding:18px;min-height:220px}
+.card h3{font-size:22px;margin:10px 0}
+.card dl{display:grid;grid-template-columns:1fr auto;gap:8px 14px;margin:18px 0 0}
+.card dt{color:var(--muted)}
+.card dd{margin:0;text-align:right;font-family:var(--mono)}
+.queue{display:grid;gap:9px}
+.queue article{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;padding:14px;border:1px solid var(--hair);border-radius:13px;background:var(--panel)}
+.rank{width:32px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);font:800 11px var(--mono)}
+.queue p{margin:3px 0;color:var(--muted);font-size:13px}
+.queue strong:last-child{font-family:var(--mono);color:var(--warn)}
+.timeline{display:grid;gap:0}
+.timeline article{position:relative;padding:12px 14px 17px 34px;border-left:1px solid var(--line);margin-left:8px}
+.timeline article::before{content:"";position:absolute;left:-5px;top:18px;width:9px;aspect-ratio:1;border-radius:50%;background:var(--cyan);box-shadow:0 0 14px var(--cyan)}
+.timeline p{margin:4px 0;color:var(--muted)}
+.drawer{position:sticky;top:88px;padding:20px;min-height:560px;max-height:calc(100vh - 108px);overflow:auto}
+.drawer h2{font-size:28px;margin:12px 0}
+.drawer pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#020506;border:1px solid var(--hair);border-radius:12px;padding:13px;font:12px/1.55 var(--mono);color:#c5dadb;max-height:310px;overflow:auto}
+.drawer .fact{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-top:1px solid var(--hair)}
+.drawer .fact span{color:var(--muted)}
+.ask{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:13px}
+.tape{display:grid;gap:8px}
+.tape-item{padding:13px}
+.tape-item code{display:block;color:var(--cyan);overflow-wrap:anywhere}
+.tape-item small{color:var(--muted)}
+.playback-control{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin:20px 0}
+input[type="range"]{padding:0;accent-color:var(--cyan)}
+.empty{padding:28px;border:1px dashed var(--line);border-radius:16px;color:var(--muted)}
+.boundary{margin:30px 0 10px;padding:18px;border:1px solid var(--line);border-radius:16px;color:var(--muted);background:rgb(8 16 20/.72)}
+.site-footer{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:22px 0;color:var(--muted);font:700 10px/1.5 var(--mono);letter-spacing:.08em;border-top:1px solid var(--hair)}
+.truth{color:var(--warn)}
+@media(max-width:1060px){.hero,.layout{grid-template-columns:1fr}.instrument{min-height:420px}.drawer{position:relative;top:auto;max-height:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.lenses,.cards{grid-template-columns:1fr}.topbar{align-items:flex-start}.status{width:100%}.instrument{min-height:360px}.hero{padding-top:58px}.hero h1{font-size:clamp(52px,17vw,86px)}}
+@media(max-width:480px){.kpis{grid-template-columns:1fr}.shell{padding-inline:14px}.topbar{margin-inline:-14px;padding-inline:14px}.ask{grid-template-columns:1fr}.queue article{grid-template-columns:auto 1fr}.queue strong:last-child{grid-column:2}.instrument{min-height:310px}.node text{font-size:9px}}
+@media(pointer:coarse){button,a,input{min-height:48px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(forced-colors:active){*{forced-color-adjust:auto}.ambient{display:none}.instrument,.kpi,.lens,.card,.drawer{border:1px solid CanvasText}}
+@media(prefers-contrast:more){:root{--muted:#c6d5d7;--hair:rgb(255 255 255/.25);--line:var(--cyan)}}
+@media print{.ambient,.topbar,.hero-actions,.ask{display:none}.view{display:block!important}.drawer{max-height:none}.instrument{box-shadow:none}}
+</style>
 </head>
 <body>
-  <header>
-    <p class="kicker">BIND_AS_A11OY_PACKAGE · not a flagship</p>
-    <h1>Lyte Services</h1>
-    <p class="muted">The one admitted design-partner cell. Same factory compiler. Compiling Lyte returns ALLOW / STRUCTURAL-ONLY. N1–N25 roadmaps are STARTED as fail-closed organs and still return BLOCKED. Energy is UNAVAILABLE. Formulas never grant authority.</p>
-    <p>
-      <span class="chip">Lyte admitted</span>
-      <span class="chip">Roadmaps STARTED · not LIVE</span>
-      <span class="chip">N1 Serve · N2 Graph · N3 Guard · N4 Mosaic</span>
-      <span class="chip">N5 Lattice · N6 Cover · N7 Quant · N8 Title</span>
-      <span class="chip">N9 Retrieve · N10 Observe · N11 Tune · N12 Schema</span>
-      <span class="chip">N13 Energy · N14 Tool · N15 Memory · N16 Eval · N17 Mesh</span>
-      <span class="chip">N18 Route · N19 Cache · N20 Voice · N21 Sandbox</span>
-      <span class="chip">N22 Identity · N23 Rails · N24 Browser · N25 Policy</span>
-    </p>
+<a class="skip" href="#main">Skip to command</a>
+<div class="ambient" aria-hidden="true"></div>
+<main id="main" class="shell">
+  <header class="topbar">
+    <div class="brand">SZL / LYTE</div>
+    <nav class="nav" aria-label="Lyte views">
+      <button type="button" data-view="command" aria-selected="true">Command</button>
+      <button type="button" data-view="services">Services</button>
+      <button type="button" data-view="journeys">Journeys</button>
+      <button type="button" data-view="agents">Agents</button>
+      <button type="button" data-view="playback">Playback</button>
+      <button type="button" data-view="evidence">Evidence</button>
+    </nav>
+    <div class="status"><span id="statusDot" class="dot"></span><span id="runtimeStatus">OBSERVING SOURCE</span></div>
   </header>
-  <main>
-    <div class="row">
-      <input id="q" placeholder="search jobs — vllm, llamaindex, phoenix, unsloth, outlines" aria-label="Search cited jobs"/>
-      <button class="run" id="searchBtn" type="button">Search catalog</button>
+
+  <section class="hero">
+    <div>
+      <div class="eyebrow">GOVERNED BUSINESS OBSERVABILITY</div>
+      <h1>See change.<span>Act with proof.</span></h1>
+      <p class="lede">One operating view across software, AI agents, customer journeys, delivery, revenue, cost, service, and risk.</p>
+      <div class="hero-actions">
+        <button id="runScenario" class="primary" type="button">Run enterprise scenario</button>
+        <button id="connectSource" type="button">Observe GitHub source</button>
+        <a href="/docs">Developer API</a>
+      </div>
+      <div class="proofline">
+        <span class="pill">SOURCE-BOUND</span>
+        <span class="pill">SECOND BRAIN</span>
+        <span class="pill">HATUN REVIEW</span>
+        <span class="pill">Λ ADVISORY ONLY</span>
+        <span class="pill">EFFECTORS DISABLED</span>
+      </div>
     </div>
-    <div class="grid" id="cells"></div>
-    <section style="margin-top:16px">
-      <h2>Receipt</h2>
-      <pre id="out">select Lyte to compile, or a frontier to watch it fail closed</pre>
-    </section>
-    <p class="muted">Flagship: <a href="https://huggingface.co/spaces/SZLHOLDINGS/a11oy">a11oy</a>. Compiler: <a href="https://huggingface.co/spaces/SZLHOLDINGS/a11oy-factory">a11oy-factory</a>. Source: <a href="https://github.com/szl-holdings/lyte-services">szl-holdings/lyte-services</a>.</p>
-  </main>
-  <script>
-    const box = document.getElementById("cells");
-    const out = document.getElementById("out");
-    async function load() {
-      const cells = await (await fetch("/api/cells")).json();
-      box.innerHTML = cells.map(c =>
-        `<button class="card" data-id="${c.id}" data-admitted="${c.admitted}">
-           <b>${c.id} · ${c.title}</b>
-           <div class="muted">${c.job || (c.admitted ? "admitted" : "ROADMAP")}</div>
-         </button>`
-      ).join("");
-      box.querySelectorAll("button").forEach(b => b.onclick = () => compile(b.dataset.id));
-    }
-    async function compile(id) {
-      const r = await fetch("/api/compile", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({cell:id, signal:"lyte window"}) });
-      const a = await fetch("/api/act", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({cell:id}) });
-      out.textContent = JSON.stringify({compile: await r.json(), act: await a.json()}, null, 2);
-    }
-    async function search() {
-      const q = document.getElementById("q").value;
-      const r = await fetch("/api/search?q=" + encodeURIComponent(q));
-      out.textContent = JSON.stringify(await r.json(), null, 2);
-    }
-    document.getElementById("searchBtn").onclick = search;
-    document.getElementById("q").addEventListener("keydown", e => { if (e.key === "Enter") search(); });
-    load().catch(err => { out.textContent = String(err); });
-  </script>
+    <aside class="instrument" aria-label="Interactive service and outcome lattice">
+      <div class="instrument-head"><span class="label">SIGNAL LATTICE</span><span class="truth">SAMPLE / MODELED</span></div>
+      <svg id="lattice" viewBox="0 0 620 390" role="img" aria-labelledby="latticeTitle latticeDesc">
+        <title id="latticeTitle">Service, agent, and business outcome topology</title>
+        <desc id="latticeDesc">Interactive graph showing checkout, payments, support agent, dependencies, and declared business outcomes.</desc>
+      </svg>
+    </aside>
+  </section>
+
+  <section class="kpis" aria-label="Enterprise state">
+    <article class="kpi"><span class="label">Revenue at risk</span><strong id="revenue">$—</strong><small>Explicit modeled value</small></article>
+    <article class="kpi"><span class="label">Operating posture</span><strong id="posture">—</strong><small>Axes exposed, not authority</small></article>
+    <article class="kpi"><span class="label">Service queue</span><strong id="queueCount">—</strong><small>Human-owned reviews</small></article>
+    <article class="kpi"><span class="label">Evidence receipts</span><strong id="receiptCount">0</strong><small>Current caller session</small></article>
+  </section>
+
+  <div class="layout">
+    <div class="stage">
+      <section class="view active" data-panel="command">
+        <div class="section-head"><div><span class="eyebrow">SIX OPERATING LENSES</span><h2>One state. Every axis visible.</h2></div><p>Signal, impact, anticipation, topology, posture, and velocity connect technical change to declared business outcomes without pretending correlation is causation.</p></div>
+        <div id="lenses" class="lenses"></div>
+        <div class="section-head" style="margin-top:34px"><div><span class="eyebrow">REVIEW QUEUE</span><h2>What needs ownership now.</h2></div></div>
+        <div id="queue" class="queue"></div>
+      </section>
+
+      <section class="view" data-panel="services">
+        <div class="section-head"><div><span class="eyebrow">SERVICE INTELLIGENCE</span><h2>SLO, latency, cost, outcome.</h2></div><p>Each service exposes reliability, error-budget burn, dependency context, unit economics, priority, and the exact formulas used.</p></div>
+        <div id="services" class="cards"></div>
+      </section>
+
+      <section class="view" data-panel="journeys">
+        <div class="section-head"><div><span class="eyebrow">JOURNEY INTELLIGENCE</span><h2>From cart to consequence.</h2></div><p>Declared journey stages connect operational state to completion, abandonment, and modeled value at risk.</p></div>
+        <div id="journey" class="cards"></div>
+      </section>
+
+      <section class="view" data-panel="agents">
+        <div class="section-head"><div><span class="eyebrow">AI AGENT OPERATIONS</span><h2>Quality, latency, tools, cost.</h2></div><p>Observe agent behavior without storing prompt or response content. Safety and privacy flags remain visible.</p></div>
+        <div id="agents" class="cards"></div>
+      </section>
+
+      <section class="view" data-panel="playback">
+        <div class="section-head"><div><span class="eyebrow">INCIDENT PLAYBACK</span><h2>Scrub the operating state.</h2></div><p>Replay declared events, deployments, state transitions, decisions, and receipts. Playback does not manufacture causality.</p></div>
+        <div class="playback-control"><span id="playbackOffset" class="label">T-30</span><input id="scrubber" type="range" min="0" max="3" value="0" aria-label="Incident playback time"><span id="playbackState" class="truth">HEALTHY</span></div>
+        <div id="timeline" class="timeline"></div>
+      </section>
+
+      <section class="view" data-panel="evidence">
+        <div class="section-head"><div><span class="eyebrow">PROOF CHAIN</span><h2>Evidence before pitch.</h2></div><p>Receipts preserve payload identity, source boundary, observation time, and caller-session scope without recording the raw token.</p></div>
+        <div id="tape" class="tape"></div>
+      </section>
+    </div>
+
+    <aside class="drawer" aria-live="polite">
+      <span class="eyebrow">ASK LYTE / SELECTED PROOF</span>
+      <h2 id="drawerTitle">Enterprise state</h2>
+      <div class="fact"><span>Truth</span><strong id="drawerTruth">SAMPLE</strong></div>
+      <div class="fact"><span>Causality claimed</span><strong>NO</strong></div>
+      <div class="fact"><span>Effectors</span><strong>DISABLED</strong></div>
+      <pre id="drawerOutput">Loading the governed enterprise scenario…</pre>
+      <div class="ask">
+        <input id="question" value="Which service is consuming the most error budget?" aria-label="Ask Lyte a question">
+        <button id="askButton" type="button">Ask</button>
+      </div>
+    </aside>
+  </div>
+
+  <section class="boundary"><strong>Operational boundary.</strong> This public scenario is explicitly <span class="truth">SAMPLE / MODELED</span>. Real observations require a caller-held session and an explicit bounded request. Lyte ranks human-owned reviews; it does not execute remediation. Lambda remains Conjecture 1 and cannot authorize an action.</section>
+  <footer class="site-footer"><span>LYTE ENTERPRISE · SIGNAL LATTICE V3</span><span id="buildIdentity">SOURCE OBSERVATION PENDING</span><span><a href="/healthz">HEALTH</a> · <a href="/readyz">READINESS</a> · <a href="/api/lyte/v3/catalog">CATALOG</a></span></footer>
+</main>
+<script>
+(function(){
+  "use strict";
+  const $=id=>document.getElementById(id);
+  const session=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,"0")).join("");
+  const headers={"Accept":"application/json","X-SZL-Session":session};
+  const state={scenario:null,receipts:[],selected:null};
+  const money=value=>Number.isFinite(Number(value))?new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Number(value)):"UNAVAILABLE";
+  const pct=value=>Number.isFinite(Number(value))?(Number(value)*100).toFixed(1)+"%":"UNAVAILABLE";
+  const clean=value=>value===null||value===undefined?"UNAVAILABLE":String(value);
+  const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};
+  async function request(url,options={}){
+    const response=await fetch(url,{cache:"no-store",redirect:"error",...options,headers:{...headers,...(options.headers||{})}});
+    const text=await response.text();let body;
+    try{body=JSON.parse(text)}catch{body={body_excerpt:text.slice(0,1000)}}
+    if(!response.ok)throw new Error(url+" returned HTTP "+response.status+"\n"+JSON.stringify(body,null,2));
+    return body;
+  }
+  function select(title,truth,value){$("drawerTitle").textContent=title;$("drawerTruth").textContent=truth;$("drawerOutput").textContent=JSON.stringify(value,null,2)}
+  function renderGraph(data){
+    const svg=$("lattice");while(svg.lastChild&&svg.lastChild.nodeName!=="desc")svg.removeChild(svg.lastChild);
+    const services=data.analysis.services;
+    const outcomes=data.analysis.outcomes;
+    const positions={
+      "payment-gateway":[70,92],"payments-api":[220,120],"checkout-api":[370,82],
+      "inventory-api":[210,260],"retrieval-service":[410,295],"support-agent":[535,245],
+      "Checkout completion":[500,86],"Support resolution":[550,330]
+    };
+    const ns="http://www.w3.org/2000/svg";
+    data.analysis.service_outcome_graph.edges.forEach((edge,index)=>{
+      if(!positions[edge.from]||!positions[edge.to])return;
+      const line=document.createElementNS(ns,"path");
+      const [x1,y1]=positions[edge.from],[x2,y2]=positions[edge.to];
+      const curve=(x1+x2)/2;
+      line.setAttribute("d",`M${x1},${y1} C${curve},${y1} ${curve},${y2} ${x2},${y2}`);
+      line.setAttribute("class","edge"+(index<2?" hot":""));svg.append(line)
+    });
+    const records=[
+      ...services.map(item=>({name:item.name,type:item.name.includes("agent")?"agent":"service",data:item})),
+      ...outcomes.map(item=>({name:item.name,type:"outcome",data:item})),
+      {name:"payment-gateway",type:"service",data:{truth_label:"REPORTED",role:"external dependency"}},
+      {name:"inventory-api",type:"service",data:{truth_label:"REPORTED",role:"dependency"}},
+      {name:"retrieval-service",type:"service",data:{truth_label:"REPORTED",role:"agent dependency"}}
+    ];
+    records.forEach(record=>{
+      if(!positions[record.name])return;
+      const [x,y]=positions[record.name];const group=document.createElementNS(ns,"g");
+      const isHot=record.data.slo&&record.data.slo.state==="BREACHED";
+      group.setAttribute("class","node "+record.type+(isHot?" hot":""));group.setAttribute("tabindex","0");group.setAttribute("role","button");group.setAttribute("aria-label",record.name+" details");
+      const circle=document.createElementNS(ns,"circle");circle.setAttribute("cx",x);circle.setAttribute("cy",y);circle.setAttribute("r",record.type==="outcome"?22:record.type==="agent"?19:17);
+      const text=document.createElementNS(ns,"text");text.setAttribute("x",x);text.setAttribute("y",y+38);text.setAttribute("text-anchor","middle");text.textContent=record.name;
+      group.append(circle,text);group.addEventListener("click",()=>select(record.name,record.data.truth_label||"MEASURED",record.data));group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();group.dispatchEvent(new Event("click"))}});svg.append(group)
+    })
+  }
+  function renderLenses(data){
+    const root=$("lenses");root.replaceChildren();
+    data.analysis.lenses.forEach(item=>{
+      const card=node("article","lens");card.append(node("span","label",item.name));
+      card.append(node("strong","score",pct(item.score)));
+      const meter=node("div","meter");const fill=node("i");fill.style.width=(item.score*100)+"%";meter.append(fill);card.append(meter);
+      const footer=node("footer");footer.append(node("span","",item.status));footer.append(node("span","",item.tagline));card.append(footer);
+      card.tabIndex=0;card.addEventListener("click",()=>select(item.name,item.truth_label,item));card.addEventListener("keydown",event=>{if(event.key==="Enter")card.click()});root.append(card)
+    })
+  }
+  function renderQueue(data){
+    const root=$("queue");root.replaceChildren();
+    const items=data.analysis.action_queue;
+    if(!items.length){root.append(node("div","empty","No review queue items."));return}
+    items.forEach((item,index)=>{
+      const card=node("article");card.append(node("span","rank",String(index+1)));
+      const copy=node("div");copy.append(node("strong","",item.service));copy.append(node("p","",item.reason));card.append(copy);card.append(node("strong","",Math.round(item.priority*100)));
+      card.tabIndex=0;card.addEventListener("click",()=>select(item.service+" review","MODELED",item));root.append(card)
+    })
+  }
+  function renderServices(data){
+    const root=$("services");root.replaceChildren();
+    data.analysis.services.forEach(item=>{
+      const card=node("article","card");card.append(node("span","label",item.slo.state));card.append(node("h3","",item.name));
+      const dl=node("dl");
+      [["SLI",pct(item.slo.sli)],["Burn",clean(item.slo.burn_rate)],["p95",clean(item.latency.p95_ms)+" ms"],["Cost/success",money(item.cost.per_success_usd)],["Revenue risk",money(item.business.revenue_at_risk_usd)],["Priority",clean(item.priority)]].forEach(pair=>{dl.append(node("dt","",pair[0]));dl.append(node("dd","",pair[1]))});card.append(dl);
+      card.tabIndex=0;card.addEventListener("click",()=>select(item.name,item.truth_label,item));root.append(card)
+    })
+  }
+  function renderJourney(data){
+    const root=$("journey");root.replaceChildren();
+    data.journey.stages.forEach(item=>{
+      const card=node("article","card");card.append(node("span","label",item.state));card.append(node("h3","",item.name));
+      const dl=node("dl");[["Service",clean(item.service)],["Success",pct(item.success_rate)],["Target",pct(item.target_success_rate)],["Missed",clean(item.missed_successes)],["Value risk",money(item.revenue_at_risk_usd)]].forEach(pair=>{dl.append(node("dt","",pair[0]));dl.append(node("dd","",pair[1]))});card.append(dl);card.tabIndex=0;card.addEventListener("click",()=>select(item.name,item.truth_label,item));root.append(card)
+    })
+  }
+  function renderAgents(data){
+    const root=$("agents");root.replaceChildren();const item=data.analysis.agent_traces;
+    const cards=[
+      ["Agent reliability",{"Trace count":item.trace_count,"Success rate":pct(item.success_rate),"p95 latency":clean(item.p95_latency_ms)+" ms","Tool calls":item.tool_calls}],
+      ["Agent economics",{"Total cost":money(item.total_cost_usd),"Input tokens":item.total_input_tokens,"Output tokens":item.total_output_tokens,"Cost per trace":money(item.trace_count?item.total_cost_usd/item.trace_count:null)}],
+      ["Safety posture",{"Privacy flags":item.privacy_flags,"Safety flags":item.safety_flags,"Prompt retained":item.prompt_content_recorded,"Response retained":item.response_content_recorded}]
+    ];
+    cards.forEach(entry=>{const card=node("article","card");card.append(node("span","label","MEASURED"));card.append(node("h3","",entry[0]));const dl=node("dl");Object.entries(entry[1]).forEach(pair=>{dl.append(node("dt","",pair[0]));dl.append(node("dd","",clean(pair[1]))});card.append(dl);card.tabIndex=0;card.addEventListener("click",()=>select(entry[0],"MEASURED",entry[1]));root.append(card)})
+  }
+  function renderPlayback(data,index=0){
+    const root=$("timeline");root.replaceChildren();const selected=data.playback[index];
+    data.playback.forEach((item,i)=>{const card=node("article");card.append(node("span","label",(item.offset_minutes>=0?"T+":"T")+item.offset_minutes));card.append(node("strong","",item.state));card.append(node("p","",item.event));if(i===index)card.style.background="color-mix(in srgb,var(--cyan) 6%,transparent)";root.append(card)});
+    $("playbackOffset").textContent=(selected.offset_minutes>=0?"T+":"T")+selected.offset_minutes;$("playbackState").textContent=selected.state;select("Playback "+$("playbackOffset").textContent,selected.truth_label,selected)
+  }
+  function renderReceipts(){
+    const root=$("tape");root.replaceChildren();
+    if(!state.receipts.length){root.append(node("div","empty","Run the governed scenario or observe a source to mint session-scoped receipts."));return}
+    state.receipts.forEach(item=>{const card=node("article","tape-item");card.append(node("span","label",item.kind));card.append(node("code","",item.receipt.receipt_id));card.append(node("small","",item.receipt.truth_label+" · raw session token not recorded"));card.tabIndex=0;card.addEventListener("click",()=>select(item.kind+" receipt",item.receipt.truth_label,item.receipt));root.append(card)});$("receiptCount").textContent=String(state.receipts.length)
+  }
+  function render(data){
+    state.scenario=data;$("revenue").textContent=money(data.analysis.enterprise_state.revenue_at_risk_usd+data.journey.revenue_at_risk_usd);$("posture").textContent=pct(data.analysis.enterprise_state.posture_score);$("queueCount").textContent=String(data.analysis.enterprise_state.queue_items);renderGraph(data);renderLenses(data);renderQueue(data);renderServices(data);renderJourney(data);renderAgents(data);renderPlayback(data,Number($("scrubber").value));renderReceipts();select("Enterprise state","SAMPLE",data.analysis.enterprise_state)
+  }
+  async function boot(){
+    try{
+      const [data,build]=await Promise.all([request("/api/lyte/v3/scenario"),request("/api/build-info")]);render(data);
+      const observed=build.build&&build.build.state==="OBSERVED";$("statusDot").classList.toggle("ready",observed);$("runtimeStatus").textContent=observed?"SOURCE BOUND":"SOURCE UNAVAILABLE";$("buildIdentity").textContent=(build.build?build.build.revision:"UNAVAILABLE")+" · "+build.version
+    }catch(error){$("runtimeStatus").textContent="RUNTIME UNAVAILABLE";$("drawerOutput").textContent=String(error)}
+  }
+  async function runScenario(){
+    if(!state.scenario)return;const button=$("runScenario");button.disabled=true;button.textContent="Closing receipts…";
+    try{
+      const [analysis,journey]=await Promise.all([
+        request("/api/lyte/v3/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(state.scenario.inputs.analysis)}),
+        request("/api/lyte/v3/journeys/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(state.scenario.inputs.journey)})
+      ]);
+      state.receipts.push({kind:"analysis",receipt:analysis.receipt},{kind:"journey",receipt:journey.receipt});renderReceipts();select("Governed scenario receipts","MEASURED",{analysis:analysis.receipt,journey:journey.receipt})
+    }catch(error){select("Scenario failed closed","UNAVAILABLE",{error:String(error)})}finally{button.disabled=false;button.textContent="Run enterprise scenario"}
+  }
+  async function observeSource(){
+    const button=$("connectSource");button.disabled=true;button.textContent="Observing…";
+    try{const body=await request("/api/lyte/v3/github/lyte-services?limit=12");state.receipts.push({kind:"source",receipt:body.receipt});renderReceipts();select("GitHub Actions source","REPORTED",body)}
+    catch(error){select("Source unavailable","UNAVAILABLE",{error:String(error)})}finally{button.disabled=false;button.textContent="Observe GitHub source"}
+  }
+  async function ask(){
+    const question=$("question").value.trim();if(!question)return;
+    try{const body=await request("/api/lyte/v3/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question})});select("Ask Lyte",body.truth_label,body)}
+    catch(error){select("Ask Lyte failed closed","UNAVAILABLE",{error:String(error)})}
+  }
+  document.querySelectorAll("[data-view]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-view]").forEach(item=>item.setAttribute("aria-selected",String(item===button)));document.querySelectorAll(".view").forEach(panel=>panel.classList.toggle("active",panel.dataset.panel===button.dataset.view))}));
+  $("runScenario").addEventListener("click",runScenario);$("connectSource").addEventListener("click",observeSource);$("askButton").addEventListener("click",ask);$("question").addEventListener("keydown",event=>{if(event.key==="Enter")ask()});$("scrubber").addEventListener("input",event=>{if(state.scenario)renderPlayback(state.scenario,Number(event.target.value))});boot()
+})();
+</script>
 </body>
 </html>
