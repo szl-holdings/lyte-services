@@ -1,13 +1,13 @@
 ---
 title: Lyte Enterprise Signal Lattice
-emoji: ✦
-colorFrom: teal
+emoji: 🔷
+colorFrom: green
 colorTo: blue
 sdk: docker
 app_port: 7860
 pinned: false
 license: apache-2.0
-short_description: Governed business observability across services, journeys, AI agents, and outcomes
+short_description: Governed observability for services, journeys, and AI agents
 tags:
   - observability
   - business-observability
