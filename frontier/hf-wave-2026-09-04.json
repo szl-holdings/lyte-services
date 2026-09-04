@@ -1,0 +1,31 @@
+{
+  "schema": "szl.frontier.binding.v1",
+  "evaluated_at": "2026-09-04T13:36:00Z",
+  "owner": "lyte-services",
+  "default_effect": "HOLD",
+  "candidates": [
+    {
+      "id": "granite-confluent-2026-09-02",
+      "source": "https://huggingface.co/ibm-granite/granite-timeseries-ttm-r2",
+      "architecture": "https://huggingface.co/blog/ibm-research/real-time-intelligence",
+      "role": "forecast/anomaly recommendation stream",
+      "status": "EVALUATE",
+      "gates": ["pinned model", "naive baseline", "MASE/MAE", "missing/late events", "drift", "replay receipts", "human approval", "rollback"]
+    },
+    {
+      "id": "neomme-2026-09-03",
+      "source": "https://huggingface.co/Hcompany/NeoMME-260M-Retriever",
+      "role": "multimodal document retrieval candidate",
+      "status": "EVALUATE",
+      "gates": ["pinned corpus", "nDCG", "recall", "encode throughput", "index bytes", "p95 latency", "fallback"]
+    },
+    {
+      "id": "qdrant-fineweb-10b-2026-09-01",
+      "source": "https://huggingface.co/datasets/Qdrant/FineWeb-10B",
+      "role": "retrieval scale benchmark only",
+      "status": "BENCHMARK",
+      "gates": ["bounded shard", "qrels lineage", "recall", "p95/p99", "cost receipt", "query rights"]
+    }
+  ],
+  "production_promotion": false
+}
