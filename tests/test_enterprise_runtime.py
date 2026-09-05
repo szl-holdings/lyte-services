@@ -24,6 +24,7 @@ from lyte_engine import (  # noqa: E402
     analyze_window,
     github_workflow_observation,
 )
+import space.server as runtime  # noqa: E402
 from space.server import app  # noqa: E402
 
 SESSION_A = "lyte-enterprise-session-a-01234567890123456789"
@@ -51,9 +52,42 @@ def test_engine_imports_and_source_bound_readiness_closes() -> None:
         "revision": "7" * 40,
     }
 
+    expected_identity = {
+        "source_repository": "szl-holdings/lyte-services",
+        "source_revision": "7" * 40,
+        "runtime_repository": "szl-holdings/lyte-services",
+        "runtime_source_revision": "7" * 40,
+        "effectors_enabled": False,
+        "human_approval_required": True,
+    }
+    for route in ("/healthz", "/api/build-info", "/api/source"):
+        response = CLIENT_A.get(route)
+        assert response.status_code == 200
+        payload = response.json()
+        assert {key: payload[key] for key in expected_identity} == expected_identity
+
     build = CLIENT_A.get("/api/build-info").json()
     assert build["source_binding"]["bindings_agree"] is True
     assert build["receipt_minted"] is False
+
+
+def test_runtime_identity_fails_readiness_closed_on_source_mismatch(monkeypatch) -> None:
+    monkeypatch.setattr(
+        runtime,
+        "_source_observation",
+        lambda: {
+            "state": "MISMATCH",
+            "revision": "6" * 40,
+            "bindings_agree": False,
+            "evidence_sources": ["container-file", "env:LYTE_SOURCE_REVISION"],
+        },
+    )
+    health = CLIENT_A.get("/healthz")
+    assert health.status_code == 200
+    assert health.json()["ok"] is False
+    ready = CLIENT_A.get("/readyz")
+    assert ready.status_code == 503
+    assert ready.json()["ready"] is False
 
 
 def test_public_catalog_anatomy_formulas_sources_and_metrics() -> None:

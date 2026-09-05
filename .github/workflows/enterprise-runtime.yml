@@ -120,6 +120,9 @@ jobs:
             fi
             sleep 1
           done
+          curl --fail --silent --show-error http://127.0.0.1:7860/healthz >/tmp/health.json
+          curl --fail --silent --show-error http://127.0.0.1:7860/api/build-info >/tmp/build.json
+          curl --fail --silent --show-error http://127.0.0.1:7860/api/source >/tmp/source.json
           python - <<'PY'
           import json, os
           body = json.load(open('/tmp/ready.json', encoding='utf-8'))
@@ -128,9 +131,20 @@ jobs:
           assert body['build']['revision'] == os.environ['GITHUB_SHA']
           assert body['source_binding']['bindings_agree'] is True
           assert body['effectors_enabled'] is False
+          expected = {
+              'source_repository': 'szl-holdings/lyte-services',
+              'source_revision': os.environ['GITHUB_SHA'],
+              'runtime_repository': 'szl-holdings/lyte-services',
+              'runtime_source_revision': os.environ['GITHUB_SHA'],
+              'effectors_enabled': False,
+              'human_approval_required': True,
+          }
+          for path in ('/tmp/health.json', '/tmp/build.json', '/tmp/source.json'):
+              payload = json.load(open(path, encoding='utf-8'))
+              assert {key: payload[key] for key in expected} == expected
           PY
           for path in \
-            / /healthz /readyz /api/build-info /.well-known/szl-source.json /metrics \
+            / /healthz /readyz /api/build-info /api/source /.well-known/szl-source.json /metrics \
             /api/lyte/v3/catalog /api/lyte/v3/capabilities \
             /api/lyte/v3/anatomy /api/lyte/v3/formulas \
             /api/lyte/v3/sources /api/lyte/v3/scenario \
