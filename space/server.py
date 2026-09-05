@@ -51,6 +51,14 @@ CONTAINER_SOURCE_FILE = Path("/app/source_revision.txt")
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 RECEIPT64 = re.compile(r"^[0-9a-f]{64}$")
 MAX_REQUEST_BYTES = 512_000
+RUNTIME_IDENTITY_FIELDS = (
+    "source_repository",
+    "source_revision",
+    "runtime_repository",
+    "runtime_source_revision",
+    "effectors_enabled",
+    "human_approval_required",
+)
 
 app = FastAPI(
     title="Lyte Enterprise Signal Lattice",
@@ -175,7 +183,7 @@ def _source_observation() -> dict[str, Any]:
     elif len(revisions) == 1:
         state, revision = "OBSERVED", revisions[0]
     else:
-        state, revision = "MISMATCH", revisions[0]
+        state, revision = "MISMATCH", "UNAVAILABLE"
     return {
         "state": state,
         "revision": revision,
@@ -184,16 +192,36 @@ def _source_observation() -> dict[str, Any]:
     }
 
 
+def _runtime_identity(source: dict[str, Any] | None = None) -> dict[str, Any]:
+    observation = source if source is not None else _source_observation()
+    revision = observation["revision"]
+    if (
+        observation["state"] != "OBSERVED"
+        or observation["bindings_agree"] is not True
+        or not SHA40.fullmatch(str(revision))
+    ):
+        revision = "UNAVAILABLE"
+    return {
+        "source_repository": SOURCE_REPOSITORY,
+        "source_revision": revision,
+        "runtime_repository": SOURCE_REPOSITORY,
+        "runtime_source_revision": revision,
+        "effectors_enabled": False,
+        "human_approval_required": True,
+    }
+
+
 def build_info() -> dict[str, Any]:
     source = _source_observation()
+    identity = _runtime_identity(source)
     return {
         "schema": "szl.build-info/v1",
         "service": "lyte-signal-lattice",
         "version": VERSION,
-        "source_repository": SOURCE_REPOSITORY,
+        **identity,
         "build": {
             "state": source["state"],
-            "revision": source["revision"],
+            "revision": identity["source_revision"],
         },
         "source_binding": {
             "bindings_agree": source["bindings_agree"],
@@ -524,10 +552,17 @@ def root() -> FileResponse:
 @app.get("/healthz")
 def health() -> dict[str, Any]:
     compiler = compile_cell("lyte")
+    source = _source_observation()
     return {
-        "ok": compiler.decision == "ALLOW" and HTML.is_file(),
+        "ok": (
+            compiler.decision == "ALLOW"
+            and HTML.is_file()
+            and source["state"] == "OBSERVED"
+            and source["bindings_agree"] is True
+        ),
         "service": "lyte-signal-lattice",
         "version": VERSION,
+        **_runtime_identity(source),
         "engine_imported": True,
         "front_door_present": HTML.is_file(),
         "compiler": {
@@ -538,8 +573,6 @@ def health() -> dict[str, Any]:
         "memory": LEDGER.status(),
         "lenses": [item["id"] for item in LENSES],
         "causality_claimed": False,
-        "effectors_enabled": False,
-        "human_approval_required": True,
         "lambda_status": "Conjecture 1 (advisory only)",
         "truth_label": "MEASURED",
     }
@@ -560,12 +593,12 @@ def readiness() -> JSONResponse:
             "ready": ready,
             "service": "lyte-signal-lattice",
             "version": VERSION,
+            **{key: build[key] for key in RUNTIME_IDENTITY_FIELDS},
             "build": build["build"],
             "source_binding": build["source_binding"],
             "compiler": compiler.decision,
             "front_door_present": HTML.is_file(),
             "memory": LEDGER.status(),
-            "effectors_enabled": False,
             "truth_label": "MEASURED",
         },
         status_code=200 if ready else 503,
@@ -577,6 +610,7 @@ def build_info_route() -> dict[str, Any]:
     return build_info()
 
 
+@app.get("/api/source")
 @app.get("/.well-known/szl-source.json")
 def source_document() -> dict[str, Any]:
     return build_info()
