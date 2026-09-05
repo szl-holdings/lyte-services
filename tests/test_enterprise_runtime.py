@@ -85,9 +85,18 @@ def test_runtime_identity_fails_readiness_closed_on_source_mismatch(monkeypatch)
     health = CLIENT_A.get("/healthz")
     assert health.status_code == 200
     assert health.json()["ok"] is False
+    assert health.json()["source_revision"] == "UNAVAILABLE"
+    assert health.json()["runtime_source_revision"] == "UNAVAILABLE"
     ready = CLIENT_A.get("/readyz")
     assert ready.status_code == 503
     assert ready.json()["ready"] is False
+    assert ready.json()["build"]["revision"] == "UNAVAILABLE"
+    assert ready.json()["source_revision"] == "UNAVAILABLE"
+
+    build = CLIENT_A.get("/api/source")
+    assert build.status_code == 200
+    assert build.json()["build"]["revision"] == "UNAVAILABLE"
+    assert build.json()["source_revision"] == "UNAVAILABLE"
 
 
 def test_public_catalog_anatomy_formulas_sources_and_metrics() -> None:

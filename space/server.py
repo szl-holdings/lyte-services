@@ -183,7 +183,7 @@ def _source_observation() -> dict[str, Any]:
     elif len(revisions) == 1:
         state, revision = "OBSERVED", revisions[0]
     else:
-        state, revision = "MISMATCH", revisions[0]
+        state, revision = "MISMATCH", "UNAVAILABLE"
     return {
         "state": state,
         "revision": revision,
@@ -195,6 +195,12 @@ def _source_observation() -> dict[str, Any]:
 def _runtime_identity(source: dict[str, Any] | None = None) -> dict[str, Any]:
     observation = source if source is not None else _source_observation()
     revision = observation["revision"]
+    if (
+        observation["state"] != "OBSERVED"
+        or observation["bindings_agree"] is not True
+        or not SHA40.fullmatch(str(revision))
+    ):
+        revision = "UNAVAILABLE"
     return {
         "source_repository": SOURCE_REPOSITORY,
         "source_revision": revision,
@@ -207,14 +213,15 @@ def _runtime_identity(source: dict[str, Any] | None = None) -> dict[str, Any]:
 
 def build_info() -> dict[str, Any]:
     source = _source_observation()
+    identity = _runtime_identity(source)
     return {
         "schema": "szl.build-info/v1",
         "service": "lyte-signal-lattice",
         "version": VERSION,
-        **_runtime_identity(source),
+        **identity,
         "build": {
             "state": source["state"],
-            "revision": source["revision"],
+            "revision": identity["source_revision"],
         },
         "source_binding": {
             "bindings_agree": source["bindings_agree"],
