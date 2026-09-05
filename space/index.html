@@ -367,12 +367,26 @@ input[type="range"]{padding:0;accent-color:var(--cyan)}
   }
   function renderAgents(data){
     const root=$("agents");root.replaceChildren();const item=data.analysis.agent_traces;
+    const truth=data.truth_label||"UNAVAILABLE";
     const cards=[
       ["Agent reliability",{"Trace count":item.trace_count,"Success rate":pct(item.success_rate),"p95 latency":clean(item.p95_latency_ms)+" ms","Tool calls":item.tool_calls}],
       ["Agent economics",{"Total cost":money(item.total_cost_usd),"Input tokens":item.total_input_tokens,"Output tokens":item.total_output_tokens,"Cost per trace":money(item.trace_count?item.total_cost_usd/item.trace_count:null)}],
       ["Safety posture",{"Privacy flags":item.privacy_flags,"Safety flags":item.safety_flags,"Prompt retained":item.prompt_content_recorded,"Response retained":item.response_content_recorded}]
     ];
-    cards.forEach(entry=>{const card=node("article","card");card.append(node("span","label","MEASURED"));card.append(node("h3","",entry[0]));const dl=node("dl");Object.entries(entry[1]).forEach(pair=>{dl.append(node("dt","",pair[0]));dl.append(node("dd","",clean(pair[1]))});card.append(dl);card.tabIndex=0;card.addEventListener("click",()=>select(entry[0],"MEASURED",entry[1]));root.append(card)})
+    cards.forEach(entry=>{
+      const card=node("article","card");
+      card.append(node("span","label",truth));
+      card.append(node("h3","",entry[0]));
+      const dl=node("dl");
+      Object.entries(entry[1]).forEach(pair=>{
+        dl.append(node("dt","",pair[0]));
+        dl.append(node("dd","",clean(pair[1])));
+      });
+      card.append(dl);
+      card.tabIndex=0;
+      card.addEventListener("click",()=>select(entry[0],truth,entry[1]));
+      root.append(card);
+    });
   }
   function renderPlayback(data,index=0){
     const root=$("timeline");root.replaceChildren();const selected=data.playback[index];
