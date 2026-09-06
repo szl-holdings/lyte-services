@@ -170,6 +170,8 @@ input[type="range"]{padding:0;accent-color:var(--cyan)}
 @media(prefers-contrast:more){:root{--muted:#c6d5d7;--hair:rgb(255 255 255/.25);--line:var(--cyan)}}
 @media print{.ambient,.topbar,.hero-actions,.ask{display:none}.view{display:block!important}.drawer{max-height:none}.instrument{box-shadow:none}}
 </style>
+  <meta name="szl-space-slug" content="lyte" data-szl-space-holo-v2="true" />
+  <link rel="stylesheet" href="./szl-space-hologram.css" data-szl-space-holo-v2="style" />
 </head>
 <body>
 <a class="skip" href="#main">Skip to command</a>
@@ -431,5 +433,6 @@ input[type="range"]{padding:0;accent-color:var(--cyan)}
   $("runScenario").addEventListener("click",runScenario);$("connectSource").addEventListener("click",observeSource);$("askButton").addEventListener("click",ask);$("question").addEventListener("keydown",event=>{if(event.key==="Enter")ask()});$("scrubber").addEventListener("input",event=>{if(state.scenario)renderPlayback(state.scenario,Number(event.target.value))});boot()
 })();
 </script>
+  <script src="./szl-space-hologram.js" defer data-szl-space-holo-v2="script"></script>
 </body>
 </html>
