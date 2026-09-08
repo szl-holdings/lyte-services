@@ -1,9 +1,12 @@
 """Declared business-journey analysis and impact modeling."""
+
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .core import clamp01, finite_float, weighted_geometric_mean
+
 
 def analyze_journey(payload: Mapping[str, Any]) -> dict[str, Any]:
     """Analyze a declared business journey and quantify stage-level impact."""
@@ -100,5 +103,3 @@ def analyze_journey(payload: Mapping[str, Any]) -> dict[str, Any]:
         "human_approval_required": True,
         "truth_label": "MODELED",
     }
-
-

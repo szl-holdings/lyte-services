@@ -5,6 +5,7 @@ This is a regression contract for Lyte's checked-in, unquoted scalar metadata,
 not a replacement for the provider's complete YAML or emoji validator.
 Reference: https://huggingface.co/docs/hub/en/spaces-config-reference
 """
+
 import re
 from pathlib import Path
 

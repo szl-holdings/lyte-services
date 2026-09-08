@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:17.6
+    environment:
+      POSTGRES_DB: lyte
+      POSTGRES_USER: lyte
+      POSTGRES_PASSWORD: ${LYTE_POSTGRES_PASSWORD:?set LYTE_POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lyte -d lyte"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - lyte-postgres:/var/lib/postgresql/data
+
+  migrate:
+    build:
+      context: .
+      args:
+        LYTE_SOURCE_REVISION: ${LYTE_SOURCE_REVISION:?set exact 40-character merged revision}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${LYTE_DATABASE_URL:?set a full PostgreSQL DATABASE_URL}
+      LYTE_ENV: production
+      LYTE_DEMO_MODE: "false"
+      LYTE_DEV_AUTH_ENABLED: "false"
+      LYTE_SOURCE_REVISION: ${LYTE_SOURCE_REVISION:?set exact 40-character merged revision}
+      OIDC_ISSUER: ${LYTE_OIDC_ISSUER:?set LYTE_OIDC_ISSUER}
+      OIDC_AUDIENCE: ${LYTE_OIDC_AUDIENCE:?set LYTE_OIDC_AUDIENCE}
+      OIDC_JWKS_URL: ${LYTE_OIDC_JWKS_URL:?set LYTE_OIDC_JWKS_URL}
+    restart: "no"
+
+  lyte:
+    build:
+      context: .
+      args:
+        LYTE_SOURCE_REVISION: ${LYTE_SOURCE_REVISION:?set exact 40-character merged revision}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: ${LYTE_DATABASE_URL:?set a full PostgreSQL DATABASE_URL}
+      LYTE_ENV: production
+      LYTE_DEMO_MODE: "false"
+      LYTE_DEV_AUTH_ENABLED: "false"
+      LYTE_SOURCE_REVISION: ${LYTE_SOURCE_REVISION:?set exact 40-character merged revision}
+      OIDC_ISSUER: ${LYTE_OIDC_ISSUER:?set LYTE_OIDC_ISSUER}
+      OIDC_AUDIENCE: ${LYTE_OIDC_AUDIENCE:?set LYTE_OIDC_AUDIENCE}
+      OIDC_JWKS_URL: ${LYTE_OIDC_JWKS_URL:?set LYTE_OIDC_JWKS_URL}
+    cap_drop: ["ALL"]
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    ports:
+      - "7860:7860"
+
+volumes:
+  lyte-postgres:

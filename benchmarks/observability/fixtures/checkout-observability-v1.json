@@ -1,0 +1,62 @@
+{
+  "schema": "szl.lyte.open-observability-fixture/v1",
+  "fixture_id": "checkout-observability-v1",
+  "fixture_version": "1.0.0",
+  "license": "CC0-1.0",
+  "description": "Synthetic checkout degradation fixture for vendor-neutral observability measurement. It contains no customer, vendor, or production data.",
+  "data_mode": "SAMPLE",
+  "expected": {
+    "service_id": "checkout-api",
+    "journey_id": "checkout",
+    "outcome_id": "checkout-revenue",
+    "incident_id": "incident-checkout-20260904",
+    "decision_id": "hatun-checkout-review-1",
+    "ask_question": "Which deployment is correlated with this incident?",
+    "source_revision": "0123456789abcdef0123456789abcdef01234567"
+  },
+  "otlp": {
+    "resource_attributes": [
+      {
+        "key": "service.name",
+        "value": {
+          "stringValue": "checkout-api"
+        }
+      },
+      {
+        "key": "deployment.environment",
+        "value": {
+          "stringValue": "open-benchmark"
+        }
+      }
+    ],
+    "scope": {
+      "name": "szl.lyte.open-benchmark",
+      "version": "1.0.0"
+    },
+    "span_template": {
+      "traceId": "11111111111111111111111111111111",
+      "spanId": "2222222222222222",
+      "name": "checkout.request",
+      "kind": "SPAN_KIND_SERVER",
+      "startTimeUnixNano": "1000000000",
+      "endTimeUnixNano": "1002500000",
+      "attributes": [
+        {
+          "key": "http.route",
+          "value": {
+            "stringValue": "/checkout"
+          }
+        },
+        {
+          "key": "benchmark.fixture",
+          "value": {
+            "stringValue": "checkout-observability-v1"
+          }
+        }
+      ],
+      "status": {
+        "code": "STATUS_CODE_OK"
+      }
+    }
+  }
+}

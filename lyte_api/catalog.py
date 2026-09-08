@@ -1,4 +1,5 @@
 """Living Anatomy, formulas, and enterprise positioning contracts."""
+
 from __future__ import annotations
 
 ANATOMY = (
@@ -125,5 +126,3 @@ POSITIONING = {
         ],
     },
 }
-
-

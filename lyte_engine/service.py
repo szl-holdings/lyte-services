@@ -1,10 +1,12 @@
 """Service, AI-agent, six-lens, and enterprise-state analysis."""
+
 from __future__ import annotations
 
 import hashlib
 import math
+from collections.abc import Mapping, Sequence
 from statistics import fmean
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from .core import (
     LENSES,
@@ -17,6 +19,7 @@ from .core import (
     percentile,
     weighted_geometric_mean,
 )
+
 
 def agent_trace_summary(traces: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """Aggregate AI-agent traces without retaining prompts or responses."""
@@ -47,9 +50,7 @@ def agent_trace_summary(traces: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         latency.append(
             finite_float(trace.get("latency_ms", 0.0), name="trace.latency_ms", minimum=0.0)
         )
-        total_cost += finite_float(
-            trace.get("cost_usd", 0.0), name="trace.cost_usd", minimum=0.0
-        )
+        total_cost += finite_float(trace.get("cost_usd", 0.0), name="trace.cost_usd", minimum=0.0)
         total_input += max(0, int(trace.get("input_tokens", 0)))
         total_output += max(0, int(trace.get("output_tokens", 0)))
         successes += int(bool(trace.get("success", False)))
@@ -86,10 +87,7 @@ def _service_priority(
     revenue = clamp01(math.log10(1.0 + max(0.0, revenue_at_risk_usd)) / 8.0)
     severity_component = clamp01(severity)
     return round(
-        0.38 * burn_component
-        + 0.28 * impact
-        + 0.19 * revenue
-        + 0.15 * severity_component,
+        0.38 * burn_component + 0.28 * impact + 0.19 * revenue + 0.15 * severity_component,
         6,
     )
 
@@ -110,7 +108,9 @@ def _trend_score(values: Sequence[float], *, higher_is_better: bool) -> dict[str
     signed = change / scale
     improvement = signed if higher_is_better else -signed
     score = clamp01(0.5 + improvement / 2.0)
-    direction = "IMPROVING" if improvement > 0.02 else "DEGRADING" if improvement < -0.02 else "STABLE"
+    direction = (
+        "IMPROVING" if improvement > 0.02 else "DEGRADING" if improvement < -0.02 else "STABLE"
+    )
     return {
         "direction": direction,
         "change": round(change, 8),
@@ -128,14 +128,10 @@ def derive_lenses(
     action_queue: Sequence[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
     """Derive the six proprietary Lyte lenses from explicit measurements."""
-    service_scores = [
-        float(item.get("lambda_advisory", {}).get("score", 0.0))
-        for item in services
-    ]
+    service_scores = [float(item.get("lambda_advisory", {}).get("score", 0.0)) for item in services]
     posture = fmean(service_scores) if service_scores else 0.0
     revenue_at_risk = sum(
-        float(item.get("business", {}).get("revenue_at_risk_usd", 0.0))
-        for item in services
+        float(item.get("business", {}).get("revenue_at_risk_usd", 0.0)) for item in services
     )
     outcome_scores = [float(item.get("attainment", 0.0)) for item in outcomes]
     impact_score = fmean(outcome_scores) if outcome_scores else 0.5
@@ -245,9 +241,7 @@ def analyze_window(payload: Mapping[str, Any]) -> dict[str, Any]:
             }
         )
 
-    trace_summary = agent_trace_summary(
-        [item for item in traces if isinstance(item, Mapping)]
-    )
+    trace_summary = agent_trace_summary([item for item in traces if isinstance(item, Mapping)])
     service_rows: list[dict[str, Any]] = []
     action_queue: list[dict[str, Any]] = []
     graph_edges: list[dict[str, Any]] = []
@@ -288,17 +282,15 @@ def analyze_window(payload: Mapping[str, Any]) -> dict[str, Any]:
             }
         )
         linked_outcomes = [
-            str(value)
-            for value in item.get("outcome_names", [])
-            if str(value) in outcome_scores
+            str(value) for value in item.get("outcome_names", []) if str(value) in outcome_scores
         ]
         if linked_outcomes:
             linked_weight_total = sum(outcome_weights[name] for name in linked_outcomes)
             if linked_weight_total > 0:
-                linked_score = sum(
-                    outcome_scores[name] * outcome_weights[name]
-                    for name in linked_outcomes
-                ) / linked_weight_total
+                linked_score = (
+                    sum(outcome_scores[name] * outcome_weights[name] for name in linked_outcomes)
+                    / linked_weight_total
+                )
             else:
                 linked_score = fmean(outcome_scores[name] for name in linked_outcomes)
         else:
@@ -314,9 +306,7 @@ def analyze_window(payload: Mapping[str, Any]) -> dict[str, Any]:
         )
         if cost_budget <= 0:
             raise ValueError("cost_budget_per_success_usd must be greater than zero")
-        cost_score = clamp01(
-            1.0 - (unit_cost if unit_cost is not None else cost) / cost_budget
-        )
+        cost_score = clamp01(1.0 - (unit_cost if unit_cost is not None else cost) / cost_budget)
         service_lambda = weighted_geometric_mean(
             {
                 "reliability": reliability,
@@ -413,9 +403,7 @@ def analyze_window(payload: Mapping[str, Any]) -> dict[str, Any]:
             )
 
     action_queue.sort(key=lambda item: (-item["priority"], item["service"]))
-    service_health = fmean(
-        float(row["lambda_advisory"]["score"]) for row in service_rows
-    )
+    service_health = fmean(float(row["lambda_advisory"]["score"]) for row in service_rows)
     if outcome_scores:
         weight_total = sum(outcome_weights.values())
         outcome_health = (
@@ -432,9 +420,7 @@ def analyze_window(payload: Mapping[str, Any]) -> dict[str, Any]:
         1.0
         if not traces
         else 1.0
-        - (
-            trace_summary["privacy_flags"] + trace_summary["safety_flags"]
-        )
+        - (trace_summary["privacy_flags"] + trace_summary["safety_flags"])
         / (2.0 * max(1, trace_summary["trace_count"]))
     )
     portfolio_lambda = weighted_geometric_mean(
@@ -467,9 +453,7 @@ def analyze_window(payload: Mapping[str, Any]) -> dict[str, Any]:
         graph_edges=graph_edges,
         action_queue=action_queue,
     )
-    total_revenue_risk = sum(
-        float(row["business"]["revenue_at_risk_usd"]) for row in service_rows
-    )
+    total_revenue_risk = sum(float(row["business"]["revenue_at_risk_usd"]) for row in service_rows)
     return {
         "schema": "szl.lyte-window/v3",
         "version": VERSION,
@@ -505,5 +489,3 @@ def analyze_window(payload: Mapping[str, Any]) -> dict[str, Any]:
         "human_approval_required": True,
         "truth_label": "MODELED",
     }
-
-

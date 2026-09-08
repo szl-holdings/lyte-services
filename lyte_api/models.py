@@ -1,4 +1,5 @@
 """Strict request contracts for the Lyte Enterprise API."""
+
 from __future__ import annotations
 
 import math

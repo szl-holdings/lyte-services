@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Lyte connects service, journey, AI-agent, cost, and business evidence without collapsing truth states.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#080b0a">
+  <title>Lyte — Business Observability Command</title>
+  <link rel="stylesheet" href="/static/lyte/styles.css">
+  <script src="/static/lyte/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to command workspace</a>
+  <div class="ambient-grid" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#executive" aria-label="Lyte, Business Observability home">
+        <span class="brand-mark" aria-hidden="true"><span>L</span><span>Y</span></span>
+        <span class="brand-copy"><strong>LYTE</strong><small>Business observability</small></span>
+      </a>
+
+      <div class="mission-line" aria-label="Current operating focus">
+        <span class="pulse-mark" aria-hidden="true"></span>
+        <span>Connect system behavior to economic outcome</span>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="source-pill" id="source-button" type="button" aria-haspopup="dialog" aria-controls="source-dialog">
+          <span class="truth-badge truth-unavailable" id="source-truth">UNAVAILABLE</span>
+          <span class="source-pill-copy"><strong id="source-label">Source identity checking</strong><small id="source-revision">Revision unavailable</small></span>
+        </button>
+        <button class="ask-trigger" id="ask-open" type="button" aria-haspopup="dialog" aria-controls="ask-dialog">
+          <span>Ask Lyte</span><kbd>Ctrl K</kbd>
+        </button>
+        <button class="icon-button mobile-menu" id="mobile-menu" type="button" aria-expanded="false" aria-controls="primary-sidebar">
+          <span class="sr-only">Toggle navigation</span>
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="primary-sidebar">
+      <nav class="primary-nav" aria-label="Lyte operating lenses">
+        <p class="nav-label">Operating lenses</p>
+        <ol>
+          <li><button type="button" data-scene-target="executive" aria-current="page"><span class="nav-index">01</span><span><strong>Executive Command</strong><small>Outcome posture</small></span></button></li>
+          <li><button type="button" data-scene-target="services"><span class="nav-index">02</span><span><strong>Service Intelligence</strong><small>System behavior</small></span></button></li>
+          <li><button type="button" data-scene-target="journeys"><span class="nav-index">03</span><span><strong>Journey Intelligence</strong><small>Customer impact</small></span></button></li>
+          <li><button type="button" data-scene-target="agents"><span class="nav-index">04</span><span><strong>AI Agent Operations</strong><small>Tools and policy</small></span></button></li>
+          <li><button type="button" data-scene-target="incidents"><span class="nav-index">05</span><span><strong>Incident Playback</strong><small>Decision timeline</small></span></button></li>
+        </ol>
+      </nav>
+
+      <section class="sidebar-scope" aria-labelledby="scope-title">
+        <div class="section-label" id="scope-title">Evaluation scope</div>
+        <p><strong>Northstar Systems</strong><br><span>SAMPLE workspace</span></p>
+        <dl>
+          <div><dt>Window</dt><dd>Last 60 min</dd></div>
+          <div><dt>Region</dt><dd>All regions</dd></div>
+          <div><dt>Sources</dt><dd id="sidebar-source-count">0 LIVE</dd></div>
+        </dl>
+      </section>
+
+      <footer class="sidebar-footer">
+        <span class="truth-badge truth-sample">SAMPLE</span>
+        <p>Evaluation data is fictional. Live source state is shown separately.</p>
+      </footer>
+    </aside>
+
+    <main id="main-content" tabindex="-1">
+      <section class="workspace-bar" aria-label="Workspace context">
+        <div><span class="section-label">Workspace</span><strong>Northstar Systems <span class="truth-badge truth-sample">SAMPLE</span></strong></div>
+        <div class="workspace-context"><span><b>60m</b> observation window</span><span><b>UTC</b> normalized clock</span><span><b id="receipt-count">08</b> evidence receipts</span></div>
+        <div class="workspace-actions"><button class="quiet-button" type="button" data-scene-target="services">Explore SAMPLE command</button><button class="quiet-button" type="button" data-open-source>Connect one source</button></div>
+      </section>
+
+      <section class="scene is-active" id="scene-executive" data-scene="executive" aria-labelledby="executive-title">
+        <header class="scene-heading">
+          <div><p class="eyebrow">01 / Executive command</p><h1 id="executive-title">See the business through its systems.</h1><p>Reliability, journeys, AI work, cost, and revenue remain connected to the evidence that supports each conclusion.</p></div>
+          <div class="scene-posture"><span class="posture-orbit" aria-hidden="true"></span><div><span class="section-label">Current posture</span><strong>Attention required</strong><small>Based on SAMPLE and MODELED inputs</small></div></div>
+        </header>
+
+        <section class="outcome-grid" aria-labelledby="outcomes-title">
+          <h2 class="sr-only" id="outcomes-title">Business outcome summary</h2>
+          <article class="outcome-tile" data-outcome="revenue"><header><span>Revenue / currently at risk</span><span class="truth-badge truth-modeled">MODELED</span></header><strong>$184<span>k</span></strong><p><span class="delta delta-up">+ $41k</span> from checkout latency model</p><div class="microbar" aria-label="Modeled revenue risk, elevated"><span class="microbar-fill fill-68"></span></div></article>
+          <article class="outcome-tile" data-outcome="agents"><header><span>Cost / AI agent retries</span><span class="truth-badge truth-modeled">MODELED</span></header><strong>$12.4<span>k</span></strong><p><span class="delta delta-up">+ 18%</span> from policy-loop retries</p><div class="microbar" aria-label="Modeled AI retry cost, moderate"><span class="microbar-fill fill-54"></span></div></article>
+          <article class="outcome-tile" data-outcome="availability"><header><span>Service / critical journey availability</span><span class="truth-badge truth-sample">SAMPLE</span></header><strong>99.82<span>%</span></strong><p><span class="delta delta-down">−0.13 pts</span> against SAMPLE objective</p><div class="microbar" aria-label="99.82 percent sample availability"><span class="microbar-fill fill-82"></span></div></article>
+          <article class="outcome-tile" data-outcome="incidents"><header><span>Risk / material incidents</span><span class="truth-badge truth-sample">SAMPLE</span></header><strong>03<span>active</span></strong><p><span class="delta delta-neutral">1 contained</span> human approval retained</p><div class="microbar" aria-label="Three sample incidents"><span class="microbar-fill fill-36"></span></div></article>
+        </section>
+
+        <div class="executive-grid">
+          <section class="panel lattice-panel" aria-labelledby="lattice-title">
+            <header class="panel-header">
+              <div><p class="eyebrow">Signal Lattice</p><h2 id="lattice-title">System-to-outcome topology</h2></div>
+              <div class="segmented-control" role="group" aria-label="Filter signal lattice"><button type="button" data-lattice-filter="all" aria-pressed="true">All</button><button type="button" data-lattice-filter="service" aria-pressed="false">Services</button><button type="button" data-lattice-filter="journey" aria-pressed="false">Journeys</button><button type="button" data-lattice-filter="agent" aria-pressed="false">Agents</button></div>
+            </header>
+            <div class="lattice-stage">
+              <svg id="signal-lattice" viewBox="0 0 860 470" role="group" aria-labelledby="lattice-title" aria-describedby="lattice-instructions">
+                <defs><pattern id="lattice-grid-pattern" width="32" height="32" patternUnits="userSpaceOnUse"><path class="lattice-grid-line" d="M 32 0 L 0 0 0 32"></path></pattern><marker id="edge-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path class="edge-arrow" d="M0,0 L8,4 L0,8 Z"></path></marker></defs>
+                <rect class="lattice-grid-surface" width="860" height="470" fill="url(#lattice-grid-pattern)"></rect><g id="lattice-edges" aria-hidden="true"></g><g id="lattice-nodes"></g>
+              </svg>
+              <output class="lattice-preview" id="lattice-preview">Focus or point to a node for compact evidence.</output>
+              <div class="lattice-key" aria-hidden="true"><span class="key-service">Service</span><span class="key-journey">Journey</span><span class="key-agent">Agent</span><span class="key-outcome">Outcome</span></div>
+            </div>
+            <p class="interaction-hint" id="lattice-instructions">Select a node for its source, formula, truth label, and receipt. Use arrow keys to move through the lattice; Enter opens evidence.</p>
+            <details class="text-alternative"><summary>Open tabular lattice alternative</summary><div class="table-scroll" tabindex="0"><table><caption>Signal Lattice text alternative</caption><thead><tr><th scope="col">Node</th><th scope="col">Layer</th><th scope="col">State</th><th scope="col">Truth</th><th scope="col">Source</th></tr></thead><tbody>
+              <tr><th scope="row">API gateway</th><td>Service</td><td>Elevated latency</td><td>SAMPLE</td><td>OTLP evaluation fixture</td></tr><tr><th scope="row">Identity policy</th><td>Service</td><td>Nominal</td><td>SAMPLE</td><td>OTLP evaluation fixture</td></tr><tr><th scope="row">Checkout journey</th><td>Journey</td><td>Degraded</td><td>MODELED</td><td>Journey impact model</td></tr><tr><th scope="row">Support journey</th><td>Journey</td><td>Watching</td><td>SAMPLE</td><td>Evaluation fixture</td></tr><tr><th scope="row">Resolution agent</th><td>Agent</td><td>Retrying</td><td>SAMPLE</td><td>Agent trace fixture</td></tr><tr><th scope="row">Policy agent</th><td>Agent</td><td>Constrained</td><td>SAMPLE</td><td>Policy receipt fixture</td></tr><tr><th scope="row">Revenue at risk</th><td>Outcome</td><td>$184k</td><td>MODELED</td><td>Economic impact model</td></tr><tr><th scope="row">Retention pressure</th><td>Outcome</td><td>Moderate</td><td>MODELED</td><td>Journey impact model</td></tr>
+            </tbody></table></div></details>
+          </section>
+
+          <aside class="panel decision-stack" aria-labelledby="decision-title">
+            <header class="panel-header"><div><p class="eyebrow">Decision queue</p><h2 id="decision-title">What needs judgment</h2></div><span class="truth-badge truth-sample">SAMPLE</span></header>
+            <ol><li><button type="button" data-decision="checkout"><span class="decision-rank">01</span><span><strong>Protect checkout conversion</strong><small>Gateway p95 precedes modeled abandonment</small></span><span class="risk-high">High</span></button></li><li><button type="button" data-decision="agent"><span class="decision-rank">02</span><span><strong>Bound agent retry cost</strong><small>Policy loop consumed 18% more tokens</small></span><span class="risk-medium">Med</span></button></li><li><button type="button" data-decision="support"><span class="decision-rank">03</span><span><strong>Watch support containment</strong><small>Escalation evidence remains incomplete</small></span><span class="risk-watch">Watch</span></button></li></ol>
+            <p class="authority-note"><span aria-hidden="true">◇</span> Lyte recommends. A human remains the consequential authority.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="scene" id="scene-services" data-scene="services" aria-labelledby="services-title" hidden>
+        <header class="scene-heading compact-heading"><div><p class="eyebrow">02 / Service intelligence</p><h1 id="services-title">Read the system as a living dependency graph.</h1><p>Latency, errors, change events, ownership, and customer consequences occupy one inspectable service surface.</p></div><div class="scene-stat"><span class="truth-badge truth-sample">SAMPLE</span><strong>7 / 9</strong><small>services within objective</small></div></header>
+        <div class="scene-toolbar" role="group" aria-label="Filter services"><button type="button" data-service-filter="all" aria-pressed="true">All services <span>09</span></button><button type="button" data-service-filter="attention" aria-pressed="false">Needs attention <span>02</span></button><button type="button" data-service-filter="changed" aria-pressed="false">Recently changed <span>03</span></button></div>
+        <div class="service-layout">
+          <section class="panel service-map" aria-labelledby="service-map-title">
+            <header class="panel-header"><div><p class="eyebrow">Dependency field</p><h2 id="service-map-title">Critical path services</h2></div><span class="freshness">SAMPLE · 10:42:18 UTC</span></header>
+            <div class="service-cards">
+              <article class="service-card state-attention" data-service-state="attention changed"><div class="service-card-top"><span class="service-symbol">GW</span><span class="truth-badge truth-sample">SAMPLE</span></div><h3>API gateway</h3><p>Routes checkout, account, and agent traffic.</p><dl><div><dt>p95</dt><dd>612 ms</dd></div><div><dt>Error</dt><dd>2.8%</dd></div><div><dt>Owner</dt><dd>Edge</dd></div></dl><button type="button" data-inspect-node="gateway">Inspect service evidence</button></article>
+              <article class="service-card state-healthy" data-service-state="changed"><div class="service-card-top"><span class="service-symbol">ID</span><span class="truth-badge truth-sample">SAMPLE</span></div><h3>Identity policy</h3><p>Evaluates authentication and authorization.</p><dl><div><dt>p95</dt><dd>84 ms</dd></div><div><dt>Error</dt><dd>0.1%</dd></div><div><dt>Owner</dt><dd>Trust</dd></div></dl><button type="button" data-inspect-node="identity">Inspect service evidence</button></article>
+              <article class="service-card state-attention" data-service-state="attention"><div class="service-card-top"><span class="service-symbol">CK</span><span class="truth-badge truth-sample">SAMPLE</span></div><h3>Checkout core</h3><p>Prices, reserves, and commits customer orders.</p><dl><div><dt>p95</dt><dd>884 ms</dd></div><div><dt>Error</dt><dd>1.9%</dd></div><div><dt>Owner</dt><dd>Commerce</dd></div></dl><button type="button" data-inspect-node="checkout">Inspect journey evidence</button></article>
+              <article class="service-card state-healthy" data-service-state="changed"><div class="service-card-top"><span class="service-symbol">RC</span><span class="truth-badge truth-sample">SAMPLE</span></div><h3>Receipt ledger</h3><p>Preserves evidence and decision lineage.</p><dl><div><dt>p95</dt><dd>112 ms</dd></div><div><dt>Error</dt><dd>0.0%</dd></div><div><dt>Owner</dt><dd>Evidence</dd></div></dl><button type="button" data-receipt="rcpt-sample-8f21">Inspect receipt chain</button></article>
+            </div>
+          </section>
+          <aside class="panel change-rail" aria-labelledby="change-title"><header class="panel-header"><div><p class="eyebrow">Change correlation</p><h2 id="change-title">What moved first</h2></div></header><ol class="event-rail"><li><time>10:31</time><span><strong>gateway-config</strong><small>Timeout policy changed</small></span><span class="truth-badge truth-sample">SAMPLE</span></li><li><time>10:34</time><span><strong>checkout p95</strong><small>Threshold crossed</small></span><span class="truth-badge truth-sample">SAMPLE</span></li><li><time>10:37</time><span><strong>conversion model</strong><small>Risk estimate increased</small></span><span class="truth-badge truth-modeled">MODELED</span></li></ol></aside>
+        </div>
+      </section>
+
+      <section class="scene" id="scene-journeys" data-scene="journeys" aria-labelledby="journeys-title" hidden>
+        <header class="scene-heading compact-heading"><div><p class="eyebrow">03 / Journey intelligence</p><h1 id="journeys-title">Follow customer intent across service boundaries.</h1><p>Journey health stays traceable to steps, services, economic formulas, and the evidence coverage behind the model.</p></div><div class="scene-stat"><span class="truth-badge truth-modeled">MODELED</span><strong>$184k</strong><small>revenue currently at risk</small></div></header>
+        <section class="panel journey-canvas" aria-labelledby="journey-canvas-title">
+          <header class="panel-header"><div><p class="eyebrow">Checkout conversion</p><h2 id="journey-canvas-title">Journey pressure map</h2></div><div class="journey-score"><span>Health</span><strong>72</strong><small>/ 100 · MODELED</small></div></header>
+          <ol class="journey-steps" aria-label="Checkout journey steps"><li><button type="button" data-journey-step="discover" aria-pressed="true"><span class="step-index">01</span><span><strong>Discover</strong><small>Nominal</small></span><span class="step-state state-good">98</span></button></li><li><button type="button" data-journey-step="configure" aria-pressed="false"><span class="step-index">02</span><span><strong>Configure</strong><small>Watching</small></span><span class="step-state state-watch">88</span></button></li><li><button type="button" data-journey-step="checkout" aria-pressed="false"><span class="step-index">03</span><span><strong>Checkout</strong><small>Degraded</small></span><span class="step-state state-bad">61</span></button></li><li><button type="button" data-journey-step="activate" aria-pressed="false"><span class="step-index">04</span><span><strong>Activate</strong><small>Nominal</small></span><span class="step-state state-good">96</span></button></li></ol>
+          <div class="journey-detail" id="journey-detail" aria-live="polite"><div><span class="section-label">Selected step</span><h3 id="journey-step-name">Discover</h3><p id="journey-step-summary">Acquisition traffic enters through the product catalog with no modeled material impact.</p></div><dl><div><dt>Service</dt><dd id="journey-service">catalog-edge</dd></div><div><dt>Signal</dt><dd id="journey-signal">p95 146 ms</dd></div><div><dt>Outcome</dt><dd id="journey-outcome">No material impact</dd></div><div><dt>Truth</dt><dd><span class="truth-badge truth-sample" id="journey-truth">SAMPLE</span></dd></div></dl></div>
+        </section>
+        <div class="two-panel-grid">
+          <section class="panel formula-card" aria-labelledby="formula-title"><header class="panel-header"><div><p class="eyebrow">Economic formula</p><h2 id="formula-title">Revenue at risk</h2></div><span class="truth-badge truth-modeled">MODELED</span></header><code>affected_sessions × baseline_conversion × observed_delta × order_value</code><p>Every term is exposed. Missing baselines return <span class="truth-badge truth-unavailable">UNAVAILABLE</span>, never zero.</p><button type="button" data-decision="checkout">Inspect formula inputs</button></section>
+          <section class="panel coverage-card" aria-labelledby="coverage-title"><header class="panel-header"><div><p class="eyebrow">Evidence coverage</p><h2 id="coverage-title">Model support</h2></div><strong>75%</strong></header><ul><li><span>Service latency</span><span class="truth-badge truth-sample">SAMPLE</span></li><li><span>Session volume</span><span class="truth-badge truth-sample">SAMPLE</span></li><li><span>Order value</span><span class="truth-badge truth-sample">SAMPLE</span></li><li><span>Customer segment</span><span class="truth-badge truth-unavailable">UNAVAILABLE</span></li></ul></section>
+        </div>
+      </section>
+
+      <section class="scene" id="scene-agents" data-scene="agents" aria-labelledby="agents-title" hidden>
+        <header class="scene-heading compact-heading"><div><p class="eyebrow">04 / AI agent operations</p><h1 id="agents-title">Observe agent work without granting silent authority.</h1><p>Tool calls, policy decisions, retries, cost, handoffs, and human approvals stay on the same evidence plane.</p></div><div class="scene-stat"><span class="truth-badge truth-sample">SAMPLE</span><strong>94.1%</strong><small>policy-conformant runs</small></div></header>
+        <div class="agent-layout">
+          <section class="panel agent-fleet" aria-labelledby="agent-fleet-title"><header class="panel-header"><div><p class="eyebrow">Agent fleet</p><h2 id="agent-fleet-title">Active evaluation runs</h2></div><span class="freshness">SAMPLE · 12 runs</span></header>
+            <div class="agent-row agent-warning"><span class="agent-glyph" aria-hidden="true">R</span><span><strong>Resolution agent</strong><small>Incident triage · 4 tool calls</small></span><span><b>3 retries</b><small>$4.82 MODELED</small></span><span class="truth-badge truth-sample">SAMPLE</span><button type="button" data-inspect-node="resolution-agent">Inspect run</button></div>
+            <div class="agent-row"><span class="agent-glyph" aria-hidden="true">P</span><span><strong>Policy agent</strong><small>Authorization review · 7 gates</small></span><span><b>0 retries</b><small>$0.94 MODELED</small></span><span class="truth-badge truth-sample">SAMPLE</span><button type="button" data-inspect-node="policy-agent">Inspect run</button></div>
+            <div class="agent-row"><span class="agent-glyph" aria-hidden="true">C</span><span><strong>Cost analyst</strong><small>Variance explanation · 2 sources</small></span><span><b>1 retry</b><small>$1.18 MODELED</small></span><span class="truth-badge truth-sample">SAMPLE</span><button type="button" data-receipt="rcpt-sample-4c90">Inspect run</button></div>
+          </section>
+          <aside class="panel authority-rail" aria-labelledby="authority-title"><header class="panel-header"><div><p class="eyebrow">Authority boundary</p><h2 id="authority-title">Consequential action gate</h2></div></header><div class="authority-core"><span aria-hidden="true">◇</span><strong>Human approval required</strong><p>No evaluation agent can change production, customer, financial, legal, or security state.</p></div><ol><li class="is-complete"><span>01</span><p><strong>Evidence gathered</strong><small>SAMPLE trace set</small></p></li><li class="is-complete"><span>02</span><p><strong>Policy evaluated</strong><small>7 constraints passed</small></p></li><li class="is-current"><span>03</span><p><strong>Human review</strong><small>Awaiting named authority</small></p></li><li><span>04</span><p><strong>Action receipt</strong><small>Not created</small></p></li></ol></aside>
+        </div>
+        <section class="panel tool-trace" aria-labelledby="tool-trace-title"><header class="panel-header"><div><p class="eyebrow">Tool-call lineage</p><h2 id="tool-trace-title">Resolution agent / run sample-4b17</h2></div><span class="truth-badge truth-sample">SAMPLE</span></header><ol><li><time>10:38:12.041</time><span><b>read_service_health</b><small>gateway, checkout-core</small></span><em>ALLOW</em></li><li><time>10:38:12.284</time><span><b>query_receipts</b><small>incident sample-inc-204</small></span><em>ALLOW</em></li><li><time>10:38:12.631</time><span><b>propose_rollback</b><small>gateway-config sample-r17</small></span><em class="gate-review">REVIEW</em></li></ol></section>
+      </section>
+
+      <section class="scene" id="scene-incidents" data-scene="incidents" aria-labelledby="incidents-title" hidden>
+        <header class="scene-heading compact-heading"><div><p class="eyebrow">05 / Incident playback</p><h1 id="incidents-title">Replay what changed, what was known, and who decided.</h1><p>A source-bound timeline preserves system signals, customer impact, agent work, human judgment, and verification as separate events.</p></div><div class="scene-stat"><span class="truth-badge truth-sample">SAMPLE</span><strong>INC-204</strong><small>checkout latency</small></div></header>
+        <section class="panel playback" aria-labelledby="playback-title">
+          <header class="panel-header"><div><p class="eyebrow">Decision timeline</p><h2 id="playback-title">Incident INC-204</h2></div><div class="playback-controls"><button type="button" id="playback-toggle" aria-pressed="false"><span aria-hidden="true">▶</span><span>Play</span></button><output id="playback-position" for="incident-scrubber">10:31:04 · Change observed</output></div></header>
+          <label class="scrubber-label" for="incident-scrubber"><span>10:31</span><span>10:46</span></label><input id="incident-scrubber" type="range" min="0" max="4" step="1" value="0" aria-label="Incident playback time">
+          <ol class="playback-events"><li><button type="button" data-playback-index="0" aria-current="step"><time>10:31:04</time><span><strong>Change observed</strong><small>gateway timeout policy</small></span><span class="truth-badge truth-sample">SAMPLE</span></button></li><li><button type="button" data-playback-index="1"><time>10:34:19</time><span><strong>Service objective crossed</strong><small>checkout-core p95</small></span><span class="truth-badge truth-sample">SAMPLE</span></button></li><li><button type="button" data-playback-index="2"><time>10:37:42</time><span><strong>Business impact modeled</strong><small>conversion and revenue</small></span><span class="truth-badge truth-modeled">MODELED</span></button></li><li><button type="button" data-playback-index="3"><time>10:41:08</time><span><strong>Rollback proposed</strong><small>agent recommendation</small></span><span class="truth-badge truth-sample">SAMPLE</span></button></li><li><button type="button" data-playback-index="4"><time>10:46:55</time><span><strong>Recovery verified</strong><small>human-approved observation</small></span><span class="truth-badge truth-sample">SAMPLE</span></button></li></ol>
+          <div class="playback-detail" aria-live="polite"><span class="event-orbit" aria-hidden="true"></span><div><span class="section-label" id="playback-kind">SYSTEM CHANGE · SAMPLE</span><h3 id="playback-event-title">Gateway timeout policy changed</h3><p id="playback-event-copy">Evaluation fixture sample-r17 changed the upstream timeout from 800 ms to 400 ms. No production action is represented.</p></div><dl><div><dt>Source</dt><dd id="playback-source">GitHub fixture</dd></div><div><dt>Receipt</dt><dd id="playback-receipt">rcpt-sample-a031</dd></div></dl></div>
+        </section>
+        <div class="two-panel-grid"><section class="panel verification-card" aria-labelledby="verification-title"><header class="panel-header"><div><p class="eyebrow">Recovery proof</p><h2 id="verification-title">Verification stayed separate</h2></div><span class="truth-badge truth-sample">SAMPLE</span></header><dl><div><dt>Service p95</dt><dd>212 ms</dd></div><div><dt>Error rate</dt><dd>0.2%</dd></div><div><dt>Journey health</dt><dd>92 / 100 <small>MODELED</small></dd></div><div><dt>Human approver</dt><dd>Evaluation operator</dd></div></dl></section><section class="panel counterfactual-card" aria-labelledby="counterfactual-title"><header class="panel-header"><div><p class="eyebrow">Counterfactual</p><h2 id="counterfactual-title">If no action was taken</h2></div><span class="truth-badge truth-modeled">MODELED</span></header><p class="counterfactual-value">$263k <small>estimated revenue at risk over 4h</small></p><button type="button" data-decision="checkout">Inspect assumptions</button></section></div>
+      </section>
+
+      <section class="evidence-section" aria-labelledby="evidence-tape-title">
+        <header class="panel-header"><div><p class="eyebrow">Evidence receipt tape</p><h2 id="evidence-tape-title">Why the command surface says what it says</h2></div><a href="/.well-known/szl-source.json">Open build source document</a></header>
+        <ol class="evidence-tape"><li><button type="button" data-receipt="rcpt-sample-a031"><time>10:31:04</time><span><strong>Change receipt</strong><small>gateway-config</small></span><span class="truth-badge truth-sample">SAMPLE</span><code>a031…97cf</code></button></li><li><button type="button" data-receipt="rcpt-sample-8f21"><time>10:34:19</time><span><strong>Signal receipt</strong><small>checkout p95</small></span><span class="truth-badge truth-sample">SAMPLE</span><code>8f21…3ba2</code></button></li><li><button type="button" data-receipt="rcpt-model-bc77"><time>10:37:42</time><span><strong>Impact receipt</strong><small>revenue formula</small></span><span class="truth-badge truth-modeled">MODELED</span><code>bc77…10e4</code></button></li><li><button type="button" data-receipt="rcpt-sample-4c90"><time>10:41:08</time><span><strong>Decision receipt</strong><small>rollback proposal</small></span><span class="truth-badge truth-sample">SAMPLE</span><code>4c90…d131</code></button></li><li><button type="button" data-receipt="rcpt-sample-f129"><time>10:46:55</time><span><strong>Verification receipt</strong><small>recovery window</small></span><span class="truth-badge truth-sample">SAMPLE</span><code>f129…a64e</code></button></li></ol>
+      </section>
+    </main>
+
+    <aside class="evidence-rail" aria-label="Source, formula, and proof status">
+      <section class="rail-panel source-panel"><header><span class="section-label">Source posture</span><span class="status-light status-unknown" id="source-light" aria-hidden="true"></span></header><h2 id="rail-source-title">No live source verified</h2><p id="rail-source-copy">The interface is using clearly marked evaluation data while source identity is checked.</p><button class="rail-action" type="button" data-open-source>Inspect sources <span aria-hidden="true">→</span></button></section>
+      <section class="rail-panel"><header><span class="section-label">Formula registry</span><span class="truth-badge truth-modeled">MODELED</span></header><h2>Revenue at risk</h2><code>sessions × conversion Δ × order value</code><p>4 inputs · 3 SAMPLE · 1 UNAVAILABLE</p><button class="rail-action" type="button" data-decision="checkout">Open formula <span aria-hidden="true">→</span></button></section>
+      <section class="rail-panel"><header><span class="section-label">Proof coverage</span><strong>68%</strong></header><div class="coverage-ring" role="img" aria-label="Sample proof coverage 68 percent"><span>68<small>%</small></span></div><ul class="coverage-legend"><li><span class="legend-dot dot-sample"></span>SAMPLE evidence <b>7</b></li><li><span class="legend-dot dot-modeled"></span>MODELED outputs <b>3</b></li><li><span class="legend-dot dot-unavailable"></span>UNAVAILABLE fields <b>4</b></li></ul></section>
+      <section class="rail-panel truth-legend"><header><span class="section-label">Truth language</span></header><ul><li><span class="truth-badge truth-measured">MEASURED</span><span>Directly computed from identified evidence</span></li><li><span class="truth-badge truth-reported">REPORTED</span><span>Declared by an identified source</span></li><li><span class="truth-badge truth-sample">SAMPLE</span><span>Fictional evaluation fixture</span></li><li><span class="truth-badge truth-modeled">MODELED</span><span>Calculated estimate, never authority</span></li><li><span class="truth-badge truth-unavailable">UNAVAILABLE</span><span>Required evidence is absent</span></li></ul></section>
+      <section class="rail-panel command-prompt"><span class="section-label">Ask with evidence</span><p>What changed, who is affected, and what supports the recommendation?</p><button type="button" data-open-ask>Open Ask Lyte <span aria-hidden="true">↗</span></button></section>
+      <footer class="rail-footer"><a href="https://github.com/szl-holdings/lyte-services" rel="noopener">Source repository</a><a href="/api/build-info">Build identity</a></footer>
+    </aside>
+  </div>
+
+  <div class="drawer-scrim" id="drawer-scrim" hidden></div>
+  <aside class="detail-drawer" id="signal-drawer" role="dialog" aria-modal="false" aria-labelledby="drawer-title" aria-describedby="drawer-summary" hidden>
+    <header><div><p class="eyebrow" id="drawer-kicker">Signal evidence</p><h2 id="drawer-title">Signal detail</h2></div><button class="icon-button" id="drawer-close" type="button"><span class="sr-only">Close signal detail</span><span aria-hidden="true">×</span></button></header>
+    <div class="drawer-body"><span class="truth-badge truth-unavailable" id="drawer-truth">UNAVAILABLE</span><p id="drawer-summary">Select a signal to inspect its evidence.</p><dl><div><dt>Source</dt><dd id="drawer-source">UNAVAILABLE</dd></div><div><dt>Formula</dt><dd id="drawer-formula">UNAVAILABLE</dd></div><div><dt>Receipt</dt><dd id="drawer-receipt">UNAVAILABLE</dd></div><div><dt>Observed at</dt><dd id="drawer-observed">UNAVAILABLE</dd></div></dl><section><h3>Why it matters</h3><p id="drawer-impact">No evidence selected.</p></section></div>
+  </aside>
+
+  <dialog class="command-dialog" id="ask-dialog" aria-labelledby="ask-title">
+    <div class="dialog-shell">
+      <header><div><p class="eyebrow">Evidence-grounded command palette</p><h2 id="ask-title">Ask Lyte</h2></div><button class="icon-button" type="button" data-dialog-close="ask-dialog"><span class="sr-only">Close Ask Lyte</span><span aria-hidden="true">×</span></button></header>
+      <form id="ask-form"><label for="ask-input">Question for this workspace</label><div class="ask-field"><input id="ask-input" name="question" type="text" minlength="3" maxlength="600" required autocomplete="off" placeholder="What changed before checkout revenue risk increased?"><button type="submit">Ask with evidence</button></div><div class="prompt-chips" aria-label="Suggested questions"><button type="button" data-ask-prompt="What changed before checkout degraded?">What changed?</button><button type="button" data-ask-prompt="Which customers are modeled to be affected?">Who is affected?</button><button type="button" data-ask-prompt="What evidence supports the rollback recommendation?">Show the evidence</button></div></form>
+      <section class="ask-result" id="ask-result" aria-live="polite" aria-busy="false"><header><span class="truth-badge truth-unavailable" id="ask-truth">UNAVAILABLE</span><span id="ask-result-state">No answer requested</span></header><p id="ask-answer">Ask Lyte returns an answer, truth label, and source references when the API is available.</p><ul id="ask-sources"><li>No evidence references returned.</li></ul></section>
+      <footer><span>Ctrl/Command + K opens this palette</span><span>Esc closes</span></footer>
+    </div>
+  </dialog>
+
+  <dialog class="source-dialog" id="source-dialog" aria-labelledby="source-dialog-title">
+    <div class="dialog-shell"><header><div><p class="eyebrow">Source and revision status</p><h2 id="source-dialog-title">Evidence connections</h2></div><button class="icon-button" type="button" data-dialog-close="source-dialog"><span class="sr-only">Close source status</span><span aria-hidden="true">×</span></button></header><p class="dialog-intro">A reachable endpoint is not automatically a live data source. Each connection retains its own truth and availability state.</p><div class="source-list"><article><span class="source-icon" aria-hidden="true">GH</span><div><strong>GitHub Actions</strong><small id="github-source-copy">Read-only source not verified</small></div><span class="truth-badge truth-unavailable" id="github-source-truth">UNAVAILABLE</span></article><article><span class="source-icon" aria-hidden="true">OT</span><div><strong>OpenTelemetry</strong><small>Evaluation fixture only</small></div><span class="truth-badge truth-sample">SAMPLE</span></article><article><span class="source-icon" aria-hidden="true">CX</span><div><strong>Customer journey events</strong><small>Evaluation fixture only</small></div><span class="truth-badge truth-sample">SAMPLE</span></article><article><span class="source-icon" aria-hidden="true">$</span><div><strong>Economic baselines</strong><small>No live baseline configured</small></div><span class="truth-badge truth-unavailable">UNAVAILABLE</span></article></div><footer><a href="/api/lyte/v2/sources">Open source API</a><button type="button" data-dialog-close="source-dialog">Done</button></footer></div>
+  </dialog>
+
+  <div class="sr-only" id="app-live" role="status" aria-live="polite" aria-atomic="true"></div>
+  <noscript><div class="noscript-banner">Lyte requires JavaScript for the interactive lattice and command palette. The tabular evidence alternative remains available above.</div></noscript>
+</body>
+</html>

@@ -1,0 +1,1411 @@
+{
+  "artifact_generation": {
+    "canonical_artifact": "artifacts/benchmarks/lyte-benchmark.json",
+    "derived_artifacts": [
+      "artifacts/benchmarks/lyte-benchmark.md",
+      "artifacts/benchmarks/lyte-capability-matrix.csv"
+    ],
+    "generated_from_one_in_memory_document": true,
+    "secret_values_recorded": false
+  },
+  "benchmark_version": "1.0.0",
+  "environment": {
+    "architecture": "AMD64",
+    "browser_name": "Edg/152.0.4191.66",
+    "browser_revision": "@cc2931e6363af1d70882ad63ee33b0e8cd524de0",
+    "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+    "database_backend": "SQLite file",
+    "http_execution": "FastAPI TestClient in process",
+    "logical_cpu_count": 16,
+    "operating_system": "Windows",
+    "operating_system_release": "11",
+    "processor": "Intel64 Family 6 Model 197 Stepping 2, GenuineIntel",
+    "python_implementation": "CPython",
+    "python_version": "3.12.10",
+    "sqlite_version": "3.49.1"
+  },
+  "fixture": {
+    "contains_production_data": false,
+    "contains_vendor_output": false,
+    "data_mode": "SAMPLE",
+    "id": "checkout-observability-v1",
+    "license": "CC0-1.0",
+    "path": "benchmarks/observability/fixtures/checkout-observability-v1.json",
+    "schema": "szl.lyte.open-observability-fixture/v1",
+    "sha256": "bf35189a0845adb7ba8d5fe2c6599432debfa10a47ff0a52aea64e798a50ef59",
+    "version": "1.0.0"
+  },
+  "generated_at": "2026-09-08T04:25:20.379371Z",
+  "methodology": {
+    "comparison_scope": "Lyte is evaluated against committed open acceptance gates. No external vendor runtime or proprietary dataset was exercised.",
+    "exact_command": "'C:\\Users\\steph\\Documents\\Codex\\2026-09-04\\get-this-fuully-oeprational-and-real\\work\\lyte-services\\.venv\\Scripts\\python.exe' -m benchmarks.observability.run_benchmark --source-revision f7b6d012c83c2c5fcbe83565bd999af860f5280f --working-tree-state clean --browser-evidence 'artifacts\\benchmarks\\browser\\lyte-ui-responsive.json' --output-dir 'artifacts\\benchmarks'",
+    "ingest_batches": 20,
+    "mode": "vendor-neutral open-fixture measurement",
+    "percentile_method": "nearest_rank",
+    "query_iterations": 30,
+    "query_warmups": 5,
+    "result_label_policy": {
+      "DOCUMENTED_DIFFERENCE": "A cited capability differs, but no performance conclusion was measured.",
+      "MEASURED_ADVANTAGE": "Reserved for a comparable external system measured with the same fixture, protocol, environment, and hardware; this runner does not assign it.",
+      "MEASURED_GAP": "The measured result does not satisfy its predeclared open acceptance gate.",
+      "MEASURED_PARITY": "The measured result satisfies its predeclared open acceptance gate.",
+      "NOT_TESTED": "The procedure is defined and runnable, but it was not executed in this run.",
+      "UNAVAILABLE": "The required evidence could not be obtained; no numeric zero or pass may be substituted."
+    },
+    "spans_per_batch": 10,
+    "targets_declared_before_run": true,
+    "targets_path": "benchmarks/observability/targets.json",
+    "targets_sha256": "459f77b23daf658082a280fbef16d542e655b5cebf0a5598c2fda4c5398c05de",
+    "targets_version": "1.0.0",
+    "workflow_iterations": 5,
+    "working_directory": "repository root"
+  },
+  "overall_limitations": [
+    "This is a local in-process benchmark over an explicitly SAMPLE fixture; it is not a production load test.",
+    "SQLite results do not establish PostgreSQL, distributed, container, or hosted-service performance.",
+    "No external vendor runtime was tested, so this report makes no comparative superiority claim.",
+    "Browser evidence covers the recorded Chromium build and declared viewports; other browser engines are not inferred.",
+    "Host background load was not isolated; raw samples are retained so another environment can rerun the same protocol.",
+    "When working_tree_state is modified or unknown, the source revision identifies the baseline only and does not bind uncommitted changes."
+  ],
+  "results": [
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "p95",
+          "unit": "ms",
+          "value": 2000.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Time to first source",
+      "evidence": [
+        "benchmarks/observability/fixtures/checkout-observability-v1.json",
+        "lyte/demo.py",
+        "lyte/api/routes_entities.py",
+        "lyte/api/routes_ask.py"
+      ],
+      "id": "time_to_first_source",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry."
+      ],
+      "measurement": {
+        "boundary": "timer starts before application lifespan startup and stops after a non-empty source catalog is validated",
+        "statistic": "p95",
+        "summary": {
+          "count": 5,
+          "maximum_ms": 1427.3603,
+          "median_ms": 97.272,
+          "minimum_ms": 93.075,
+          "p95_ms": 1427.3603,
+          "p99_ms": 1427.3603,
+          "percentile_method": "nearest_rank"
+        },
+        "unit": "ms",
+        "value": 1427.3603
+      },
+      "raw_measurements": {
+        "elapsed_ms": [
+          1427.3603,
+          133.0542,
+          97.272,
+          93.075,
+          93.5843
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "p95",
+          "unit": "ms",
+          "value": 2500.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Time to first useful service view",
+      "evidence": [
+        "benchmarks/observability/fixtures/checkout-observability-v1.json",
+        "lyte/demo.py",
+        "lyte/api/routes_entities.py",
+        "lyte/api/routes_ask.py"
+      ],
+      "id": "time_to_first_useful_service_view",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry."
+      ],
+      "measurement": {
+        "boundary": "timer starts before application lifespan startup and stops after checkout-api detail is validated",
+        "statistic": "p95",
+        "summary": {
+          "count": 5,
+          "maximum_ms": 1446.2307,
+          "median_ms": 117.1762,
+          "minimum_ms": 110.4427,
+          "p95_ms": 1446.2307,
+          "p99_ms": 1446.2307,
+          "percentile_method": "nearest_rank"
+        },
+        "unit": "ms",
+        "value": 1446.2307
+      },
+      "raw_measurements": {
+        "elapsed_ms": [
+          1446.2307,
+          197.433,
+          117.1762,
+          111.2884,
+          110.4427
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "p95",
+          "unit": "ms",
+          "value": 1000.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Time to map a service to a business outcome",
+      "evidence": [
+        "benchmarks/observability/fixtures/checkout-observability-v1.json",
+        "lyte/demo.py",
+        "lyte/api/routes_entities.py",
+        "lyte/api/routes_ask.py"
+      ],
+      "id": "time_to_map_service_to_business_outcome",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry."
+      ],
+      "measurement": {
+        "boundary": "timer covers journey and outcome retrieval plus bidirectional service/journey/outcome ID validation",
+        "statistic": "p95",
+        "summary": {
+          "count": 5,
+          "maximum_ms": 19.9144,
+          "median_ms": 9.022,
+          "minimum_ms": 8.3822,
+          "p95_ms": 19.9144,
+          "p99_ms": 19.9144,
+          "percentile_method": "nearest_rank"
+        },
+        "unit": "ms",
+        "value": 19.9144
+      },
+      "raw_measurements": {
+        "elapsed_ms": [
+          19.9144,
+          12.0947,
+          8.3822,
+          8.639,
+          9.022
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "p95",
+          "unit": "ms",
+          "value": 1000.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Time to explain an incident with evidence",
+      "evidence": [
+        "benchmarks/observability/fixtures/checkout-observability-v1.json",
+        "lyte/demo.py",
+        "lyte/api/routes_entities.py",
+        "lyte/api/routes_ask.py"
+      ],
+      "id": "time_to_explain_incident_with_evidence",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry."
+      ],
+      "measurement": {
+        "boundary": "timer covers incident retrieval and deterministic Ask Lyte response validation for citations and no causal claim",
+        "statistic": "p95",
+        "summary": {
+          "count": 5,
+          "maximum_ms": 17.1948,
+          "median_ms": 9.9888,
+          "minimum_ms": 9.1099,
+          "p95_ms": 17.1948,
+          "p99_ms": 17.1948,
+          "percentile_method": "nearest_rank"
+        },
+        "unit": "ms",
+        "value": 17.1948
+      },
+      "raw_measurements": {
+        "elapsed_ms": [
+          17.1948,
+          10.7874,
+          9.1099,
+          9.3987,
+          9.9888
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "p95",
+          "unit": "ms",
+          "value": 1000.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Time to replay a decision",
+      "evidence": [
+        "benchmarks/observability/fixtures/checkout-observability-v1.json",
+        "lyte/demo.py",
+        "lyte/api/routes_entities.py",
+        "lyte/api/routes_ask.py"
+      ],
+      "id": "time_to_replay_decision",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry."
+      ],
+      "measurement": {
+        "boundary": "timer covers decision and playback retrieval plus evidence and non-execution validation",
+        "statistic": "p95",
+        "summary": {
+          "count": 5,
+          "maximum_ms": 9.2661,
+          "median_ms": 8.4689,
+          "minimum_ms": 7.097,
+          "p95_ms": 9.2661,
+          "p99_ms": 9.2661,
+          "percentile_method": "nearest_rank"
+        },
+        "unit": "ms",
+        "value": 9.2661
+      },
+      "raw_measurements": {
+        "elapsed_ms": [
+          9.1431,
+          9.2661,
+          8.4689,
+          7.097,
+          7.6433
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "gte",
+          "statistic": "coverage",
+          "unit": "percent",
+          "value": 100.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Receipt completeness",
+      "evidence": [
+        "lyte/api/responses.py",
+        "lyte/api/routes_health.py",
+        "lyte/domain/receipts.py",
+        "runtime API responses from the open fixture"
+      ],
+      "id": "receipt_completeness",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry.",
+        "artifacts are evaluated after ingest"
+      ],
+      "measurement": {
+        "denominator": 294,
+        "numerator": 294,
+        "statistic": "coverage",
+        "unit": "percent",
+        "value": 100.0
+      },
+      "raw_measurements": {
+        "append_only_declared": true,
+        "chain_head": "d7b6245c6ee88fab34767dd7c13a160579277ee090f271120be3f4d009f6a5b5",
+        "checks_per_receipt": 14,
+        "denominator": 294,
+        "missing_or_invalid": [],
+        "numerator": 294,
+        "percentage": 100.0,
+        "receipt_count": 21
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "gte",
+          "statistic": "coverage",
+          "unit": "percent",
+          "value": 100.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Truth-label completeness",
+      "evidence": [
+        "lyte/api/responses.py",
+        "lyte/api/routes_health.py",
+        "lyte/domain/receipts.py",
+        "runtime API responses from the open fixture"
+      ],
+      "id": "truth_label_completeness",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry.",
+        "only explicitly enumerated benchmark response contract points are in the denominator"
+      ],
+      "measurement": {
+        "denominator": 111,
+        "numerator": 111,
+        "statistic": "coverage",
+        "unit": "percent",
+        "value": 100.0
+      },
+      "raw_measurements": {
+        "contract": "explicit response, record, body, indicator, citation, and formula points",
+        "denominator": 111,
+        "invalid_labels": [],
+        "missing_paths": [],
+        "numerator": 111,
+        "observed_product_truth_labels": {
+          "MEASURED": 3,
+          "MODELED": 6,
+          "REPORTED": 22,
+          "ROADMAP": 1,
+          "SAMPLE": 78,
+          "UNAVAILABLE": 1
+        },
+        "percentage": 100.0
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "gte",
+          "statistic": "coverage",
+          "unit": "percent",
+          "value": 100.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Source-binding completeness",
+      "evidence": [
+        "lyte/api/responses.py",
+        "lyte/api/routes_health.py",
+        "lyte/domain/receipts.py",
+        "runtime API responses from the open fixture"
+      ],
+      "id": "source_binding_completeness",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry.",
+        "the exact source revision is injected into the isolated test runtime and does not prove a deployed artifact"
+      ],
+      "measurement": {
+        "denominator": 17,
+        "numerator": 17,
+        "statistic": "coverage",
+        "unit": "percent",
+        "value": 100.0
+      },
+      "raw_measurements": {
+        "checks": {
+          "bindings_agree": true,
+          "build_repository_canonical": true,
+          "build_revision_exact": true,
+          "build_state_observed": true,
+          "build_truth_measured": true,
+          "effectors_disabled": true,
+          "evidence_source_present": true,
+          "hub_surface_canonical": true,
+          "human_approval_required": true,
+          "invalid_sources_empty": true,
+          "one_distinct_revision": true,
+          "product_repository_canonical": true,
+          "product_revision_exact": true,
+          "runtime_repository_canonical": true,
+          "runtime_source_revision_exact": true,
+          "source_repository_canonical": true,
+          "source_revision_exact": true
+        },
+        "denominator": 17,
+        "expected_revision": "f7b6d012c83c2c5fcbe83565bd999af860f5280f",
+        "missing_or_mismatched": [],
+        "numerator": 17,
+        "observed_revision": "f7b6d012c83c2c5fcbe83565bd999af860f5280f",
+        "percentage": 100.0
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "p95",
+          "unit": "ms",
+          "value": 100.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Query latency",
+      "evidence": [
+        "lyte/api/routes_entities.py",
+        "runtime API responses from the open fixture"
+      ],
+      "id": "query_latency",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry."
+      ],
+      "measurement": {
+        "route": "/api/lyte/v2/services/checkout-api",
+        "statistic": "p95",
+        "summary": {
+          "count": 30,
+          "maximum_ms": 5.5114,
+          "median_ms": 3.2649,
+          "minimum_ms": 1.9917,
+          "p95_ms": 5.3242,
+          "p99_ms": 5.5114,
+          "percentile_method": "nearest_rank"
+        },
+        "unit": "ms",
+        "value": 5.3242
+      },
+      "raw_measurements": {
+        "elapsed_ms": [
+          3.6625,
+          4.013,
+          3.2649,
+          2.5439,
+          3.9997,
+          3.7633,
+          2.7192,
+          2.2513,
+          4.2558,
+          3.1165,
+          2.8557,
+          2.1935,
+          2.0861,
+          2.0032,
+          2.4495,
+          5.3242,
+          3.7357,
+          3.3476,
+          3.9903,
+          5.5114,
+          3.0105,
+          3.5731,
+          3.9921,
+          2.5343,
+          1.9917,
+          3.7369,
+          3.4537,
+          2.1944,
+          2.4416,
+          4.7322
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "gte",
+          "statistic": "rate",
+          "unit": "records/s",
+          "value": 100.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Ingest throughput",
+      "evidence": [
+        "benchmarks/observability/fixtures/checkout-observability-v1.json",
+        "lyte/connectors/otlp_http.py",
+        "lyte/api/routes_ingest.py"
+      ],
+      "id": "ingest_throughput",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry."
+      ],
+      "measurement": {
+        "accepted_batches": 20,
+        "accepted_records": 200,
+        "elapsed_seconds": 0.2961026,
+        "payload_bytes": 81060,
+        "rejected_batches": 0,
+        "statistic": "accepted_records / summed_request_elapsed_seconds",
+        "unit": "records/s",
+        "value": 675.441553
+      },
+      "raw_measurements": {
+        "rejected_batches": [],
+        "request_elapsed_ms": [
+          22.1502,
+          13.7127,
+          15.8476,
+          13.4449,
+          13.8289,
+          15.6016,
+          14.3558,
+          14.0038,
+          14.0372,
+          14.4005,
+          13.4923,
+          14.726,
+          14.7565,
+          14.1269,
+          13.1024,
+          16.0854,
+          14.4302,
+          14.0774,
+          15.1033,
+          14.819
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "rate",
+          "unit": "bytes/record",
+          "value": 32768.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Storage growth",
+      "evidence": [
+        "temporary SQLite benchmark database",
+        "lyte/persistence/models.py"
+      ],
+      "id": "storage_growth",
+      "limitations": [
+        "In-process FastAPI TestClient and local SQLite are measured; network, proxy, and PostgreSQL costs are excluded.",
+        "The dataset is the public synthetic SAMPLE fixture, not production telemetry.",
+        "SQLite page allocation and receipt/projection overhead are included; PostgreSQL storage behavior is not inferred."
+      ],
+      "measurement": {
+        "baseline_bytes": 286720,
+        "delta_bytes": 413696,
+        "final_bytes": 700416,
+        "record_count": 200,
+        "statistic": "database file delta / accepted normalized spans",
+        "unit": "bytes/record",
+        "value": 2068.48
+      },
+      "raw_measurements": {
+        "accepted_records": 200,
+        "baseline_bytes": 286720,
+        "delta_bytes": 413696,
+        "final_bytes": 700416
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "eq",
+          "statistic": "all_declared_sequences",
+          "unit": "completed",
+          "value": 1.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "UI keyboard completion",
+      "evidence": [
+        "C:\\Users\\steph\\Documents\\Codex\\2026-09-04\\get-this-fuully-oeprational-and-real\\work\\lyte-services\\artifacts\\benchmarks\\browser\\lyte-ui-responsive.json",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-320x568.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-375x812.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-430x932.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-768x1024.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1024x768.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1440x900.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1920x1080.png"
+      ],
+      "id": "ui_keyboard_completion",
+      "limitations": [
+        "This run covers one Chromium implementation; Safari and Firefox are not inferred.",
+        "Forced-colors and reduced-motion support remain separately checked by static contract tests unless those OS preferences are active for this browser run.",
+        "Screenshots contain the public SAMPLE / MODELED scenario and no customer telemetry."
+      ],
+      "measurement": {
+        "browser": "Edg/152.0.4191.66",
+        "statistic": "all_declared_sequences",
+        "unit": "completed",
+        "value": 1.0,
+        "viewport": {
+          "height": 900,
+          "width": 1440
+        }
+      },
+      "raw_measurements": {
+        "completed": true,
+        "focus_order": [
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "a",
+            "text": "Skip to command workspace"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "a",
+            "text": "L Y LYTE Business observability"
+          },
+          {
+            "id": "source-button",
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "MEASURED No live data source Build f7b6d012c83c"
+          },
+          {
+            "id": "ask-open",
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "Ask Lyte Ctrl K"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": "executive",
+            "tag": "button",
+            "text": "01 Executive Command Outcome posture"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": "services",
+            "tag": "button",
+            "text": "02 Service Intelligence System behavior"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": "journeys",
+            "tag": "button",
+            "text": "03 Journey Intelligence Customer impact"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": "agents",
+            "tag": "button",
+            "text": "04 AI Agent Operations Tools and policy"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": "incidents",
+            "tag": "button",
+            "text": "05 Incident Playback Decision timeline"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": "services",
+            "tag": "button",
+            "text": "Explore SAMPLE command"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "Connect one source"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "article",
+            "text": "Revenue / currently at risk MODELED $184k + $41k from checkout latency model"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "article",
+            "text": "Cost / AI agent retries MODELED $12.4k + 18% from policy-loop retries"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "article",
+            "text": "Service / critical journey availability SAMPLE 99.82% −0.13 pts against SAMPLE objective"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "article",
+            "text": "Risk / material incidents SAMPLE 03active 1 contained human approval retained"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "All"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "Services"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "Journeys"
+          },
+          {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "Agents"
+          },
+          {
+            "id": null,
+            "nodeId": "gateway",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "API gateway, service, Elevated latency, truth SAMPLE. Open evidence."
+          },
+          {
+            "id": null,
+            "nodeId": "identity",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "Identity policy, service, Nominal, truth SAMPLE. Open evidence."
+          },
+          {
+            "id": null,
+            "nodeId": "checkout",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "Checkout journey, journey, Degraded, truth MODELED. Open evidence."
+          },
+          {
+            "id": null,
+            "nodeId": "support",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "Support journey, journey, Watching, truth SAMPLE. Open evidence."
+          },
+          {
+            "id": null,
+            "nodeId": "policy-agent",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "Policy agent, agent, Constrained, truth SAMPLE. Open evidence."
+          },
+          {
+            "id": null,
+            "nodeId": "resolution-agent",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "Resolution agent, agent, Retrying, truth SAMPLE. Open evidence."
+          }
+        ],
+        "required_sequence": [
+          "Tab through global controls and scene navigation",
+          "Enter on every operating lens",
+          "ArrowRight between visible Signal Lattice nodes",
+          "Enter to inspect focused node",
+          "Escape to close evidence drawer",
+          "Enter and Escape on Ask Lyte dialog"
+        ],
+        "steps": [
+          {
+            "name": "activate all five operating lenses with Enter",
+            "observed": {
+              "agents": true,
+              "executive": true,
+              "incidents": true,
+              "journeys": true,
+              "services": true
+            },
+            "passed": true
+          },
+          {
+            "name": "move between lattice nodes with ArrowRight",
+            "observed": {
+              "after": {
+                "id": null,
+                "nodeId": "checkout",
+                "sceneTarget": null,
+                "tag": "g",
+                "text": "Checkout journey, journey, Degraded, truth MODELED. Open evidence."
+              },
+              "before": {
+                "id": null,
+                "nodeId": "gateway",
+                "sceneTarget": null,
+                "tag": "g",
+                "text": "API gateway, service, Elevated latency, truth SAMPLE. Open evidence."
+              }
+            },
+            "passed": true
+          },
+          {
+            "name": "open focused lattice evidence with Enter",
+            "observed": {
+              "drawerOpen": true
+            },
+            "passed": true
+          },
+          {
+            "name": "close lattice evidence with Escape",
+            "observed": {
+              "drawerClosed": true,
+              "focus": {
+                "id": null,
+                "nodeId": null,
+                "sceneTarget": null,
+                "tag": "body",
+                "text": "Skip to command workspace L Y LYTE Business observability Connect system behavior to economic outcome MEASURED No live d"
+              }
+            },
+            "passed": true
+          },
+          {
+            "name": "open Ask Lyte dialog with Enter",
+            "observed": {
+              "dialogOpen": true
+            },
+            "passed": true
+          },
+          {
+            "name": "close Ask Lyte dialog with Escape",
+            "observed": {
+              "dialogClosed": true,
+              "focus": {
+                "id": "ask-open",
+                "nodeId": null,
+                "sceneTarget": null,
+                "tag": "button",
+                "text": "Ask Lyte Ctrl K"
+              }
+            },
+            "passed": true
+          },
+          {
+            "name": "Tab reaches navigation and a global command",
+            "observed": {
+              "globalCommandReached": true,
+              "navigationReached": true
+            },
+            "passed": true
+          }
+        ],
+        "viewport": {
+          "height": 900,
+          "width": 1440
+        }
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "eq",
+          "statistic": "maximum",
+          "unit": "overflow_px",
+          "value": 0.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Mobile overflow",
+      "evidence": [
+        "C:\\Users\\steph\\Documents\\Codex\\2026-09-04\\get-this-fuully-oeprational-and-real\\work\\lyte-services\\artifacts\\benchmarks\\browser\\lyte-ui-responsive.json",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-320x568.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-375x812.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-430x932.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-768x1024.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1024x768.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1440x900.png",
+        "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1920x1080.png"
+      ],
+      "id": "mobile_overflow",
+      "limitations": [
+        "This run covers one Chromium implementation; Safari and Firefox are not inferred.",
+        "Forced-colors and reduced-motion support remain separately checked by static contract tests unless those OS preferences are active for this browser run.",
+        "Screenshots contain the public SAMPLE / MODELED scenario and no customer telemetry."
+      ],
+      "measurement": {
+        "browser": "Edg/152.0.4191.66",
+        "statistic": "maximum",
+        "unit": "overflow_px",
+        "value": 0.0,
+        "viewport_count": 7
+      },
+      "raw_measurements": {
+        "local_assets_only": true,
+        "viewports": [
+          {
+            "activeScene": "executive",
+            "bodyClientWidth": 320,
+            "bodyScrollWidth": 320,
+            "documentClientWidth": 320,
+            "documentScrollWidth": 320,
+            "externalResources": [],
+            "forcedColorsQuery": false,
+            "height": 568,
+            "horizontalOverflowPx": 0,
+            "innerHeight": 568,
+            "innerWidth": 320,
+            "passed": true,
+            "reducedMotionQuery": false,
+            "rightmostRenderedPixel": 857.531,
+            "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-320x568.png",
+            "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+            "visibleTruthLabels": [
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MEASURED",
+              "REPORTED",
+              "SAMPLE",
+              "MODELED",
+              "UNAVAILABLE"
+            ],
+            "width": 320
+          },
+          {
+            "activeScene": "executive",
+            "bodyClientWidth": 375,
+            "bodyScrollWidth": 375,
+            "documentClientWidth": 375,
+            "documentScrollWidth": 375,
+            "externalResources": [],
+            "forcedColorsQuery": false,
+            "height": 812,
+            "horizontalOverflowPx": 0,
+            "innerHeight": 812,
+            "innerWidth": 375,
+            "passed": true,
+            "reducedMotionQuery": false,
+            "rightmostRenderedPixel": 857.531,
+            "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-375x812.png",
+            "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+            "visibleTruthLabels": [
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MEASURED",
+              "REPORTED",
+              "SAMPLE",
+              "MODELED",
+              "UNAVAILABLE"
+            ],
+            "width": 375
+          },
+          {
+            "activeScene": "executive",
+            "bodyClientWidth": 430,
+            "bodyScrollWidth": 430,
+            "documentClientWidth": 430,
+            "documentScrollWidth": 430,
+            "externalResources": [],
+            "forcedColorsQuery": false,
+            "height": 932,
+            "horizontalOverflowPx": 0,
+            "innerHeight": 932,
+            "innerWidth": 430,
+            "passed": true,
+            "reducedMotionQuery": false,
+            "rightmostRenderedPixel": 857.531,
+            "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-430x932.png",
+            "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+            "visibleTruthLabels": [
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MEASURED",
+              "REPORTED",
+              "SAMPLE",
+              "MODELED",
+              "UNAVAILABLE"
+            ],
+            "width": 430
+          },
+          {
+            "activeScene": "executive",
+            "bodyClientWidth": 753,
+            "bodyScrollWidth": 753,
+            "documentClientWidth": 753,
+            "documentScrollWidth": 753,
+            "externalResources": [],
+            "forcedColorsQuery": false,
+            "height": 1024,
+            "horizontalOverflowPx": 0,
+            "innerHeight": 1024,
+            "innerWidth": 768,
+            "passed": true,
+            "reducedMotionQuery": false,
+            "rightmostRenderedPixel": 862.5,
+            "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-768x1024.png",
+            "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+            "visibleTruthLabels": [
+              "MEASURED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MEASURED",
+              "REPORTED",
+              "SAMPLE",
+              "MODELED",
+              "UNAVAILABLE"
+            ],
+            "width": 768
+          },
+          {
+            "activeScene": "executive",
+            "bodyClientWidth": 1009,
+            "bodyScrollWidth": 1009,
+            "documentClientWidth": 1009,
+            "documentScrollWidth": 1009,
+            "externalResources": [],
+            "forcedColorsQuery": false,
+            "height": 768,
+            "horizontalOverflowPx": 0,
+            "innerHeight": 768,
+            "innerWidth": 1024,
+            "passed": true,
+            "reducedMotionQuery": false,
+            "rightmostRenderedPixel": 1009,
+            "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1024x768.png",
+            "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+            "visibleTruthLabels": [
+              "MEASURED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MEASURED",
+              "REPORTED",
+              "SAMPLE",
+              "MODELED",
+              "UNAVAILABLE"
+            ],
+            "width": 1024
+          },
+          {
+            "activeScene": "executive",
+            "bodyClientWidth": 1425,
+            "bodyScrollWidth": 1425,
+            "documentClientWidth": 1425,
+            "documentScrollWidth": 1425,
+            "externalResources": [],
+            "forcedColorsQuery": false,
+            "height": 900,
+            "horizontalOverflowPx": 0,
+            "innerHeight": 900,
+            "innerWidth": 1440,
+            "passed": true,
+            "reducedMotionQuery": false,
+            "rightmostRenderedPixel": 1425,
+            "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1440x900.png",
+            "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+            "visibleTruthLabels": [
+              "MEASURED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MEASURED",
+              "REPORTED",
+              "SAMPLE",
+              "MODELED",
+              "UNAVAILABLE"
+            ],
+            "width": 1440
+          },
+          {
+            "activeScene": "executive",
+            "bodyClientWidth": 1905,
+            "bodyScrollWidth": 1905,
+            "documentClientWidth": 1905,
+            "documentScrollWidth": 1905,
+            "externalResources": [],
+            "forcedColorsQuery": false,
+            "height": 1080,
+            "horizontalOverflowPx": 0,
+            "innerHeight": 1080,
+            "innerWidth": 1920,
+            "passed": true,
+            "reducedMotionQuery": false,
+            "rightmostRenderedPixel": 1905,
+            "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1920x1080.png",
+            "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+            "visibleTruthLabels": [
+              "MEASURED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "SAMPLE",
+              "SAMPLE",
+              "MODELED",
+              "MEASURED",
+              "REPORTED",
+              "SAMPLE",
+              "MODELED",
+              "UNAVAILABLE"
+            ],
+            "width": 1920
+          }
+        ]
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "lte",
+          "statistic": "total",
+          "unit": "gzip_bytes",
+          "value": 300000.0
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Bundle size",
+      "evidence": [
+        "lyte/ui/index.html",
+        "lyte/ui/styles.css",
+        "lyte/ui/app.js"
+      ],
+      "id": "bundle_size",
+      "limitations": [
+        "Dependency closure and container image layers are outside this frontend bundle scope."
+      ],
+      "measurement": {
+        "raw_bytes": 130882,
+        "scope": "first-party frontend HTML, CSS, and JavaScript; dependencies and container excluded",
+        "statistic": "total",
+        "unit": "gzip_bytes",
+        "value": 29353
+      },
+      "raw_measurements": {
+        "compression": "gzip level 9 with mtime=0",
+        "files": [
+          {
+            "gzip_bytes": 8725,
+            "path": "lyte/ui/index.html",
+            "raw_bytes": 36882,
+            "sha256": "b96651f2869438f4c0fa51642f322f52cb60768bab0474b9922c4a0007128830"
+          },
+          {
+            "gzip_bytes": 9707,
+            "path": "lyte/ui/styles.css",
+            "raw_bytes": 50982,
+            "sha256": "5642f6bd265f528602e9e5c661dda6844f87923c652f1f716964eb2843717176"
+          },
+          {
+            "gzip_bytes": 10921,
+            "path": "lyte/ui/app.js",
+            "raw_bytes": 43018,
+            "sha256": "e2ec0964bac69f9ea582c50620bf0071e41c83b173609a9a63cf4fbe9465eb32"
+          }
+        ],
+        "gzip_bytes": 29353,
+        "raw_bytes": 130882,
+        "scope": "first-party frontend HTML, CSS, and JavaScript; dependencies and container excluded"
+      },
+      "result_label": "MEASURED_PARITY"
+    },
+    {
+      "comparison_basis": {
+        "external_vendor_baseline": "NOT_TESTED",
+        "kind": "OPEN_ACCEPTANCE_GATE",
+        "target": {
+          "operator": "all_lte",
+          "statistic": "process_workload",
+          "unit": "mixed",
+          "values": {
+            "cpu_time_seconds": 20.0,
+            "peak_rss_bytes": 536870912.0,
+            "wall_time_seconds": 60.0
+          }
+        }
+      },
+      "comparison_subject": "predeclared open Lyte acceptance gate",
+      "dimension": "Resource consumption",
+      "evidence": [
+        "operating-system process counters",
+        "Python process_time and perf_counter"
+      ],
+      "id": "resource_consumption",
+      "limitations": [
+        "Peak RSS is process-lifetime high-water memory, not an isolated per-request sample.",
+        "CPU and wall time include benchmark orchestration, application startup, queries, and ingest; host background load is not controlled.",
+        "Container and whole-host resources are not inferred from this process measurement."
+      ],
+      "measurement": {
+        "cpu_time_seconds": 1.28125,
+        "measurement_boundary": "one runner process including fixture startup repetitions, query workload, OTLP ingest, SQLite persistence, and artifact preparation",
+        "peak_rss_before_bytes": 80134144,
+        "peak_rss_before_method": "Windows PeakWorkingSetSize",
+        "peak_rss_bytes": 91734016,
+        "peak_rss_method": "Windows PeakWorkingSetSize",
+        "wall_time_seconds": 2.7540482
+      },
+      "raw_measurements": {
+        "cpu_time_seconds": 1.28125,
+        "measurement_boundary": "one runner process including fixture startup repetitions, query workload, OTLP ingest, SQLite persistence, and artifact preparation",
+        "peak_rss_before_bytes": 80134144,
+        "peak_rss_before_method": "Windows PeakWorkingSetSize",
+        "peak_rss_bytes": 91734016,
+        "peak_rss_method": "Windows PeakWorkingSetSize",
+        "wall_time_seconds": 2.7540482
+      },
+      "result_label": "MEASURED_PARITY"
+    }
+  ],
+  "run_id": "b633f746e558da4b32d117dfa7d8bb74c24e2b25859f08a8694106a8e17e6776",
+  "schema": "szl.lyte.observability-benchmark/v1",
+  "subject": {
+    "hub_surface": "SZLHOLDINGS/lyte",
+    "product": "Lyte Enterprise Signal Lattice",
+    "repository": "szl-holdings/lyte-services",
+    "source_revision": "f7b6d012c83c2c5fcbe83565bd999af860f5280f",
+    "source_revision_scope": "declared code baseline; working_tree_state discloses whether the benchmark runner and product files are fully represented by that commit",
+    "working_tree_state": "clean"
+  },
+  "summary": {
+    "all_dimensions_present": true,
+    "competitor_superiority_claimed": false,
+    "dimension_count": 15,
+    "external_vendor_systems_exercised": [],
+    "measured_advantage_claimed": false,
+    "result_label_counts": {
+      "MEASURED_PARITY": 15
+    }
+  }
+}

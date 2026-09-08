@@ -1,12 +1,12 @@
 """Fixed, bounded first-party public source connectors."""
+
 from __future__ import annotations
 
 import datetime as dt
-import hashlib
 import json
 import os
-import time
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 import httpx
@@ -55,9 +55,7 @@ def _bounded_get_json(
                 if 300 <= response.status_code < 400:
                     raise SourceUnavailable("upstream redirect rejected")
                 if response.status_code < 200 or response.status_code >= 300:
-                    raise SourceUnavailable(
-                        f"GitHub returned HTTP {response.status_code}"
-                    )
+                    raise SourceUnavailable(f"GitHub returned HTTP {response.status_code}")
                 content_length = response.headers.get("content-length")
                 if content_length and int(content_length) > max_bytes:
                     raise SourceUnavailable("upstream response exceeds byte budget")
@@ -76,9 +74,7 @@ def _bounded_get_json(
     except SourceUnavailable:
         raise
     except (httpx.HTTPError, OSError, ValueError) as exc:
-        raise SourceUnavailable(
-            f"source transport failed: {type(exc).__name__}"
-        ) from exc
+        raise SourceUnavailable(f"source transport failed: {type(exc).__name__}") from exc
     source_url = urlunsplit(
         (
             parts.scheme,
@@ -119,9 +115,7 @@ def github_workflow_observation(
         max_bytes=4_000_000,
         transport=transport,
     )
-    if not isinstance(payload, dict) or not isinstance(
-        payload.get("workflow_runs"), list
-    ):
+    if not isinstance(payload, dict) or not isinstance(payload.get("workflow_runs"), list):
         raise SourceUnavailable("GitHub workflow payload schema is not recognized")
     rows: list[dict[str, Any]] = []
     completed = 0
@@ -162,9 +156,7 @@ def github_workflow_observation(
                 "run_number": item.get("run_number"),
                 "created_at": item.get("created_at"),
                 "updated_at": item.get("updated_at"),
-                "duration_seconds": (
-                    round(duration, 3) if duration is not None else None
-                ),
+                "duration_seconds": (round(duration, 3) if duration is not None else None),
                 "html_url": item.get("html_url"),
             }
         )
@@ -219,4 +211,3 @@ def rebind_receipt_scope(receipt: Mapping[str, Any], scope: str) -> dict[str, An
         "receipt_algorithm": "SHA-256",
         "raw_session_token_recorded": False,
     }
-
