@@ -46,6 +46,9 @@ from lyte_engine import (
 ROOT = Path(__file__).resolve().parent
 REPOSITORY_ROOT = ROOT.parent
 HTML = ROOT / "index.html"
+HOLOGRAM_STYLESHEET = ROOT / "szl-space-hologram.css"
+HOLOGRAM_SCRIPT = ROOT / "szl-space-hologram.js"
+FRONT_DOOR_ASSETS = (HTML, HOLOGRAM_STYLESHEET, HOLOGRAM_SCRIPT)
 SOURCE_FILE = REPOSITORY_ROOT / "source_revision.txt"
 CONTAINER_SOURCE_FILE = Path("/app/source_revision.txt")
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
@@ -71,6 +74,11 @@ app = FastAPI(
 
 _METRICS: Counter[str] = Counter()
 _METRICS_LOCK = threading.RLock()
+
+
+def _front_door_present() -> bool:
+    """Return true only when the HTML and every referenced local asset ship."""
+    return all(path.is_file() for path in FRONT_DOOR_ASSETS)
 
 
 class StrictModel(BaseModel):
@@ -549,6 +557,16 @@ def root() -> FileResponse:
     return FileResponse(HTML, media_type="text/html")
 
 
+@app.get("/szl-space-hologram.css", response_class=FileResponse, include_in_schema=False)
+def hologram_stylesheet() -> FileResponse:
+    return FileResponse(HOLOGRAM_STYLESHEET, media_type="text/css")
+
+
+@app.get("/szl-space-hologram.js", response_class=FileResponse, include_in_schema=False)
+def hologram_script() -> FileResponse:
+    return FileResponse(HOLOGRAM_SCRIPT, media_type="text/javascript")
+
+
 @app.get("/healthz")
 def health() -> dict[str, Any]:
     compiler = compile_cell("lyte")
@@ -556,7 +574,7 @@ def health() -> dict[str, Any]:
     return {
         "ok": (
             compiler.decision == "ALLOW"
-            and HTML.is_file()
+            and _front_door_present()
             and source["state"] == "OBSERVED"
             and source["bindings_agree"] is True
         ),
@@ -564,7 +582,7 @@ def health() -> dict[str, Any]:
         "version": VERSION,
         **_runtime_identity(source),
         "engine_imported": True,
-        "front_door_present": HTML.is_file(),
+        "front_door_present": _front_door_present(),
         "compiler": {
             "cell": compiler.cell,
             "decision": compiler.decision,
@@ -586,7 +604,7 @@ def readiness() -> JSONResponse:
         build["build"]["state"] == "OBSERVED"
         and build["source_binding"]["bindings_agree"] is True
         and compiler.decision == "ALLOW"
-        and HTML.is_file()
+        and _front_door_present()
     )
     return JSONResponse(
         {
@@ -597,7 +615,7 @@ def readiness() -> JSONResponse:
             "build": build["build"],
             "source_binding": build["source_binding"],
             "compiler": compiler.decision,
-            "front_door_present": HTML.is_file(),
+            "front_door_present": _front_door_present(),
             "memory": LEDGER.status(),
             "truth_label": "MEASURED",
         },
