@@ -1,48 +1,34 @@
-"""Parse the shipped browser program; backend 200 is not frontend execution."""
-from html.parser import HTMLParser
-from pathlib import Path
+"""Execute syntax checks against the canonical external browser program."""
+
+from __future__ import annotations
+
 import shutil
 import subprocess
-import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = ROOT / "lyte" / "ui" / "app.js"
 
 
-class InlineScripts(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.in_script = False
-        self.parts = []
-
-    def handle_starttag(self, tag, attrs):
-        self.in_script = tag == "script"
-
-    def handle_endtag(self, tag):
-        if tag == "script":
-            self.in_script = False
-
-    def handle_data(self, data):
-        if self.in_script:
-            self.parts.append(data)
+def test_shipped_external_javascript_parses() -> None:
+    node = shutil.which("node")
+    assert node is not None, "Node.js is required to verify the browser program"
+    checked = subprocess.run(  # noqa: S603
+        [node, "--check", str(SCRIPT)],
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+        timeout=15,
+        check=False,
+    )
+    assert checked.returncode == 0, checked.stderr
 
 
-class FrontendScriptTests(unittest.TestCase):
-    def test_shipped_inline_javascript_parses(self):
-        document = Path(__file__).resolve().parents[1] / "space/index.html"
-        parser = InlineScripts()
-        parser.feed(document.read_text(encoding="utf-8"))
-        self.assertTrue(parser.parts, "No executable browser program found")
-        node = shutil.which("node")
-        self.assertIsNotNone(node, "Node.js is required to verify the browser program")
-        for program in parser.parts:
-            checked = subprocess.run(
-                [node, "--check"], input=program, text=True,
-                encoding="utf-8", capture_output=True, timeout=15,
-            )
-            self.assertEqual(checked.returncode, 0, checked.stderr)
-
-    def test_agent_cards_keep_scenario_truth_label(self):
-        source = (Path(__file__).resolve().parents[1] / "space/index.html").read_text(encoding="utf-8")
-        agent_renderer = source.split("function renderAgents(data){", 1)[1].split("function renderPlayback", 1)[0]
-        self.assertIn('const truth=data.truth_label||"UNAVAILABLE"', agent_renderer)
-        self.assertIn('node("span","label",truth)', agent_renderer)
-        self.assertIn('select(entry[0],truth,entry[1])', agent_renderer)
-        self.assertNotIn('"MEASURED"', agent_renderer)
+def test_agent_surfaces_preserve_sample_and_modeled_truth() -> None:
+    source = SCRIPT.read_text(encoding="utf-8")
+    for agent_id in ("policy-agent", "resolution-agent"):
+        start = source.index(f'id: "{agent_id}"')
+        record = source[start : source.index("},", start) + 2]
+        assert 'truth: "SAMPLE"' in record
+        assert 'truth: "MEASURED"' not in record
+    assert 'TRUTH_LABELS.has(payload?.truth_label) ? payload.truth_label : "UNAVAILABLE"' in source

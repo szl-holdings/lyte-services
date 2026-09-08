@@ -1,0 +1,16 @@
+{
+  "schema": "szl.lyte-canonical-ownership/v1",
+  "observed_at": "2026-09-04T15:40:00Z",
+  "decision": "SELECTED_WITH_CONFLICT",
+  "primary_repository": "szl-holdings/lyte-services",
+  "primary_revision": "def1133ae9d5cc7adc78746f66539c281990756a",
+  "hub_surface": "SZLHOLDINGS/lyte",
+  "publisher_repository": "szl-holdings/a11oy",
+  "publisher_revision_observed": "07c2d3f9b3208a5a2ae70d433b4d663d4cdac110",
+  "conflicts": [
+    "a11oy docs/estate/PRODUCT_SURFACE_POLICY.json still names lyte-lattice",
+    "lyte-services main was observed unprotected",
+    "lyte-services had no canonical deployment workflow"
+  ],
+  "secret_values_recorded": false
+}

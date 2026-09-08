@@ -1,14 +1,17 @@
 """Session-scoped Second Brain storage and deterministic Lyte answers."""
+
 from __future__ import annotations
 
 import hashlib
 import json
 import os
 import sqlite3
+import tempfile
 import threading
 import time
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from .core import (
     MAX_MEMORY_PAYLOAD_BYTES,
@@ -45,7 +48,7 @@ def observation_receipt(
     kind: str,
     payload: Mapping[str, Any],
     truth_label: str,
-    source_url: str,
+    source_url: str | None = None,
     observed_at: float | None = None,
 ) -> dict[str, Any]:
     """Mint a source-safe SHA-256 receipt for one bounded observation."""
@@ -57,7 +60,15 @@ def observation_receipt(
     serialized = canonical_json(payload).encode("utf-8")
     if len(serialized) > MAX_MEMORY_PAYLOAD_BYTES:
         raise ValueError("memory payload exceeds the configured byte budget")
-    timestamp = float(time.time() if observed_at is None else observed_at)
+    # The legacy runtime always supplies a source URL and retains its observed
+    # timestamp semantics.  The source-less compatibility form is deterministic
+    # so repeated imports/tests cannot mint two identities for the same payload.
+    if observed_at is not None:
+        timestamp = float(observed_at)
+    elif source_url is None:
+        timestamp = 0.0
+    else:
+        timestamp = time.time()
     if timestamp < 0:
         raise ValueError("observed_at must be non-negative")
     basis = {
@@ -65,11 +76,12 @@ def observation_receipt(
         "kind": str(kind)[:80],
         "session_scope_sha256": scope,
         "payload_sha256": hashlib.sha256(serialized).hexdigest(),
-        "source_url": str(source_url)[:500],
+        "source_url": str(source_url or "")[:500],
         "observed_at": timestamp,
         "truth_label": label,
         "signature_claimed": False,
         "raw_session_token_recorded": False,
+        "can_authorize": False,
         "effectors_enabled": False,
     }
     return {
@@ -84,7 +96,7 @@ class SessionLedger:
 
     def __init__(self, path: str | os.PathLike[str] | None = None) -> None:
         configured = path or os.environ.get(
-            "LYTE_STATE_PATH", "/tmp/lyte-enterprise.sqlite3"
+            "LYTE_STATE_PATH", str(Path(tempfile.gettempdir()) / "lyte-enterprise.sqlite3")
         )
         self.path = Path(configured)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -181,14 +193,12 @@ class SessionLedger:
         if RECEIPT_ID.fullmatch(scope) is None:
             raise ValueError("session scope must be a SHA-256 digest")
         bounded = max(1, min(int(limit), 100))
-        query = (
-            """
+        query = """
             SELECT receipt_id, kind, observed_at, truth_label, source_url,
                    payload_sha256, summary_json
             FROM observations
             WHERE session_scope_sha256 = ?
             """
-        )
         parameters: list[Any] = [scope]
         if kind:
             query += " AND kind = ?"
@@ -328,9 +338,7 @@ def _analysis_answer(
 
     if any(term in needle for term in ("agent", "model", "token", "tool")):
         candidates = [
-            item
-            for item in analyses
-            if item.get("summary", {}).get("agent_trace_count", 0)
+            item for item in analyses if item.get("summary", {}).get("agent_trace_count", 0)
         ]
         if not candidates:
             return (
@@ -424,11 +432,7 @@ def answer_question(
         "answer": answer,
         "truth_label": truth,
         "confidence": (
-            0.92
-            if truth in {"MEASURED", "REPORTED"}
-            else 0.72
-            if truth == "MODELED"
-            else 0.0
+            0.92 if truth in {"MEASURED", "REPORTED"} else 0.72 if truth == "MODELED" else 0.0
         ),
         "evidence_receipt_ids": receipts,
         "formula_ids": formulas,

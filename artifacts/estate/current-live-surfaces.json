@@ -1,0 +1,22 @@
+{
+  "schema": "szl.lyte-live-surface-audit/v1",
+  "observed_at": "2026-09-04T15:40:00Z",
+  "space": "SZLHOLDINGS/lyte",
+  "origin": "https://szlholdings-lyte.hf.space",
+  "provider_stage": "RUNNING_REPORTED",
+  "hf_revision": "46d4b982067fc538642676a8bde9ea56d8b92043",
+  "deployment_source_revision": "07c2d3f9b3208a5a2ae70d433b4d663d4cdac110",
+  "product_source": "szl-holdings/lyte-lattice",
+  "routes": {
+    "/": 200,
+    "/healthz": 200,
+    "/readyz": 404,
+    "/api/build-info": 200,
+    "/.well-known/szl-source.json": 200,
+    "/api/lyte/v2/catalog": 404,
+    "/api/lyte/v2/services": 404,
+    "/api/lyte/v2/ask": 404
+  },
+  "business_observability_evidence": "UNAVAILABLE",
+  "operational_state": "INCOMPLETE"
+}

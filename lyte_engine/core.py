@@ -8,22 +8,15 @@ and every analysis or observation receives a deterministic receipt.
 The runtime has no autonomous remediation path. Hatun returns REVIEW or
 ABSTAIN, and all suggested actions remain human-owned.
 """
+
 from __future__ import annotations
 
-import datetime as dt
 import hashlib
 import json
 import math
-import os
 import re
-import threading
-import time
-from collections import Counter, OrderedDict, defaultdict
-from statistics import fmean
-from typing import Any, Iterable, Mapping, Sequence
-from urllib.parse import urlencode, urlsplit, urlunsplit
-
-import httpx
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 VERSION = "3.0.0"
 SOURCE_REPOSITORY = "szl-holdings/lyte-services"
@@ -79,19 +72,25 @@ LENSES: tuple[dict[str, Any], ...] = (
         "id": "impact",
         "name": "Impact",
         "tagline": "Every event has a consequence.",
-        "purpose": "Translate declared operational effects into revenue, cost, service, and risk context.",
+        "purpose": (
+            "Translate declared operational effects into revenue, cost, service, and risk context."
+        ),
     },
     {
         "id": "anticipation",
         "name": "Anticipation",
         "tagline": "Project, do not pretend.",
-        "purpose": "Estimate trajectory from explicit trends without presenting forecasts as guarantees.",
+        "purpose": (
+            "Estimate trajectory from explicit trends without presenting forecasts as guarantees."
+        ),
     },
     {
         "id": "topology",
         "name": "Topology",
         "tagline": "Show the dependency field.",
-        "purpose": "Reveal declared and observed service, trace, journey, and outcome relationships.",
+        "purpose": (
+            "Reveal declared and observed service, trace, journey, and outcome relationships."
+        ),
     },
     {
         "id": "posture",
@@ -258,15 +257,12 @@ def weighted_geometric_mean(
         if set(weights) != set(clean):
             raise ValueError("weights must name the same axes")
         raw_weights = {
-            name: finite_float(weights[name], name=f"weight.{name}", minimum=0.0)
-            for name in clean
+            name: finite_float(weights[name], name=f"weight.{name}", minimum=0.0) for name in clean
         }
         total_weight = sum(raw_weights.values())
         if total_weight <= 0:
             raise ValueError("weight sum must be positive")
-        normalized_weights = {
-            name: raw_weights[name] / total_weight for name in clean
-        }
+        normalized_weights = {name: raw_weights[name] / total_weight for name in clean}
 
     if any(value == 0.0 and normalized_weights[name] > 0 for name, value in clean.items()):
         score = 0.0
@@ -280,9 +276,7 @@ def weighted_geometric_mean(
     return {
         "score": round(min(TRUST_CEILING, score), 6),
         "axes": clean,
-        "weights": {
-            name: round(normalized_weights[name], 8) for name in normalized_weights
-        },
+        "weights": {name: round(normalized_weights[name], 8) for name in normalized_weights},
         "status": "CONJECTURE_1_ADVISORY",
         "can_authorize": False,
         "can_be_sole_allow_basis": False,
@@ -297,5 +291,3 @@ def cost_per_success(cost_usd: float, successful_outcomes: int) -> float | None:
     if successful <= 0:
         return None
     return cost / successful
-
-

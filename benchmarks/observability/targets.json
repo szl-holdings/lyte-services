@@ -1,0 +1,109 @@
+{
+  "schema": "szl.lyte.observability-benchmark-targets/v1",
+  "target_version": "1.0.0",
+  "purpose": "Predeclared open acceptance gates for Lyte itself; these are not competitor baselines.",
+  "label_policy": {
+    "MEASURED_PARITY": "The measured result satisfies its predeclared open acceptance gate.",
+    "MEASURED_GAP": "The measured result does not satisfy its predeclared open acceptance gate.",
+    "MEASURED_ADVANTAGE": "Reserved for a comparable external system measured with the same fixture, protocol, environment, and hardware; this runner does not assign it.",
+    "DOCUMENTED_DIFFERENCE": "A cited capability differs, but no performance conclusion was measured.",
+    "NOT_TESTED": "The procedure is defined and runnable, but it was not executed in this run.",
+    "UNAVAILABLE": "The required evidence could not be obtained; no numeric zero or pass may be substituted."
+  },
+  "targets": {
+    "time_to_first_source": {
+      "operator": "lte",
+      "value": 2000.0,
+      "unit": "ms",
+      "statistic": "p95"
+    },
+    "time_to_first_useful_service_view": {
+      "operator": "lte",
+      "value": 2500.0,
+      "unit": "ms",
+      "statistic": "p95"
+    },
+    "time_to_map_service_to_business_outcome": {
+      "operator": "lte",
+      "value": 1000.0,
+      "unit": "ms",
+      "statistic": "p95"
+    },
+    "time_to_explain_incident_with_evidence": {
+      "operator": "lte",
+      "value": 1000.0,
+      "unit": "ms",
+      "statistic": "p95"
+    },
+    "time_to_replay_decision": {
+      "operator": "lte",
+      "value": 1000.0,
+      "unit": "ms",
+      "statistic": "p95"
+    },
+    "receipt_completeness": {
+      "operator": "gte",
+      "value": 100.0,
+      "unit": "percent",
+      "statistic": "coverage"
+    },
+    "truth_label_completeness": {
+      "operator": "gte",
+      "value": 100.0,
+      "unit": "percent",
+      "statistic": "coverage"
+    },
+    "source_binding_completeness": {
+      "operator": "gte",
+      "value": 100.0,
+      "unit": "percent",
+      "statistic": "coverage"
+    },
+    "query_latency": {
+      "operator": "lte",
+      "value": 100.0,
+      "unit": "ms",
+      "statistic": "p95"
+    },
+    "ingest_throughput": {
+      "operator": "gte",
+      "value": 100.0,
+      "unit": "records/s",
+      "statistic": "rate"
+    },
+    "storage_growth": {
+      "operator": "lte",
+      "value": 32768.0,
+      "unit": "bytes/record",
+      "statistic": "rate"
+    },
+    "ui_keyboard_completion": {
+      "operator": "eq",
+      "value": 1.0,
+      "unit": "completed",
+      "statistic": "all_declared_sequences"
+    },
+    "mobile_overflow": {
+      "operator": "eq",
+      "value": 0.0,
+      "unit": "overflow_px",
+      "statistic": "maximum"
+    },
+    "bundle_size": {
+      "operator": "lte",
+      "value": 300000.0,
+      "unit": "gzip_bytes",
+      "statistic": "total"
+    },
+    "resource_consumption": {
+      "operator": "all_lte",
+      "values": {
+        "peak_rss_bytes": 536870912.0,
+        "cpu_time_seconds": 20.0,
+        "wall_time_seconds": 60.0
+      },
+      "unit": "mixed",
+      "statistic": "process_workload"
+    }
+  }
+}

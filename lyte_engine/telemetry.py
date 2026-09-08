@@ -1,11 +1,14 @@
 """OpenTelemetry-shaped and ATLAS business-event normalization."""
+
 from __future__ import annotations
 
 import time
 from collections import Counter, defaultdict
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from .core import EVENT_CLASSES, SEVERITIES, clamp01, finite_float, percentile
+
 
 def normalize_otel_spans(spans: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """Normalize a bounded OpenTelemetry-shaped span batch.
@@ -34,9 +37,7 @@ def normalize_otel_spans(spans: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             raise ValueError("trace_id, span_id, service, and name are required")
         if span_id in by_span_id:
             raise ValueError("span_id values must be unique in a batch")
-        duration = finite_float(
-            raw.get("duration_ms", 0.0), name="duration_ms", minimum=0.0
-        )
+        duration = finite_float(raw.get("duration_ms", 0.0), name="duration_ms", minimum=0.0)
         status = str(raw.get("status", "UNSET")).strip().upper()
         if status not in {"OK", "ERROR", "UNSET"}:
             raise ValueError("span status must be OK, ERROR, or UNSET")
@@ -225,9 +226,7 @@ def summarize_atlas_events(events: Sequence[Mapping[str, Any]]) -> dict[str, Any
         "slo_impacts": dict(sorted(slo_impacts.items())),
         "business_value": {
             "total_usd": round(total_value, 2),
-            "by_type_usd": {
-                key: round(value, 2) for key, value in sorted(value_by_type.items())
-            },
+            "by_type_usd": {key: round(value, 2) for key, value in sorted(value_by_type.items())},
         },
         "priority": {
             "high_or_critical_events": critical,
@@ -238,5 +237,3 @@ def summarize_atlas_events(events: Sequence[Mapping[str, Any]]) -> dict[str, Any
         "causality_claimed": False,
         "effectors_enabled": False,
     }
-
-

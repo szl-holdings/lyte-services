@@ -1,0 +1,14 @@
+{
+  "schema": "szl.lyte-source-map/v1",
+  "observed_at": "2026-09-04T15:40:00Z",
+  "primary": {"repository":"szl-holdings/lyte-services","revision":"def1133ae9d5cc7adc78746f66539c281990756a","role":"product source"},
+  "deployment": {"repository":"szl-holdings/a11oy","revision":"07c2d3f9b3208a5a2ae70d433b4d663d4cdac110","role":"protected Hugging Face single writer"},
+  "references": [
+    {"repository":"szl-holdings/vertical-services","revision":"7a84e34a05c7342bd32b56f6519fe51ce240f577","role":"legacy vertical engine and receipt patterns"},
+    {"repository":"szl-holdings/lyte-lattice","revision":"5b40e9f3021ae6f52d23f467f51b5679a5b4ffa6","role":"superseded hologram; history preserved"},
+    {"repository":"szl-holdings/szl-formulas","revision":"d03536144d2f23ee2da35c356e2558abe5183779","role":"canonical formula status reference"},
+    {"repository":"szl-holdings/szl-second-brain","revision":"5d77a5b4705401e8d318b164a3076b4163f357e9","role":"retrieval contract reference"},
+    {"repository":"szl-holdings/szl-receipt","revision":"25bc63d1059b7c0f427869e89d2522ade819fe1b","role":"receipt signing reference"},
+    {"repository":"szl-holdings/anatomy","revision":"3c8aab384383314e284b19b24961ae976f01c44b","role":"source identity and anatomy reference"}
+  ]
+}

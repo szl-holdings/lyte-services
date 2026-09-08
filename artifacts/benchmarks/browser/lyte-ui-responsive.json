@@ -1,0 +1,617 @@
+{
+  "base_url": "http://127.0.0.1:7860",
+  "browser": {
+    "executable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "js_version": "15.2.23.10",
+    "product": "Edg/152.0.4191.66",
+    "revision": "@cc2931e6363af1d70882ad63ee33b0e8cd524de0",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
+  },
+  "captured_at": "2026-09-08T04:24:29.551253Z",
+  "keyboard": {
+    "completed": true,
+    "focus_order": [
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "a",
+        "text": "Skip to command workspace"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "a",
+        "text": "L Y LYTE Business observability"
+      },
+      {
+        "id": "source-button",
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "button",
+        "text": "MEASURED No live data source Build f7b6d012c83c"
+      },
+      {
+        "id": "ask-open",
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "button",
+        "text": "Ask Lyte Ctrl K"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": "executive",
+        "tag": "button",
+        "text": "01 Executive Command Outcome posture"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": "services",
+        "tag": "button",
+        "text": "02 Service Intelligence System behavior"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": "journeys",
+        "tag": "button",
+        "text": "03 Journey Intelligence Customer impact"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": "agents",
+        "tag": "button",
+        "text": "04 AI Agent Operations Tools and policy"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": "incidents",
+        "tag": "button",
+        "text": "05 Incident Playback Decision timeline"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": "services",
+        "tag": "button",
+        "text": "Explore SAMPLE command"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "button",
+        "text": "Connect one source"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "article",
+        "text": "Revenue / currently at risk MODELED $184k + $41k from checkout latency model"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "article",
+        "text": "Cost / AI agent retries MODELED $12.4k + 18% from policy-loop retries"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "article",
+        "text": "Service / critical journey availability SAMPLE 99.82% −0.13 pts against SAMPLE objective"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "article",
+        "text": "Risk / material incidents SAMPLE 03active 1 contained human approval retained"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "button",
+        "text": "All"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "button",
+        "text": "Services"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "button",
+        "text": "Journeys"
+      },
+      {
+        "id": null,
+        "nodeId": null,
+        "sceneTarget": null,
+        "tag": "button",
+        "text": "Agents"
+      },
+      {
+        "id": null,
+        "nodeId": "gateway",
+        "sceneTarget": null,
+        "tag": "g",
+        "text": "API gateway, service, Elevated latency, truth SAMPLE. Open evidence."
+      },
+      {
+        "id": null,
+        "nodeId": "identity",
+        "sceneTarget": null,
+        "tag": "g",
+        "text": "Identity policy, service, Nominal, truth SAMPLE. Open evidence."
+      },
+      {
+        "id": null,
+        "nodeId": "checkout",
+        "sceneTarget": null,
+        "tag": "g",
+        "text": "Checkout journey, journey, Degraded, truth MODELED. Open evidence."
+      },
+      {
+        "id": null,
+        "nodeId": "support",
+        "sceneTarget": null,
+        "tag": "g",
+        "text": "Support journey, journey, Watching, truth SAMPLE. Open evidence."
+      },
+      {
+        "id": null,
+        "nodeId": "policy-agent",
+        "sceneTarget": null,
+        "tag": "g",
+        "text": "Policy agent, agent, Constrained, truth SAMPLE. Open evidence."
+      },
+      {
+        "id": null,
+        "nodeId": "resolution-agent",
+        "sceneTarget": null,
+        "tag": "g",
+        "text": "Resolution agent, agent, Retrying, truth SAMPLE. Open evidence."
+      }
+    ],
+    "required_sequence": [
+      "Tab through global controls and scene navigation",
+      "Enter on every operating lens",
+      "ArrowRight between visible Signal Lattice nodes",
+      "Enter to inspect focused node",
+      "Escape to close evidence drawer",
+      "Enter and Escape on Ask Lyte dialog"
+    ],
+    "steps": [
+      {
+        "name": "activate all five operating lenses with Enter",
+        "observed": {
+          "agents": true,
+          "executive": true,
+          "incidents": true,
+          "journeys": true,
+          "services": true
+        },
+        "passed": true
+      },
+      {
+        "name": "move between lattice nodes with ArrowRight",
+        "observed": {
+          "after": {
+            "id": null,
+            "nodeId": "checkout",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "Checkout journey, journey, Degraded, truth MODELED. Open evidence."
+          },
+          "before": {
+            "id": null,
+            "nodeId": "gateway",
+            "sceneTarget": null,
+            "tag": "g",
+            "text": "API gateway, service, Elevated latency, truth SAMPLE. Open evidence."
+          }
+        },
+        "passed": true
+      },
+      {
+        "name": "open focused lattice evidence with Enter",
+        "observed": {
+          "drawerOpen": true
+        },
+        "passed": true
+      },
+      {
+        "name": "close lattice evidence with Escape",
+        "observed": {
+          "drawerClosed": true,
+          "focus": {
+            "id": null,
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "body",
+            "text": "Skip to command workspace L Y LYTE Business observability Connect system behavior to economic outcome MEASURED No live d"
+          }
+        },
+        "passed": true
+      },
+      {
+        "name": "open Ask Lyte dialog with Enter",
+        "observed": {
+          "dialogOpen": true
+        },
+        "passed": true
+      },
+      {
+        "name": "close Ask Lyte dialog with Escape",
+        "observed": {
+          "dialogClosed": true,
+          "focus": {
+            "id": "ask-open",
+            "nodeId": null,
+            "sceneTarget": null,
+            "tag": "button",
+            "text": "Ask Lyte Ctrl K"
+          }
+        },
+        "passed": true
+      },
+      {
+        "name": "Tab reaches navigation and a global command",
+        "observed": {
+          "globalCommandReached": true,
+          "navigationReached": true
+        },
+        "passed": true
+      }
+    ],
+    "viewport": {
+      "height": 900,
+      "width": 1440
+    }
+  },
+  "limitations": [
+    "This run covers one Chromium implementation; Safari and Firefox are not inferred.",
+    "Forced-colors and reduced-motion support remain separately checked by static contract tests unless those OS preferences are active for this browser run.",
+    "Screenshots contain the public SAMPLE / MODELED scenario and no customer telemetry."
+  ],
+  "page_url": "http://127.0.0.1:7860/static/lyte/index.html",
+  "schema": "szl.lyte-ui-browser-evidence/v1",
+  "source_identity": {
+    "build": {
+      "repository": "szl-holdings/lyte-services",
+      "revision": "f7b6d012c83c2c5fcbe83565bd999af860f5280f",
+      "state": "OBSERVED"
+    },
+    "data_mode": "SAMPLE",
+    "effectors_enabled": false,
+    "human_approval_required": true,
+    "persistence": {
+      "backend": "sqlite",
+      "durability": "FILE_OR_PROCESS_SCOPED",
+      "state": "READY",
+      "tenant_workspace_scoped": true,
+      "truth_label": "MEASURED"
+    },
+    "runtime_repository": "szl-holdings/lyte-services",
+    "runtime_source_revision": "f7b6d012c83c2c5fcbe83565bd999af860f5280f",
+    "schema": "szl.lyte-build/v2",
+    "service": "lyte-signal-lattice",
+    "source_binding": {
+      "bindings_agree": true,
+      "distinct_revision_count": 1,
+      "evidence_sources": [
+        "LYTE_SOURCE_REVISION"
+      ],
+      "hub_surface": "SZLHOLDINGS/lyte",
+      "invalid_sources": [],
+      "product_repository": "szl-holdings/lyte-services",
+      "product_revision": "f7b6d012c83c2c5fcbe83565bd999af860f5280f"
+    },
+    "source_repository": "szl-holdings/lyte-services",
+    "source_revision": "f7b6d012c83c2c5fcbe83565bd999af860f5280f",
+    "truth_label": "MEASURED",
+    "version": "4.0.0"
+  },
+  "summary": {
+    "external_resources": [],
+    "keyboard_completed": true,
+    "local_assets_only": true,
+    "maximum_horizontal_overflow_px": 0,
+    "no_horizontal_overflow": true,
+    "passed": true,
+    "viewport_count": 7
+  },
+  "viewports": [
+    {
+      "activeScene": "executive",
+      "bodyClientWidth": 320,
+      "bodyScrollWidth": 320,
+      "documentClientWidth": 320,
+      "documentScrollWidth": 320,
+      "externalResources": [],
+      "forcedColorsQuery": false,
+      "height": 568,
+      "horizontalOverflowPx": 0,
+      "innerHeight": 568,
+      "innerWidth": 320,
+      "passed": true,
+      "reducedMotionQuery": false,
+      "rightmostRenderedPixel": 857.531,
+      "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-320x568.png",
+      "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+      "visibleTruthLabels": [
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MEASURED",
+        "REPORTED",
+        "SAMPLE",
+        "MODELED",
+        "UNAVAILABLE"
+      ],
+      "width": 320
+    },
+    {
+      "activeScene": "executive",
+      "bodyClientWidth": 375,
+      "bodyScrollWidth": 375,
+      "documentClientWidth": 375,
+      "documentScrollWidth": 375,
+      "externalResources": [],
+      "forcedColorsQuery": false,
+      "height": 812,
+      "horizontalOverflowPx": 0,
+      "innerHeight": 812,
+      "innerWidth": 375,
+      "passed": true,
+      "reducedMotionQuery": false,
+      "rightmostRenderedPixel": 857.531,
+      "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-375x812.png",
+      "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+      "visibleTruthLabels": [
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MEASURED",
+        "REPORTED",
+        "SAMPLE",
+        "MODELED",
+        "UNAVAILABLE"
+      ],
+      "width": 375
+    },
+    {
+      "activeScene": "executive",
+      "bodyClientWidth": 430,
+      "bodyScrollWidth": 430,
+      "documentClientWidth": 430,
+      "documentScrollWidth": 430,
+      "externalResources": [],
+      "forcedColorsQuery": false,
+      "height": 932,
+      "horizontalOverflowPx": 0,
+      "innerHeight": 932,
+      "innerWidth": 430,
+      "passed": true,
+      "reducedMotionQuery": false,
+      "rightmostRenderedPixel": 857.531,
+      "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-430x932.png",
+      "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+      "visibleTruthLabels": [
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MEASURED",
+        "REPORTED",
+        "SAMPLE",
+        "MODELED",
+        "UNAVAILABLE"
+      ],
+      "width": 430
+    },
+    {
+      "activeScene": "executive",
+      "bodyClientWidth": 753,
+      "bodyScrollWidth": 753,
+      "documentClientWidth": 753,
+      "documentScrollWidth": 753,
+      "externalResources": [],
+      "forcedColorsQuery": false,
+      "height": 1024,
+      "horizontalOverflowPx": 0,
+      "innerHeight": 1024,
+      "innerWidth": 768,
+      "passed": true,
+      "reducedMotionQuery": false,
+      "rightmostRenderedPixel": 862.5,
+      "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-768x1024.png",
+      "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+      "visibleTruthLabels": [
+        "MEASURED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MEASURED",
+        "REPORTED",
+        "SAMPLE",
+        "MODELED",
+        "UNAVAILABLE"
+      ],
+      "width": 768
+    },
+    {
+      "activeScene": "executive",
+      "bodyClientWidth": 1009,
+      "bodyScrollWidth": 1009,
+      "documentClientWidth": 1009,
+      "documentScrollWidth": 1009,
+      "externalResources": [],
+      "forcedColorsQuery": false,
+      "height": 768,
+      "horizontalOverflowPx": 0,
+      "innerHeight": 768,
+      "innerWidth": 1024,
+      "passed": true,
+      "reducedMotionQuery": false,
+      "rightmostRenderedPixel": 1009,
+      "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1024x768.png",
+      "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+      "visibleTruthLabels": [
+        "MEASURED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MEASURED",
+        "REPORTED",
+        "SAMPLE",
+        "MODELED",
+        "UNAVAILABLE"
+      ],
+      "width": 1024
+    },
+    {
+      "activeScene": "executive",
+      "bodyClientWidth": 1425,
+      "bodyScrollWidth": 1425,
+      "documentClientWidth": 1425,
+      "documentScrollWidth": 1425,
+      "externalResources": [],
+      "forcedColorsQuery": false,
+      "height": 900,
+      "horizontalOverflowPx": 0,
+      "innerHeight": 900,
+      "innerWidth": 1440,
+      "passed": true,
+      "reducedMotionQuery": false,
+      "rightmostRenderedPixel": 1425,
+      "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1440x900.png",
+      "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+      "visibleTruthLabels": [
+        "MEASURED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MEASURED",
+        "REPORTED",
+        "SAMPLE",
+        "MODELED",
+        "UNAVAILABLE"
+      ],
+      "width": 1440
+    },
+    {
+      "activeScene": "executive",
+      "bodyClientWidth": 1905,
+      "bodyScrollWidth": 1905,
+      "documentClientWidth": 1905,
+      "documentScrollWidth": 1905,
+      "externalResources": [],
+      "forcedColorsQuery": false,
+      "height": 1080,
+      "horizontalOverflowPx": 0,
+      "innerHeight": 1080,
+      "innerWidth": 1920,
+      "passed": true,
+      "reducedMotionQuery": false,
+      "rightmostRenderedPixel": 1905,
+      "screenshot": "C:/Users/steph/Documents/Codex/2026-09-04/get-this-fuully-oeprational-and-real/work/lyte-services/artifacts/benchmarks/browser/screenshots/lyte-1920x1080.png",
+      "url": "http://127.0.0.1:7860/static/lyte/index.html#executive",
+      "visibleTruthLabels": [
+        "MEASURED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "SAMPLE",
+        "SAMPLE",
+        "MODELED",
+        "MEASURED",
+        "REPORTED",
+        "SAMPLE",
+        "MODELED",
+        "UNAVAILABLE"
+      ],
+      "width": 1920
+    }
+  ]
+}

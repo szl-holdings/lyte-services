@@ -1,26 +1,391 @@
 # Copyright 2026 SZL Holdings — SPDX-License-Identifier: Apache-2.0
-name: compiler
+name: lyte-enterprise-gates
+
 on:
+  pull_request:
   push:
     branches: [main]
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      expected_revision:
+        description: Exact merged Lyte revision for post-publication live proof
+        required: true
+        type: string
+
 permissions:
   contents: read
+
+concurrency:
+  group: lyte-enterprise-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONHASHSEED: "0"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  LYTE_ENV: test
+  DATABASE_URL: "sqlite+pysqlite:///:memory:"
+  LYTE_DEMO_MODE: "true"
+
 jobs:
-  unittest:
+  python-compile:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: "3.11"
-      - name: Decision Cell Compiler
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - name: Install and verify the complete dependency and package closure
+        run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+      - run: >-
+          python -I -B -m compileall -q
+          a11oy_factory lyte lyte_engine lyte_api space benchmarks frontier migrations
+          tools tests lyte_runtime.py
+      - run: python -m tools.verify_release_scaffolding
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+      - run: ruff check lyte lyte_engine lyte_api tests tools
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+      - name: Run the complete test closure
+        run: python -m pytest -q tests
+
+  api-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+      - run: python -m pytest -q tests/test_api_contract.py
+
+  release-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+      - run: python -m pytest -q tests/test_release_gates.py
+
+  database-migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: sqlite+pysqlite:///./migration-gate.db
+      LYTE_ENV: test
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install --requirement requirements.txt --editable . && python -m pip check
+      - run: alembic upgrade head
+      - run: alembic current | grep 20260904_0001
+
+  connector-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+      - run: python -m pytest -q tests/test_connectors_intelligence.py
+
+  truth-and-governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+      - run: python -m pytest -q tests/test_domain_persistence.py -k "truth or formula or receipt or hatun or auth or isolation"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: "3.12.10"}
+      - run: python -m tools.security_gate
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: "3.12.10"}
+      - run: python -m tools.secret_scan
+
+  frontend-static-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: "3.12.10"}
+      - run: python -m tools.verify_frontend --mode all
+
+  accessibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: "3.12.10"}
+      - run: python -m tools.verify_frontend --mode accessibility
+
+  responsive-overflow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: "3.12.10"}
+      - run: python -m tools.verify_frontend --mode responsive
+
+  bundle-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: "3.12.10"}
+      - run: python -m tools.verify_frontend --mode bundle
+
+  container-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: docker build --build-arg "LYTE_SOURCE_REVISION=${GITHUB_SHA}" --tag "szl-lyte:${GITHUB_SHA}" .
+
+  container-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: "3.12.10"}
+      - run: docker build --build-arg "LYTE_SOURCE_REVISION=${GITHUB_SHA}" --tag szl-lyte:smoke .
+      - name: Boot exact container and close readiness
         run: |
-          set +e
-          python3 -m a11oy_factory compile --cell lyte
-          test $? -eq 0
-          python3 -m a11oy_factory compile --cell N1
-          test $? -eq 2
+          set -euo pipefail
+          docker run -d --name lyte-smoke -p 127.0.0.1:7860:7860 \
+            -e LYTE_ENV=test \
+            -e DATABASE_URL=sqlite+pysqlite:////data/lyte.db \
+            -e LYTE_DEMO_MODE=true \
+            szl-lyte:smoke
+          trap 'docker logs lyte-smoke; docker rm -f lyte-smoke' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:7860/readyz > ready.json; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo '::error::Lyte readiness did not converge'
+              exit 1
+            fi
+            sleep 2
+          done
+          test "$(docker inspect --format '{{.Config.User}}' lyte-smoke)" = "10001:10001"
+          if docker history --no-trunc szl-lyte:smoke | grep -Eiq \
+            'hf_[A-Za-z0-9]{20,}|(OPENAI_API_KEY|GITHUB_TOKEN|GITHUB_READ_TOKEN|HF_TOKEN|HUGGING_FACE_HUB_TOKEN|OIDC_CLIENT_SECRET|LYTE_WEBHOOK_SECRET|PASSWORD)='; then
+            echo '::error::Potential secret material found in the image history'
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          import os
+
+          with open("ready.json", encoding="utf-8") as stream:
+              ready = json.load(stream)
+          assert ready["ready"] is True
+          assert ready["build"]["state"] == "OBSERVED"
+          assert ready["build"]["revision"] == os.environ["GITHUB_SHA"]
+          assert ready["source_binding"]["bindings_agree"] is True
+          assert ready["source_binding"]["required"] is True
+          assert ready["effectors_enabled"] is False
+          PY
+          python -m tools.probe_live \
+            --base-url http://127.0.0.1:7860 \
+            --revision "$GITHUB_SHA"
+
+  source-binding:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install --requirement requirements.txt --editable . && python -m pip check
+      - run: python -m tools.verify_source_binding --revision "$GITHUB_SHA"
+
+  live-probe:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPECTED_REVISION: ${{ inputs.expected_revision }}
+    steps:
+      - uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12.10"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install --requirement requirements.txt --editable . && python -m pip check
+      - run: python -m tools.verify_source_binding --revision "$EXPECTED_REVISION"
+      - run: python -m tools.probe_live --revision "$EXPECTED_REVISION" --retries 30 --wait-seconds 10

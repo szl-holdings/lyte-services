@@ -1,0 +1,13 @@
+{
+  "schema": "szl.lyte-open-pr-conflicts/v1",
+  "observed_at": "2026-09-04T15:40:00Z",
+  "repositories_checked": [
+    "szl-holdings/lyte-services",
+    "szl-holdings/lyte-lattice",
+    "szl-holdings/vertical-services",
+    "szl-holdings/a11oy",
+    "szl-holdings/szl-platform"
+  ],
+  "relevant_open_pull_requests": [],
+  "state": "CLEAR_AT_OBSERVATION_TIME"
+}
