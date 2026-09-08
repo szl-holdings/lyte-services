@@ -9,6 +9,6 @@ prometheus-client==0.26.0
 psycopg[binary]==3.3.2
 pydantic==2.13.5
 pydantic-settings==2.15.0
-PyJWT[crypto]==2.10.1
+PyJWT[crypto]==2.13.0
 SQLAlchemy==2.0.52
 uvicorn[standard]==0.52.4
