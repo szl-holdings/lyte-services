@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import tempfile
+from html.parser import HTMLParser
 from pathlib import Path
 
 import httpx
@@ -31,6 +32,26 @@ SESSION_A = "lyte-enterprise-session-a-01234567890123456789"
 SESSION_B = "lyte-enterprise-session-b-01234567890123456789"
 CLIENT_A = TestClient(app, headers={"X-SZL-Session": SESSION_A})
 CLIENT_B = TestClient(app, headers={"X-SZL-Session": SESSION_B})
+
+
+class FrontDoorAssetParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.scripts: list[str] = []
+        self.stylesheets: list[str] = []
+
+    def handle_starttag(
+        self,
+        tag: str,
+        attrs: list[tuple[str, str | None]],
+    ) -> None:
+        attributes = dict(attrs)
+        if tag == "script" and attributes.get("src"):
+            self.scripts.append(str(attributes["src"]))
+        if tag == "link" and "stylesheet" in str(attributes.get("rel", "")).split():
+            href = attributes.get("href")
+            if href:
+                self.stylesheets.append(str(href))
 
 
 def test_engine_imports_and_source_bound_readiness_closes() -> None:
@@ -459,10 +480,13 @@ def test_front_door_is_original_responsive_accessible_and_local_asset_only() -> 
         "EFFECTORS DISABLED",
     ):
         assert fragment in text
+    assets = FrontDoorAssetParser()
+    assets.feed(text)
+    assert assets.scripts == ["./szl-space-hologram.js"]
+    assert assets.stylesheets == ["./szl-space-hologram.css"]
+
     lowered = text.casefold()
     for forbidden in (
-        "<script src=",
-        "<link rel=",
         "localstorage",
         "sessionstorage",
         "document.cookie",
@@ -470,6 +494,56 @@ def test_front_door_is_original_responsive_accessible_and_local_asset_only() -> 
         "datadog",
     ):
         assert forbidden not in lowered
+
+
+@pytest.mark.parametrize(
+    ("path", "media_type", "marker"),
+    (
+        (
+            "/szl-space-hologram.css",
+            "text/css",
+            "SZL Holographic Space Fabric v2",
+        ),
+        (
+            "/szl-space-hologram.js",
+            "text/javascript",
+            "SZL Holographic Space Fabric v2",
+        ),
+    ),
+)
+def test_front_door_local_assets_are_served_under_same_origin_policy(
+    path: str,
+    media_type: str,
+    marker: str,
+) -> None:
+    response = CLIENT_A.get(path)
+    assert response.status_code == 200
+    assert response.headers["content-type"].split(";", 1)[0] == media_type
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert "default-src 'self'" in response.headers["content-security-policy"]
+    assert response.headers["cache-control"] == "no-store"
+    assert marker in response.text
+
+
+def test_readiness_fails_closed_when_a_front_door_asset_is_missing(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(
+        runtime,
+        "FRONT_DOOR_ASSETS",
+        (runtime.HTML, runtime.HOLOGRAM_STYLESHEET, tmp_path / "missing.js"),
+    )
+
+    health = CLIENT_A.get("/healthz")
+    assert health.status_code == 200
+    assert health.json()["ok"] is False
+    assert health.json()["front_door_present"] is False
+
+    ready = CLIENT_A.get("/readyz")
+    assert ready.status_code == 503
+    assert ready.json()["ready"] is False
+    assert ready.json()["front_door_present"] is False
 
 
 def test_no_missing_enterprise_modules_or_old_organs_import() -> None:
