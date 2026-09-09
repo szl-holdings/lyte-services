@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from lyte.api.dependencies import get_mutation_scope, get_runtime
 from lyte.api.models import AnalysisRequest
 from lyte.api.routes_catalog import ANATOMY
-from lyte.api.routes_forecast import ForecastBody, forecast as forecast_signal
+from lyte.api.routes_forecast import forecast as forecast_signal, ForecastBody
 from lyte.api.routes_health import source_revision
 from lyte.domain import (
     ReceiptDraft,
