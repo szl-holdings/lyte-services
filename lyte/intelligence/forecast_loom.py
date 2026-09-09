@@ -17,8 +17,9 @@ import hashlib
 import json
 import math
 import statistics
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Protocol, Sequence
+from typing import Protocol
 
 MAX_CONTEXT = 8_192
 DEFAULT_QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90)
@@ -175,8 +176,6 @@ class RobustDriftProvider:
             spread = scale * math.sqrt(step)
             row: dict[float, float] = {}
             for q in quantiles:
-                # Logistic quantile approximation gives a stable symmetric
-                # envelope without introducing scipy/numpy into Lyte core.
                 z = math.log(q / (1.0 - q)) / 1.7
                 row[float(q)] = median + z * spread
             output.append(row)
@@ -194,12 +193,7 @@ def run_forecast(
     request: ForecastRequest,
     provider: ForecastProvider | None = None,
 ) -> GovernedForecast:
-    """Execute a forecast and emit a deterministic proof receipt.
-
-    This function is the only intended admission path into Lyte. Provider
-    output is rejected if it omits steps/quantiles, contains non-finite values,
-    or produces crossing quantiles.
-    """
+    """Execute a forecast and emit a deterministic proof receipt."""
 
     if not request.signal_id.strip():
         raise ForecastError("signal_id is required")
