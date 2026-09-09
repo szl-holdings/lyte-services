@@ -8,9 +8,9 @@ admission, and execution authority remain SZL-owned.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Sequence
+from datetime import UTC, datetime, timedelta
 
 MODEL_ID = "ibm-granite/granite-timeseries-patchtst-fm-r2"
 MIN_GRANITE_TSFM_VERSION = "0.3.9"
@@ -68,7 +68,7 @@ class GranitePatchTSTProvider:
 
         model = self._load()
         context = list(values[-min(len(values), self.context_length) :])
-        start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        start = datetime(2026, 1, 1, tzinfo=UTC)
         frame = pd.DataFrame(
             {
                 "timestamp": [start + timedelta(hours=i) for i in range(len(context))],
@@ -108,8 +108,6 @@ class GranitePatchTSTProvider:
                 )
                 column = next((name for name in candidates if name in forecast.columns), None)
                 if column is None:
-                    # TSFM versions may label quantiles differently. Resolve by
-                    # suffix while remaining fail-closed on ambiguity.
                     suffixes = (str(q), f"{q:g}")
                     matches = [
                         name
