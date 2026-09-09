@@ -6,10 +6,10 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
+from lyte.api import routes_forecast
 from lyte.api.dependencies import get_mutation_scope, get_runtime
 from lyte.api.models import AnalysisRequest
 from lyte.api.routes_catalog import ANATOMY
-from lyte.api.routes_forecast import forecast as forecast_signal, ForecastBody
 from lyte.api.routes_health import source_revision
 from lyte.domain import (
     ReceiptDraft,
@@ -160,9 +160,9 @@ def analyze(
 
 
 @router.post("/forecast")
-def forecast(payload: ForecastBody) -> dict[str, object]:
+def forecast(payload: routes_forecast.ForecastBody) -> dict[str, object]:
     """Expose Forecast Loom through Lyte's already-mounted analysis router."""
-    return forecast_signal(payload)
+    return routes_forecast.forecast(payload)
 
 
 __all__ = ["router"]
