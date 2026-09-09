@@ -1,0 +1,9 @@
+{
+  "schema": "szl.lyte.forecast-state/v1",
+  "runtime_route": "LIVE_IN_SOURCE_PENDING_MERGE",
+  "baseline": "ENABLED",
+  "granite": "DISABLED_FAIL_CLOSED",
+  "granite_schema_verification": "PASS",
+  "granite_benchmark": "RUNNING",
+  "production_authority": "NONE"
+}
