@@ -1,0 +1,15 @@
+{
+  "schema": "szl.lyte.hf-evidence/v1",
+  "model_id": "ibm-granite/granite-timeseries-patchtst-fm-r2",
+  "hf_job_id": "6aa1ee2d5527934177ebe848",
+  "environment": "python:3.12-slim / a10g-small",
+  "model_context_observed": 8192,
+  "quantile_columns_observed": [
+    "value_q0.1",
+    "value_q0.5",
+    "value_q0.9"
+  ],
+  "adapter_contract": "PASS",
+  "production_admission": "PENDING_CHALLENGER_BENCHMARK",
+  "execution_authority": "NONE"
+}
