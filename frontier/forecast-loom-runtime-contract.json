@@ -1,0 +1,16 @@
+{
+  "schema": "szl.lyte.forecast-runtime/v1",
+  "route": "/api/lyte/v2/forecast",
+  "default_provider": "szl.robust-drift/v1",
+  "granite_provider": "hf.ibm-granite.patchtst-fm-r2",
+  "granite_enabled_by_default": false,
+  "granite_admission_control": "LYTE_GRANITE_ENABLED",
+  "execution_authority": "NONE",
+  "source_of_truth": "szl-holdings/lyte-services",
+  "projection_order": [
+    "GitHub",
+    "Hugging Face",
+    "a-11-oy.com",
+    "a11oy.net"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "szl.lyte.forecast-admission/v1",
+  "measured_at": "2026-09-09",
+  "hf_job_id": "6aa1eed621047bf1b037119e",
+  "hf_environment": "python:3.12-slim / a10g-small",
+  "lyte_source_sha_under_test": "53dc2087eabd5c97213df7485dfefcb77af0ef06",
+  "model_id": "ibm-granite/granite-timeseries-patchtst-fm-r2",
+  "model_context": 8192,
+  "horizon": 48,
+  "baseline_aggregate_mae": 35.241635420131225,
+  "granite_aggregate_mae": 3.6184810362134523,
+  "relative_mae_improvement": 0.8973236913362297,
+  "quantile_contract_pass": true,
+  "signals": [
+    {"signal": "cpu_utilization", "baseline_mae": 27.255780901925945, "granite_mae": 1.304305443071082},
+    {"signal": "transaction_rate", "baseline_mae": 130.91569243817517, "granite_mae": 8.468594309574314},
+    {"signal": "incident_volume", "baseline_mae": 3.5020491286227955, "granite_mae": 0.5328467814924219},
+    {"signal": "capacity", "baseline_mae": 1.4558855639766024, "granite_mae": 0.25981130997127533},
+    {"signal": "cloud_cost", "baseline_mae": 39.9838808863999, "granite_mae": 10.183040532505933},
+    {"signal": "business_kpi", "baseline_mae": 8.336523601686956, "granite_mae": 0.9622878406656857}
+  ],
+  "admission": "ADMITTED_FOR_EVALUATION",
+  "production_admission": "WITHHELD_PENDING_REPRESENTATIVE_LYTE_TELEMETRY_AND_DEPLOYMENT_SLO_EVIDENCE",
+  "production_authority": "NONE",
+  "limitations": [
+    "Qualification workloads are deterministic synthetic operational series, not representative production telemetry.",
+    "Production enablement requires representative Lyte telemetry and deployment-SLO evidence."
+  ]
+}

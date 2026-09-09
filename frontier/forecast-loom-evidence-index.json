@@ -1,0 +1,11 @@
+{
+  "schema": "szl.evidence-index/v1",
+  "items": [
+    "frontier/forecast-loom-hf-evidence.json",
+    "frontier/forecast-loom-admission-policy.json",
+    "frontier/forecast-loom-runtime-contract.json",
+    "frontier/forecast-loom-source-binding.json"
+  ],
+  "hf_schema_job": "6aa1ee2d5527934177ebe848",
+  "hf_challenger_job": "6aa1eed621047bf1b037119e"
+}

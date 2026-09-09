@@ -1,0 +1,14 @@
+{
+  "schema": "szl.lyte.forecast-state/v1",
+  "baseline": "ENABLED",
+  "granite": "ADMITTED_FOR_EVALUATION",
+  "granite_schema_verification": "PASS",
+  "granite_challenger_benchmark": "PASS",
+  "granite_relative_mae_improvement": 0.8973236913362297,
+  "production_granite_enabled": false,
+  "production_enablement_blockers": [
+    "representative Lyte telemetry benchmark",
+    "deployment SLO evidence"
+  ],
+  "execution_authority": "NONE"
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "szl.ownership/v1",
+  "artifact": "Forecast Loom",
+  "source_authority": "szl-holdings/lyte-services",
+  "publisher_authority": "szl-holdings/a11oy",
+  "hub_projection": "SZLHOLDINGS/lyte",
+  "proof_projection": "szl-holdings/a11oy-net"
+}

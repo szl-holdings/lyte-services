@@ -1,0 +1,11 @@
+{
+  "schema": "szl.projection-order/v1",
+  "artifact": "lyte-forecast-loom",
+  "order": [
+    {"surface": "GitHub", "role": "source_of_truth"},
+    {"surface": "Hugging Face", "role": "evaluated_runtime_projection"},
+    {"surface": "a-11-oy.com", "role": "product_runtime_projection"},
+    {"surface": "a11oy.net", "role": "proof_receipt_projection"}
+  ],
+  "second_hf_writer_allowed": false
+}
