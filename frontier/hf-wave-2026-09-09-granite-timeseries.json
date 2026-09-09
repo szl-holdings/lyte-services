@@ -1,0 +1,42 @@
+{
+  "schema": "szl.frontier-adaptation/v1",
+  "date": "2026-09-09",
+  "source": {
+    "organization": "ibm-granite",
+    "artifact": "granite-timeseries-patchtst-fm-r2",
+    "url": "https://huggingface.co/ibm-granite/granite-timeseries-patchtst-fm-r2",
+    "category": "time-series-foundation-model"
+  },
+  "szl_adaptation": {
+    "name": "Lyte Forecast Loom",
+    "module": "lyte.intelligence.forecast_loom",
+    "status": "EVALUATION_GATE",
+    "borrowed_ideas": [
+      "long-context operational forecasting",
+      "probabilistic quantile outputs",
+      "missing-value handling",
+      "zero-shot evaluation as an admission criterion"
+    ],
+    "original_szl_layers": [
+      "provider-neutral admission boundary",
+      "deterministic baseline challenger",
+      "fail-closed quantile validation",
+      "input and output SHA-256 receipts",
+      "operational confidence evidence",
+      "explicit limitations and non-autonomous authority"
+    ],
+    "not_copied": [
+      "IBM model weights",
+      "IBM architecture implementation",
+      "IBM branding",
+      "IBM training code"
+    ]
+  },
+  "admission_rule": "An external model is not promoted by reputation or model-card claims. It must produce reproducible benchmark evidence against the SZL baseline and satisfy the Forecast Loom receipt contract.",
+  "projection_order": [
+    "GitHub source of truth",
+    "Hugging Face evaluated artifact projection",
+    "a-11-oy.com product/runtime projection",
+    "a11oy.net proof and receipt projection"
+  ]
+}
