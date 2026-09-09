@@ -1,0 +1,18 @@
+{
+  "schema": "szl.lyte.forecast-admission-policy/v1",
+  "candidate": "hf.ibm-granite.patchtst-fm-r2",
+  "baseline": "szl.robust-drift/v1",
+  "requirements": {
+    "quantile_contract": "PASS",
+    "aggregate_mae_improvement_over_baseline": "> 0",
+    "representative_telemetry_required_for_production": true,
+    "deployment_slo_evidence_required_for_production": true
+  },
+  "states": [
+    "NOT_ADMITTED",
+    "ADMITTED_FOR_EVALUATION",
+    "PRODUCTION_ADMITTED"
+  ],
+  "default_state": "NOT_ADMITTED",
+  "execution_authority": "NONE"
+}
