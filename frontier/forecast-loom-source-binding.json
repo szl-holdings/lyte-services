@@ -1,0 +1,10 @@
+{
+  "schema": "szl.lyte.forecast-source-binding/v1",
+  "source_repository": "szl-holdings/lyte-services",
+  "source_branch": "main",
+  "upstream_model": "ibm-granite/granite-timeseries-patchtst-fm-r2",
+  "upstream_usage": "optional adapter only",
+  "copies_upstream_weights": false,
+  "copies_upstream_implementation": false,
+  "execution_authority": "NONE"
+}
