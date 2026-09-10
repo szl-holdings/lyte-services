@@ -6,7 +6,7 @@ import os
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from lyte.intelligence.forecast_loom import (
     MAX_QUANTILES,
@@ -14,8 +14,18 @@ from lyte.intelligence.forecast_loom import (
     ForecastRequest,
     run_forecast,
 )
+from lyte.intelligence.forecast_risk import ThresholdRule, derive_risk_window
 
 router = APIRouter(prefix="/api/v1/forecast", tags=["forecast"])
+
+
+class ForecastRiskBody(BaseModel):
+    """Optional strict threshold event; not permission to execute an action."""
+
+    model_config = ConfigDict(extra="forbid")
+    threshold: float = Field(allow_inf_nan=False)
+    direction: Literal["above", "below"] = "above"
+    alert_level: float = Field(default=0.5, gt=0, le=1, allow_inf_nan=False)
 
 
 class ForecastBody(BaseModel):
@@ -26,6 +36,7 @@ class ForecastBody(BaseModel):
         default_factory=lambda: [0.1, 0.5, 0.9], min_length=1, max_length=MAX_QUANTILES
     )
     provider: Literal["baseline", "granite"] = "baseline"
+    risk: ForecastRiskBody | None = None
 
 
 def _provider(name: str):
@@ -46,7 +57,7 @@ def _provider(name: str):
 
 @router.post("")
 def forecast(body: ForecastBody) -> dict[str, object]:
-    """Return an advisory forecast with deterministic proof receipt."""
+    """Return an advisory forecast with optional source-bound threshold risk."""
     try:
         result = run_forecast(
             ForecastRequest(
@@ -56,6 +67,10 @@ def forecast(body: ForecastBody) -> dict[str, object]:
                 quantiles=tuple(body.quantiles),
             ),
             provider=_provider(body.provider),
+        )
+        risk_window = (
+            derive_risk_window(result, ThresholdRule(**body.risk.model_dump()))
+            if body.risk is not None else None
         )
     except ForecastError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -67,7 +82,7 @@ def forecast(body: ForecastBody) -> dict[str, object]:
         if body.provider != "granite":
             raise
         raise HTTPException(status_code=503, detail="Granite provider unavailable") from exc
-    return {
+    response: dict[str, object] = {
         "points": [
             {"step": point.step, "quantiles": point.quantiles}
             for point in result.points
@@ -90,3 +105,6 @@ def forecast(body: ForecastBody) -> dict[str, object]:
         },
         "execution_authority": "NONE",
     }
+    if risk_window is not None:
+        response["risk_window"] = risk_window
+    return response
