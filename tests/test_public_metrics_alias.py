@@ -38,7 +38,11 @@ def samples(response):
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/plain")
     assert response.text.endswith("\n")
-    return [sample for family in text_string_to_metric_families(response.text) for sample in family.samples]
+    return [
+        sample
+        for family in text_string_to_metric_families(response.text)
+        for sample in family.samples
+    ]
 
 
 def test_application_alias_has_real_source_identity_and_preserves_local_route(client):
@@ -75,7 +79,7 @@ def test_alias_reports_failed_database_probe_without_inventing_health(client, mo
         yield  # pragma: no cover - context manager never admits a session
 
     monkeypatch.setattr(client.app.state.runtime.database, "session", unavailable)
-    assert client.get("/readyz").status_code == 503
+    assert client.get("readyz").status_code == 503
     response = client.get(PUBLIC_METRICS)
     observed = samples(response)
     assert [s.value for s in observed if s.name == "lyte_db_pool_healthy"] == [0]
