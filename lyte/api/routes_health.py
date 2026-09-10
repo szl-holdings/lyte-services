@@ -170,6 +170,14 @@ def source_info(request: Request) -> dict[str, Any]:
 
 
 @router.get("/metrics", include_in_schema=False)
+@router.get("/api/lyte/v2/metrics", include_in_schema=False)
 def metrics(request: Request) -> Response:
+    """Expose the same real registry through local and application-owned paths.
+
+    Hosted ingress can reserve /metrics for its own infrastructure. Public
+    application attestation uses /api/lyte/v2/metrics instead, without sending
+    infrastructure credentials or replacing empty responses with success.
+    Neither route performs ingestion, creates receipts, or grants authority.
+    """
     runtime = request.app.state.runtime
     return Response(runtime.metrics.render(), media_type=CONTENT_TYPE_LATEST)
