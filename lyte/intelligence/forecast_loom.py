@@ -19,9 +19,11 @@ import math
 import statistics
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
+from decimal import Decimal
 from typing import Protocol
 
 MAX_CONTEXT = 8_192
+MAX_QUANTILES = 99
 DEFAULT_QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90)
 CONTRACT_VERSION = "szl.lyte.forecast-loom/v1"
 
@@ -57,6 +59,9 @@ class ForecastReceipt:
     output_sha256: str
     confidence: float
     limitations: tuple[str, ...]
+    raw_input_sha256: str = ""
+    original_context_points: int = 0
+    truncated_points: int = 0
 
 
 @dataclass(frozen=True)
@@ -94,14 +99,28 @@ def _sha256(payload: object) -> str:
     return hashlib.sha256(_canonical(payload)).hexdigest()
 
 
+def quantile_key(quantile: float) -> str:
+    """Preserve q10/q50/q90 while avoiding fractional-percent collisions.
+
+    A shortest-roundtrip decimal identifies each accepted float uniquely.
+    Decimal multiplication avoids introducing binary percentage-rounding noise.
+    For example, 0.101 and 0.104 become q10.1 and q10.4, never two q10 keys.
+    """
+    # Only fractional trailing zeros can be stripped; integral 10 must stay 10.
+    exact = format(Decimal(str(quantile)) * 100, "f")
+    percent = exact.rstrip("0").rstrip(".") if "." in exact else exact
+    whole, dot, fraction = percent.partition(".")
+    return f"q{whole.zfill(2)}{dot}{fraction}"
+
+
 def _validate_quantiles(quantiles: Sequence[float]) -> tuple[float, ...]:
+    if not quantiles or len(quantiles) > MAX_QUANTILES:
+        raise ForecastError("between 1 and 99 quantiles are required")
     normalized = tuple(float(q) for q in quantiles)
-    if not normalized:
-        raise ForecastError("at least one quantile is required")
-    if tuple(sorted(set(normalized))) != normalized:
-        raise ForecastError("quantiles must be strictly increasing and unique")
     if any(q <= 0.0 or q >= 1.0 or not math.isfinite(q) for q in normalized):
         raise ForecastError("quantiles must be finite values strictly between 0 and 1")
+    if tuple(sorted(set(normalized))) != normalized:
+        raise ForecastError("quantiles must be strictly increasing and unique")
     if 0.5 not in normalized:
         raise ForecastError("quantiles must include the median (0.5)")
     return normalized
@@ -193,15 +212,20 @@ def run_forecast(
     request: ForecastRequest,
     provider: ForecastProvider | None = None,
 ) -> GovernedForecast:
-    """Execute a forecast and emit a deterministic proof receipt."""
-
+    """Execute a forecast and emit a deterministic, non-signature receipt."""
     if not request.signal_id.strip():
         raise ForecastError("signal_id is required")
+    if not isinstance(request.horizon, int) or isinstance(request.horizon, bool):
+        raise ForecastError("horizon must be an integer between 1 and 1024")
     if request.horizon < 1 or request.horizon > 1_024:
         raise ForecastError("horizon must be between 1 and 1024")
 
     quantiles = _validate_quantiles(request.quantiles)
-    values, imputed = _impute(request.values)
+    # Keep missingness and discarded-prefix identity distinct from imputed inputs.
+    original = tuple(None if v is None else float(v) for v in request.values)
+    if any(v is not None and not math.isfinite(v) for v in original):
+        raise ForecastError("forecast context contains a non-finite value")
+    values, imputed = _impute(original)
     engine = provider or RobustDriftProvider()
     raw = tuple(engine.forecast(values, horizon=request.horizon, quantiles=quantiles))
     if len(raw) != request.horizon:
@@ -218,7 +242,7 @@ def run_forecast(
             if not math.isfinite(value):
                 raise ForecastError("provider returned a non-finite forecast")
             observed.append(value)
-            normalized[f"q{int(round(q * 100)):02d}"] = value
+            normalized[quantile_key(q)] = value
         if observed != sorted(observed):
             raise ForecastError("provider returned crossing quantiles")
         points.append(ForecastPoint(step=step, quantiles=normalized))
@@ -230,6 +254,7 @@ def run_forecast(
         "horizon": request.horizon,
         "quantiles": quantiles,
     }
+    raw_payload = {**input_payload, "values": original}
     output_payload = [asdict(point) for point in points]
     receipt = ForecastReceipt(
         contract=CONTRACT_VERSION,
@@ -246,6 +271,10 @@ def run_forecast(
             "Forecasts are advisory signals, not autonomous execution authority.",
             "Provider admission requires measured benchmark evidence against SZL baselines.",
             "Confidence is an operational evidence score, not calibrated probability.",
+            "SHA-256 digests bind content; they are not signatures or proof of accuracy.",
         ),
+        raw_input_sha256=_sha256(raw_payload),
+        original_context_points=len(original),
+        truncated_points=max(0, len(original) - len(values)),
     )
     return GovernedForecast(points=tuple(points), receipt=receipt)
