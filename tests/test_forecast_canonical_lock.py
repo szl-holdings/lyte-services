@@ -5,13 +5,13 @@ source-revision match, and not production admission of Granite.
 """
 from __future__ import annotations
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 from lyte.intelligence.forecast_loom import ForecastRequest, run_forecast
 
 LOCK_PATH = Path(__file__).resolve().parents[1] / "frontier" / "forecast-loom-canonical-lock.json"
-LOCK = json.loads(LOCK_PATH.read_text())
+LOCK = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
 
 
 def test_canonical_publisher_fixture_hashes() -> None:
