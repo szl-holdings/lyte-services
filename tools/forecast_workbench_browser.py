@@ -67,7 +67,7 @@ def main() -> int:
                     for width, height in ((320, 568), (375, 812), (768, 1024), (1440, 900)):
                         page = browser.new_page(viewport={"width": width, "height": height})
                         errors = []
-                        page.on("pageerror", lambda error: errors.append(str(error)))
+                        page.on("pageerror", lambda error, errors=errors: errors.append(str(error)))
                         page.goto(origin + "/api/lyte/v2/forecast/workbench")
                         expect(page.locator("#forecast-output")).to_be_hidden()
                         page.locator("#run").click()
