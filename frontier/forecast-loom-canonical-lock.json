@@ -1,0 +1,15 @@
+{
+  "schema": "szl.lyte.forecast-canonical-lock/v1",
+  "contract": "szl.lyte.forecast-loom/v1",
+  "provider": "szl.robust-drift/v1",
+  "signal_id": "qualification.canonical-publisher",
+  "values": [10.0, 11.0, null, 13.0, 14.0],
+  "horizon": 3,
+  "quantiles": [0.1, 0.5, 0.9],
+  "raw_input_sha256": "1311f370e7ecce72b3ed4547bc63d63f49e8c64ea7a579f3c1924e9ebaec2b9d",
+  "input_sha256": "a837772a02c8df0ecd3cadc7fff47574c7de654aa523c3e3d73106673146af17",
+  "output_sha256": "459a5dbfa0985e763cf6dc495c09fb811ff4cf6ee66aad761f84af19352e4bfa",
+  "publisher_pin": "dd17d9f524b76c8f0e260d7ec1e084cc079dfc43",
+  "execution_authority": "NONE",
+  "note": "Hashes bind Forecast Loom content. A hash match is not a source-revision match and not a production certificate. Granite remains unadmitted. Do not treat Hugging Face healthz revision as implied by these hashes."
+}
