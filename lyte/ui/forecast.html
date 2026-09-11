@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Inspect Lyte's advisory forecasts, threshold windows, and source-bound evidence.">
+  <title>Forecast Loom | Lyte</title>
+  <link rel="stylesheet" href="/static/lyte/forecast.css">
+  <script type="module" src="/static/lyte/forecast.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to forecasting workspace</a>
+  <header class="masthead">
+    <a class="brand" href="/" aria-label="Return to Lyte command">LYTE <span>/ Forecast Loom</span></a>
+    <span class="badge">ADVISORY · NO EXECUTION</span>
+  </header>
+  <main id="workspace" tabindex="-1">
+    <div class="intro"><p class="eyebrow">Forecast → threshold → evidence</p><h1>See the window.<br>Keep the uncertainty.</h1><p>Explore a signal with Lyte's deterministic baseline. This is not Granite inference or a calibrated incident probability.</p></div>
+    <div class="workbench">
+      <form id="forecast-form" class="panel controls" aria-labelledby="controls-title">
+        <div class="panel-heading"><h2 id="controls-title">Signal inputs</h2><span id="input-origin" class="badge">SAMPLE</span></div>
+        <label for="signal">Signal name</label><input id="signal" name="signal" maxlength="256" required value="sample.cpu.utilization">
+        <label for="values">Chronological observations</label><textarea id="values" name="values" rows="4" spellcheck="false" required aria-describedby="values-help">40, 42, 41, 45, 48, 51, 53, 55</textarea>
+        <p id="values-help" class="hint">Oldest first; evenly spaced. Use comma-separated numbers or null for missing values. At most 8,192 points.</p>
+        <div class="field-pair"><div><label for="horizon">Future steps</label><input id="horizon" name="horizon" type="number" min="1" max="1024" step="1" required value="12"></div><div><label for="threshold">Threshold</label><input id="threshold" name="threshold" type="number" step="any" required value="80"></div></div>
+        <div class="field-pair"><div><label for="direction">Strict crossing</label><select id="direction" name="direction"><option value="above">Above (&gt;)</option><option value="below">Below (&lt;)</option></select></div><div><label for="alert">Alert level</label><input id="alert" name="alert" type="number" min="0.01" max="1" step="0.01" required value="0.8"></div></div>
+        <p class="hint">Submitting sends these values to this Lyte service for calculation. Do not enter confidential data into a public deployment. No model is enabled by this form.</p>
+        <div class="actions"><button id="run" type="submit">Inspect forecast</button><button id="reset-sample" type="button" class="secondary">Reset sample</button></div>
+      </form>
+      <section class="panel result" aria-labelledby="result-title" aria-busy="false" id="result-panel">
+        <div class="panel-heading"><h2 id="result-title">Forecast window</h2><span class="badge">BASELINE</span></div>
+        <p id="status" role="status" aria-live="polite">No forecast has been requested.</p>
+        <div id="forecast-output" hidden>
+          <svg id="forecast-chart" viewBox="0 0 720 300" role="img" aria-labelledby="chart-title chart-desc"><title id="chart-title">Forecast and threshold</title><desc id="chart-desc">Historical observations, model-implied q10 to q90 ribbon, median, and strict threshold. An equivalent table is available below.</desc><g id="chart-content"></g></svg>
+          <p class="legend"><span>History</span><span>Median</span><span>q10–q90 ribbon</span><span>Threshold</span></p>
+          <div class="readouts"><div><span>Possible alert</span><strong id="possible">—</strong></div><div><span>Supported alert</span><strong id="supported">—</strong></div><div><span>Median crossing</span><strong id="median-crossing">—</strong></div></div>
+          <label for="step">Inspect future step</label><input id="step" type="range" min="1" max="12" value="1"><output id="step-detail" for="step"></output>
+          <p class="bounds">Bounds are conditional on the model quantiles. No calibration or temporal independence is assumed. “Not established” does not mean safe. Time is in steps, not hours.</p>
+          <details><summary>Forecast values and risk bounds</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable forecast table"><table><caption>Model-implied forecast; not calibrated incident risk</caption><thead><tr><th scope="col">Step</th><th scope="col">q10</th><th scope="col">Median</th><th scope="col">q90</th><th scope="col">Breach bounds</th></tr></thead><tbody id="forecast-table"></tbody></table></div></details>
+          <details><summary>Evidence and known bounds</summary><dl class="evidence"><dt>Python source revision</dt><dd id="source"></dd><dt>Response content SHA-256</dt><dd id="digest"></dd><dt>Interpretation</dt><dd>Content integrity only. Not a signature, identity attestation, provenance certification, or accuracy guarantee.</dd></dl><button id="export" type="button" class="secondary">Export exact evidence</button><pre id="evidence-json" tabindex="0" aria-label="Exact source-bound response envelope"></pre></details>
+        </div>
+      </section>
+    </div>
+    <footer>IBM Granite remains an attributed, separately qualified challenger. <a href="https://huggingface.co/ibm-granite/granite-timeseries-patchtst-fm-r2" rel="noreferrer">Upstream model</a> · <a href="/">Lyte command</a></footer>
+  </main>
+</body>
+</html>

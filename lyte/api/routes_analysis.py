@@ -6,7 +6,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
-from lyte.api import routes_forecast
+from lyte.api import routes_forecast, routes_forecast_workbench
 from lyte.api.dependencies import get_mutation_scope, get_runtime
 from lyte.api.models import AnalysisRequest
 from lyte.api.routes_catalog import ANATOMY
@@ -164,5 +164,7 @@ def forecast(payload: routes_forecast.ForecastBody) -> dict[str, object]:
     """Expose Forecast Loom through Lyte's already-mounted analysis router."""
     return routes_forecast.forecast(payload)
 
+
+router.include_router(routes_forecast_workbench.router)
 
 __all__ = ["router"]
