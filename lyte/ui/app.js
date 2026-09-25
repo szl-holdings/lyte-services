@@ -817,8 +817,8 @@
   }
 
   function isLiveSource(source) {
-    const state = String(source?.state || "").toUpperCase();
-    return ["CONNECTED", "CONFIGURED", "READY", "LIVE"].includes(state);
+    const truth = String(source?.truth_label || source?.truth || "").toUpperCase();
+    return truth === "MEASURED";
   }
 
   function sourceById(sources, id) {
@@ -827,37 +827,37 @@
 
   function applySourceStatus(build, sourceCatalog) {
     const sources = Array.isArray(sourceCatalog?.sources) ? sourceCatalog.sources : [];
-    const liveCount = sources.filter(isLiveSource).length;
+    const measuredCount = sources.filter(isLiveSource).length;
     const revision = typeof build?.build?.revision === "string" && /^[0-9a-f]{40}$/i.test(build.build.revision)
       ? build.build.revision.toLowerCase()
       : null;
     const buildObserved = build?.build?.state === "OBSERVED" && Boolean(revision);
     const github = sourceById(sources, "github_actions");
-    text("#sidebar-source-count", `${liveCount} LIVE`);
+    text("#sidebar-source-count", measuredCount ? `${measuredCount} MEASURED` : "0 BLOCKED");
     text("#receipt-count", "05");
 
     const sourceTruth = one("#source-truth");
-    applyTruthBadge(sourceTruth, buildObserved ? "MEASURED" : "UNAVAILABLE");
-    text("#source-label", liveCount ? `${liveCount} live source${liveCount === 1 ? "" : "s"}` : "No live data source");
+    applyTruthBadge(sourceTruth, measuredCount ? "MEASURED" : "UNAVAILABLE");
+    text("#source-label", measuredCount ? `${measuredCount} measured source${measuredCount === 1 ? "" : "s"}` : "No measured data source");
     text("#source-revision", revision ? `Build ${revision.slice(0, 12)}` : "Build revision unavailable");
 
     const light = one("#source-light");
     if (light) {
       light.classList.remove("status-unknown", "status-observed", "status-warning");
-      light.classList.add(liveCount && buildObserved ? "status-observed" : buildObserved ? "status-warning" : "status-unknown");
+      light.classList.add(measuredCount ? "status-observed" : "status-unknown");
     }
-    text("#rail-source-title", liveCount ? `${liveCount} live source${liveCount === 1 ? "" : "s"} verified` : "No live data source verified");
+    text("#rail-source-title", measuredCount ? `${measuredCount} measured source${measuredCount === 1 ? "" : "s"} verified` : "No measured data source verified");
     text(
       "#rail-source-copy",
       buildObserved
-        ? `Build ${revision.slice(0, 12)} is source-bound. Data adapters remain ${liveCount ? "explicitly connected" : "unconfigured"}; the visible scenario is SAMPLE / MODELED.`
+        ? `Build ${revision.slice(0, 12)} is reachable and source-bound. Reachability is not MEASURED; adapters stay ${measuredCount ? "measured" : "BLOCKED"} and the visible scenario is SAMPLE / MODELED.`
         : "Build identity or revision is unavailable. The visible scenario remains clearly marked SAMPLE / MODELED.",
     );
 
     if (github) {
       const state = String(github.state || "UNAVAILABLE");
       text("#github-source-copy", state === "AVAILABLE_UNCONFIGURED" ? "Read-only adapter available; connection not configured" : `Read-only adapter state: ${state}`);
-      applyTruthBadge(one("#github-source-truth"), isLiveSource(github) ? "MEASURED" : "REPORTED");
+      applyTruthBadge(one("#github-source-truth"), isLiveSource(github) ? "MEASURED" : "UNAVAILABLE");
     } else {
       text("#github-source-copy", "Read-only source catalog entry unavailable");
       applyTruthBadge(one("#github-source-truth"), "UNAVAILABLE");
@@ -865,7 +865,7 @@
   }
 
   function applySourceUnavailable() {
-    text("#sidebar-source-count", "0 LIVE");
+    text("#sidebar-source-count", "0 BLOCKED");
     applyTruthBadge(one("#source-truth"), "UNAVAILABLE");
     text("#source-label", "Source status unavailable");
     text("#source-revision", "Build revision unavailable");

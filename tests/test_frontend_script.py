@@ -32,3 +32,14 @@ def test_agent_surfaces_preserve_sample_and_modeled_truth() -> None:
         assert 'truth: "SAMPLE"' in record
         assert 'truth: "MEASURED"' not in record
     assert 'TRUTH_LABELS.has(payload?.truth_label) ? payload.truth_label : "UNAVAILABLE"' in source
+
+
+def test_source_paint_cannot_mint_measured_from_reachability() -> None:
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert 'return ["CONNECTED", "CONFIGURED", "READY", "LIVE"].includes(state);' not in source
+    assert 'return truth === "MEASURED";' in source
+    assert 'buildObserved ? "MEASURED"' not in source
+    assert 'isLiveSource(github) ? "MEASURED" : "REPORTED"' not in source
+    assert 'measuredCount ? "MEASURED" : "UNAVAILABLE"' in source
+    assert '"0 BLOCKED"' in source
+    assert "`${liveCount} LIVE`" not in source
