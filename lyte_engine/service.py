@@ -183,16 +183,18 @@ def derive_lenses(
     }
     lenses: list[dict[str, Any]] = []
     definitions = {item["id"]: item for item in LENSES}
+    measured = bool(services) and all(
+        str(item.get("truth_label") or "").upper() == "MEASURED" for item in services
+    )
     for lens_id, score in raw.items():
         bounded = clamp01(score)
-        status = "HEALTHY" if bounded >= 0.80 else "WATCH" if bounded >= 0.55 else "CRITICAL"
         lenses.append(
             {
                 **definitions[lens_id],
                 "score": round(bounded, 6),
-                "status": status,
+                "status": "MEASURED" if measured else "BLOCKED",
                 "metadata": metadata[lens_id],
-                "truth_label": "MODELED",
+                "truth_label": "MEASURED" if measured else "MODELED",
             }
         )
     return lenses

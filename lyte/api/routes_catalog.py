@@ -71,7 +71,13 @@ def catalog(request: Request) -> dict[str, Any]:
         "product": "Lyte Enterprise Signal Lattice",
         "positioning": "Governed business observability command system",
         "lenses": [
-            {"id": lens_id, "name": name, "description": description}
+            {
+                "id": lens_id,
+                "name": name,
+                "description": description,
+                "status": "BLOCKED",
+                "truth_label": "SAMPLE" if runtime.demo_mode else "UNAVAILABLE",
+            }
             for lens_id, name, description in LENSES
         ],
         "scenes": [
