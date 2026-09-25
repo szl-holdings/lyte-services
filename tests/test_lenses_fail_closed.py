@@ -19,7 +19,11 @@ class _Request:
 
 def test_derived_lenses_are_blocked_without_measured_services() -> None:
     lenses = derive_lenses(
-        services=[{"lambda_advisory": {"score": 0.91}, "business": {"revenue_at_risk_usd": 12}, "slo": {"burn_rate": 0.1}}],
+        services=[{
+            "lambda_advisory": {"score": 0.91},
+            "business": {"revenue_at_risk_usd": 12},
+            "slo": {"burn_rate": 0.1},
+        }],
         outcomes=[{"attainment": 0.9}],
         trace_summary={"success_rate": 0.99},
         graph_edges=[{"from": "a", "to": "b"}],
