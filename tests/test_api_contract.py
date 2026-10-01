@@ -293,7 +293,7 @@ def test_security_headers_support_hf_embed_without_external_assets(monkeypatch) 
         root = client.get("/")
         policy = root.headers["content-security-policy"]
         assert policy.startswith("default-src 'self'")
-        assert "https://huggingface.co" in policy
+        assert "https://huggingface.co" in policy.replace(";", " ").split()  # a whole source token, not a substring
         assert "unsafe-inline" not in policy
         assert root.headers["cross-origin-resource-policy"] == "same-origin"
         api = client.get("/api/build-info")
