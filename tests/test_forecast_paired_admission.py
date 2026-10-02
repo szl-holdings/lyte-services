@@ -10,6 +10,8 @@ from benchmarks.forecast_loom_admission import (
     compare_providers,
     evaluate_provider,
     load_series,
+    require_unchanged_source,
+    source_identity,
 )
 
 
@@ -105,3 +107,43 @@ def test_supplied_bytes_are_hashed_and_duplicate_keys_rejected(tmp_path):
     path.write_bytes(b'{"x":[],"x":[]}')
     with pytest.raises(ValueError, match="duplicate"):
         load_series(path)
+
+
+def test_executed_implementation_change_invalidates_source_identity(tmp_path):
+    import subprocess
+
+    from benchmarks.forecast_loom_admission import SOURCE_PATHS
+
+    for name in SOURCE_PATHS:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# declared synthetic implementation fixture\n")
+    for arguments in (["init"], ["add", "."], ["-c", "user.name=Fixture", "-c",
+                      "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false",
+                      "commit", "-m", "fixture"]):
+        # Fixed Git argv creates only the synthetic repository fixture above.
+        subprocess.run(["git", *arguments], cwd=tmp_path, capture_output=True, check=True)  # noqa: S603, S607
+    original = source_identity(tmp_path)
+    assert original["tracked_worktree_dirty"] is False
+    assert len(original["commit_sha"]) == len(original["tree_sha"]) == 40
+    assert len(original["executed_local_source_sha256"]) == 4
+    (tmp_path / "lyte/intelligence/forecast_loom.py").write_text("# changed implementation\n")
+    changed = source_identity(tmp_path)
+    assert changed["commit_sha"] == original["commit_sha"]
+    assert changed["tracked_worktree_dirty"] is True
+    assert changed["executed_local_source_sha256"] != original["executed_local_source_sha256"]
+    with pytest.raises(ValueError, match="changed during"):
+        require_unchanged_source(original, tmp_path)
+
+
+def test_policy_and_evidence_index_bind_the_actual_paired_admission_rule():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    policy = json.loads((root / "frontier/forecast-loom-admission-policy.json").read_text())
+    index = json.loads((root / "frontier/forecast-loom-evidence-index.json").read_text())
+    assert policy["requirements"]["normalized_improvement_on_every_signal"] == "> 0"
+    assert policy["requirements"]["raw_cross_signal_loss_average_for_admission"] is False
+    assert policy["requirements"]["executed_source_identity_bound_and_unchanged"] is True
+    assert index["current_admission_policy_schema"] == policy["schema"]
+    assert index["current_measurement_report_schema"] == policy["report_schema"]

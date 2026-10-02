@@ -12,7 +12,9 @@ from pathlib import Path
 import platform
 import time
 
-from benchmarks.forecast_loom_admission import compare_providers, evaluate_provider, workloads
+from benchmarks.forecast_loom_admission import (
+    compare_providers, evaluate_provider, require_unchanged_source, source_identity, workloads,
+)
 
 REVISION = "b125275f9204d37cbb81fe47b9cf5e08a521e829"
 BUNDLE_SHA256 = {
@@ -47,6 +49,7 @@ def main() -> int:
     if args.output.exists():
         raise ValueError("preserve existing evidence: choose a new output path")
     started = time.monotonic()
+    source = source_identity()
     bundle = verify_bundle(args.model_dir)
     os.environ.update(HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1",
                       HF_HUB_DISABLE_TELEMETRY="1", TOKENIZERS_PARALLELISM="false")
@@ -82,6 +85,7 @@ def main() -> int:
         "checkpoint_bytes": bundle, "seed": 17, "context_points": 512, "reports": reports,
         "python": platform.python_version(), "elapsed_seconds": time.monotonic() - started,
         "probe_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "source_identity": source,
         "benchmark_sha256": hashlib.sha256(Path(__file__).with_name("forecast_loom_admission.py").read_bytes()).hexdigest(),
         "dependencies": {name: importlib.metadata.version(name) for name in (
             "torch", "granite-tsfm", "transformers", "pandas", "safetensors")},
@@ -91,6 +95,7 @@ def main() -> int:
                         "No significance, independent replication, deployment, or production admission is established.",
                         "Measure actual worker resources separately; this probe does not enforce a memory budget."],
     }
+    require_unchanged_source(source)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("xb") as handle:
         handle.write(json.dumps(result, sort_keys=True, indent=2, allow_nan=False).encode() + b"\n")

@@ -15,12 +15,51 @@ import json
 import math
 import random
 import statistics
+import subprocess
 from dataclasses import asdict
 from pathlib import Path
 
 from lyte.intelligence.forecast_loom import ForecastRequest, RobustDriftProvider, run_forecast
 
 MAX_INPUT_BYTES = 2 * 1024 * 1024
+SOURCE_ROOT = Path(__file__).resolve().parents[1]
+SOURCE_PATHS = (
+    "benchmarks/forecast_loom_admission.py", "benchmarks/granite_checkpoint_probe.py",
+    "lyte/intelligence/forecast_loom.py", "lyte/intelligence/granite_timeseries.py",
+)
+
+
+def source_identity(root: Path = SOURCE_ROOT) -> dict:
+    """Bind executed local implementations, plus the Git generation and dirtiness."""
+    def git(*arguments):
+        result = subprocess.run(["git", "-c", "core.fsmonitor=false", *arguments],
+                                cwd=root, capture_output=True, timeout=10, check=True)
+        if len(result.stdout) > MAX_INPUT_BYTES:
+            raise ValueError("Git source identity output exceeds its bound")
+        return result.stdout
+    files = {}
+    for name in SOURCE_PATHS:
+        path = root / name
+        if not path.is_file() or path.is_symlink():
+            raise ValueError("executed source file must be regular: " + name)
+        with path.open("rb") as handle:
+            raw = handle.read(MAX_INPUT_BYTES + 1)
+        if len(raw) > MAX_INPUT_BYTES:
+            raise ValueError("executed source file exceeds its byte bound")
+        files[name] = hashlib.sha256(raw).hexdigest()
+    status = git("status", "--porcelain=v1", "--untracked-files=no")
+    return {"repository": "szl-holdings/lyte-services",
+            "commit_sha": git("rev-parse", "HEAD").decode().strip(),
+            "tree_sha": git("rev-parse", "HEAD^{tree}").decode().strip(),
+            "tracked_worktree_dirty": bool(status),
+            "tracked_status_sha256": hashlib.sha256(status).hexdigest(),
+            "executed_local_source_sha256": files,
+            "environment_is_complete_locked_closure": False}
+
+
+def require_unchanged_source(before: dict, root: Path = SOURCE_ROOT) -> None:
+    if source_identity(root) != before:
+        raise ValueError("source generation changed during measurement")
 
 
 def _data_hash(context: list[float], truth: list[float]) -> str:
@@ -156,6 +195,7 @@ def main() -> int:
 
     series = workloads()
     try:
+        source = source_identity()
         input_hash = None
         if args.input_json:
             supplied, input_hash = load_series(args.input_json)
@@ -173,7 +213,9 @@ def main() -> int:
         report["input_scope"] = "MIXED_SYNTHETIC_AND_SUPPLIED" if input_hash else "SYNTHETIC"
         report["supplied_input_sha256"] = input_hash
         report["benchmark_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-    except (ValueError, TypeError, OverflowError, RecursionError, OSError) as exc:
+        require_unchanged_source(source)
+        report["source_identity"] = source
+    except (ValueError, TypeError, OverflowError, RecursionError, OSError, subprocess.SubprocessError) as exc:
         print(json.dumps({"admission": "INVALID_INPUT", "production_authority": "NONE",
                           "error": str(exc)}, allow_nan=False))
         return 2
