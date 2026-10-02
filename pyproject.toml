@@ -39,6 +39,12 @@ test = [
 [project.scripts]
 lyte = "lyte.app:run"
 
+[project.urls]
+Homepage = "https://github.com/szl-holdings/lyte-services"
+Source = "https://github.com/szl-holdings/lyte-services"
+Issues = "https://github.com/szl-holdings/lyte-services/issues"
+Changelog = "https://github.com/szl-holdings/lyte-services/releases"
+
 [tool.hatch.build.targets.wheel]
 packages = ["lyte", "lyte_engine", "lyte_api"]
 
@@ -55,3 +61,6 @@ exclude = ["migrations/versions"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC", "S"]
 ignore = ["S101"]
+
+[tool.szl.release]
+import_names = ["lyte", "lyte_api", "lyte_engine"] # wheel top-level import names; the release gate fails if the built wheel differs
