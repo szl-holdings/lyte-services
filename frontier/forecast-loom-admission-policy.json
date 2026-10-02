@@ -1,10 +1,16 @@
 {
-  "schema": "szl.lyte.forecast-admission-policy/v1",
+  "schema": "szl.lyte.forecast-admission-policy/v2",
   "candidate": "hf.ibm-granite.patchtst-fm-r2",
   "baseline": "szl.robust-drift/v1",
   "requirements": {
     "quantile_contract": "PASS",
-    "aggregate_mae_improvement_over_baseline": "> 0",
+    "complete_unique_paired_signal_coverage": true,
+    "identical_context_truth_and_request_identity": true,
+    "training_only_positive_finite_normalization_scale": true,
+    "normalized_improvement_on_every_signal": "> 0",
+    "baseline_and_candidate_repeat_output_hashes_equal": true,
+    "raw_cross_signal_loss_average_for_admission": false,
+    "executed_source_identity_bound_and_unchanged": true,
     "representative_telemetry_required_for_production": true,
     "deployment_slo_evidence_required_for_production": true
   },
@@ -14,5 +20,7 @@
     "PRODUCTION_ADMITTED"
   ],
   "default_state": "NOT_ADMITTED",
-  "execution_authority": "NONE"
+  "execution_authority": "NONE",
+  "report_schema": "szl.lyte.forecast-admission/v2",
+  "historical_v1_results": "Retained as historical measurements; do not reinterpret as admission under v2."
 }
