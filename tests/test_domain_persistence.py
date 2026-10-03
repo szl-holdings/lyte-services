@@ -172,7 +172,6 @@ def test_second_brain_digest_and_hatun_never_grant_execution() -> None:
     assert digest_scope_token(Scope(scope.tenant_id, uuid4()), raw_token) != digest
 
     observation = MemoryDraft(
-        scope_digest=digest,
         kind=MemoryKind.OBSERVATION,
         summary="Checkout latency rose after the declared deployment window.",
         truth_label=TruthLabel.REPORTED,
@@ -182,7 +181,6 @@ def test_second_brain_digest_and_hatun_never_grant_execution() -> None:
     assert raw_token not in repr(observation)
     with pytest.raises(ValueError, match="approved knowledge"):
         MemoryDraft(
-            scope_digest=digest,
             kind=MemoryKind.APPROVED_KNOWLEDGE,
             summary="Demonstration-only claim.",
             truth_label=TruthLabel.SAMPLE,
@@ -299,12 +297,12 @@ def test_receipt_and_idempotency_streams_are_scoped_and_hash_chained(
         store.list_receipts(scope, offset=-1)
 
 
-def test_memory_and_anatomy_are_digest_scoped_and_immutable(
+def test_memory_and_anatomy_are_workspace_scoped_and_immutable(
     scoped_store: tuple[Database, LyteStore, Scope],
 ) -> None:
     database, store, scope = scoped_store
     token = "m" * 48
-    digest = digest_scope_token(scope, token)
+    transient_digest = digest_scope_token(scope, token)
     receipt = store.append_receipt(
         scope,
         ReceiptDraft(
@@ -319,18 +317,29 @@ def test_memory_and_anatomy_are_digest_scoped_and_immutable(
     memory = store.append_memory(
         scope,
         MemoryDraft(
-            scope_digest=digest,
             kind=MemoryKind.OBSERVATION,
             summary="Checkout entered WATCH during the observation window.",
             truth_label=TruthLabel.REPORTED,
             evidence_refs=(receipt.record_hash,),
             subjects=("checkout",),
+            subject_dimensions={"journey": ("checkout",)},
         ),
         receipt_hash=receipt.record_hash,
     )
     assert token not in str(memory.basis_json)
-    assert [row.id for row in store.list_memory(scope, scope_digest=digest)] == [memory.id]
-    assert store.list_memory(scope, scope_digest="0" * 64) == []
+    assert transient_digest not in str(memory.basis_json)
+    assert [row.id for row in store.list_memory(scope).items] == [memory.id]
+    assert [
+        row.id
+        for row in store.list_memory(
+            scope,
+            subject_dimensions={"journey": "checkout"},
+        ).items
+    ] == [memory.id]
+    assert not store.list_memory(
+        scope,
+        subject_dimensions={"service": "checkout"},
+    ).items
     assert store.verify_chain(scope, STREAM_MEMORY).valid
 
     started = datetime(2026, 9, 4, 12, 0, tzinfo=UTC)

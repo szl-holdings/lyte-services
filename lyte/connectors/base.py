@@ -12,23 +12,9 @@ from enum import StrEnum
 from typing import Any
 
 from lyte.domain import ReceiptDraft, TruthLabel, canonical_json
+from lyte.domain.receipts import is_sensitive_key
 
 _IDEMPOTENCY_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$")
-_SENSITIVE_ATTRIBUTE_KEYS = {
-    "access_token",
-    "api_key",
-    "auth_token",
-    "authorization",
-    "client_secret",
-    "cookie",
-    "password",
-    "private_key",
-    "refresh_token",
-    "secret",
-    "session_token",
-    "set_cookie",
-    "token",
-}
 
 
 class ConnectorError(RuntimeError):
@@ -184,24 +170,36 @@ def assert_finite_json(value: Any, *, path: str = "payload") -> None:
 
 
 def is_sensitive_attribute_key(key: str) -> bool:
-    normalized = key.strip().lower().replace("-", "_").replace(".", "_")
-    return normalized in _SENSITIVE_ATTRIBUTE_KEYS or normalized.endswith("_secret")
+    return is_sensitive_key(key)
 
 
 def strip_sensitive_attributes(
     attributes: Mapping[str, Any],
 ) -> tuple[dict[str, Any], tuple[str, ...]]:
-    """Remove sensitive attribute values and report only the removed key names."""
+    """Recursively remove credentials and report removed key paths, never values."""
 
-    clean: dict[str, Any] = {}
     stripped: list[str] = []
-    for raw_key, value in attributes.items():
-        key = str(raw_key)
-        if is_sensitive_attribute_key(key):
-            stripped.append(key)
-        else:
-            clean[key] = value
-    return clean, tuple(sorted(set(stripped)))
+
+    def clean_mapping(value: Mapping[str, Any], path: str) -> dict[str, Any]:
+        clean: dict[str, Any] = {}
+        for raw_key, nested in value.items():
+            key = str(raw_key)
+            key_path = f"{path}.{key}" if path else key
+            if is_sensitive_attribute_key(key):
+                stripped.append(key_path)
+            else:
+                clean[key] = clean_value(nested, key_path)
+        return clean
+
+    def clean_value(value: Any, path: str) -> Any:
+        if isinstance(value, Mapping):
+            return clean_mapping(value, path)
+        if isinstance(value, (list, tuple)):
+            items = [clean_value(item, f"{path}[{index}]") for index, item in enumerate(value)]
+            return tuple(items) if isinstance(value, tuple) else items
+        return value
+
+    return clean_mapping(attributes, ""), tuple(sorted(set(stripped)))
 
 
 def require_object(value: Any, *, path: str) -> Mapping[str, Any]:

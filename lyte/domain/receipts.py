@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -12,22 +13,53 @@ from .truth import TruthLabel
 
 _NAME = re.compile(r"^[a-z][a-z0-9_.:-]{0,127}$")
 _SENSITIVE_KEYS = {
-    "api_key",
+    "apikey",
+    "accesstoken",
+    "authtoken",
     "authorization",
+    "bearertoken",
+    "clientsecret",
     "cookie",
+    "credential",
+    "credentials",
+    "csrftoken",
+    "idtoken",
+    "oauthtoken",
+    "passphrase",
+    "passwd",
     "password",
-    "private_key",
+    "privatekey",
+    "proxyauthorization",
+    "refreshtoken",
     "secret",
-    "set_cookie",
+    "sessiontoken",
+    "setcookie",
     "token",
+    "xsrftoken",
 }
+
+
+def is_sensitive_key(key: str) -> bool:
+    """Match credential fields, including qualified names, on word boundaries.
+
+    Collapse formatting differences while retaining boundaries so telemetry such
+    as ``token_count`` and ``authorization_status`` remains usable. Compact
+    spellings of compound credentials (for example ``APIKEY``) also match.
+    """
+    normalized = unicodedata.normalize("NFKC", key).strip()
+    words = re.findall(r"[a-z0-9]+", normalized.casefold())
+    if words and (words[-1] in _SENSITIVE_KEYS or "".join(words[-2:]) in _SENSITIVE_KEYS):
+        return True
+    normalized = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", normalized)
+    normalized = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", normalized)
+    words = re.findall(r"[a-z0-9]+", normalized.casefold())
+    return bool(words) and (words[-1] in _SENSITIVE_KEYS or "".join(words[-2:]) in _SENSITIVE_KEYS)
 
 
 def assert_no_sensitive_keys(value: Any, *, path: str = "payload") -> None:
     if isinstance(value, Mapping):
         for key, nested in value.items():
-            normalized = str(key).strip().lower().replace("-", "_")
-            if normalized in _SENSITIVE_KEYS or normalized.endswith("_secret"):
+            if is_sensitive_key(str(key)):
                 raise ValueError(f"sensitive field is forbidden at {path}.{key}")
             assert_no_sensitive_keys(nested, path=f"{path}.{key}")
     elif isinstance(value, (list, tuple)):

@@ -10,7 +10,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     LYTE_ENV=development \
     DATABASE_URL=sqlite+pysqlite:////data/lyte.db \
     LYTE_DEMO_MODE=true \
-    LYTE_REQUIRE_SOURCE_BINDING=true
+    LYTE_REQUIRE_SOURCE_BINDING=true \
+    LYTE_REQUIRE_BUILD_RECEIPT=true
 
 WORKDIR /app
 RUN groupadd --system --gid 10001 lyte \
@@ -32,6 +33,10 @@ ARG LYTE_SOURCE_REVISION=UNAVAILABLE
 ENV LYTE_SOURCE_REVISION=${LYTE_SOURCE_REVISION}
 COPY source_revision.txt ./source_revision.txt
 RUN python -c "import os,pathlib,re; p=pathlib.Path('source_revision.txt'); marker=p.read_text(encoding='utf-8').strip().lower(); build=os.environ.get('LYTE_SOURCE_REVISION','').strip().lower(); valid=lambda value: re.fullmatch(r'[0-9a-f]{40}',value) is not None; assert valid(build) or valid(marker), 'exact source revision is required'; assert not (valid(build) and valid(marker) and build != marker), 'source revisions disagree'; p.write_text((build if valid(build) else marker)+'\n',encoding='utf-8')"
+RUN python -m lyte.build_receipt generate --root /app \
+    && chmod 0444 /app/build-receipt.json \
+    && find /app/lyte /app/lyte_engine /app/lyte_api /app/space /app/migrations \
+      -type f -exec chmod 0444 {} +
 
 USER 10001:10001
 EXPOSE 7860

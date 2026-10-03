@@ -28,8 +28,9 @@ RUNS = ROOT / "artifacts" / "runs"
 SCHEMA = "szl.product-frontier-run/v1"
 REPOSITORY = "szl-holdings/lyte-services"
 PUBLISHER_REPOSITORY = "szl-holdings/a11oy"
-PUBLISHER_WORKFLOW = "hf-sync.yml"
+PUBLISHER_WORKFLOW = "hf-publish-vertical-flagships.yml"
 SHA = re.compile(r"^[0-9a-f]{40}$")
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SECRET_PATTERNS = (
     re.compile(r"gh[pousr]_[A-Za-z0-9]{12,}"),
     re.compile(r"github_pat_[A-Za-z0-9_]{12,}"),
@@ -606,15 +607,16 @@ def deploy(receipt: RunReceipt, args: argparse.Namespace) -> bool:
         "--ref",
         "main",
         "--field",
-        f"lyte_source_repository={REPOSITORY}",
-        "--field",
-        f"lyte_source_revision={revision}",
+        "scope=lyte",
     ]
     result = execute(command)
     receipt.deployments["SZLHOLDINGS/lyte"] = {
         "publisher": PUBLISHER_REPOSITORY,
         "workflow": PUBLISHER_WORKFLOW,
-        "source_revision": revision,
+        "requested_source_revision": revision,
+        "evidence_class": "DECLARED",
+        "publication_verified": False,
+        "source_selection": "publisher independently admits then-current protected main",
         **result.to_dict(),
     }
     if not result.passed:
@@ -626,6 +628,12 @@ def verify(receipt: RunReceipt, args: argparse.Namespace) -> bool:
     revision = resolve_release_revision(receipt, args)
     if revision is None:
         return False
+    receipt_sha256 = str(args.receipt_sha256 or "").strip().lower()
+    if SHA256.fullmatch(receipt_sha256) is None:
+        receipt.failures.append(
+            "live verification requires --receipt-sha256 from independent publication evidence"
+        )
+        return False
     result = execute(
         [
             sys.executable,
@@ -634,6 +642,8 @@ def verify(receipt: RunReceipt, args: argparse.Namespace) -> bool:
             args.base_url,
             "--revision",
             revision,
+            "--receipt-sha256",
+            receipt_sha256,
             "--retries",
             str(max(1, args.max_retries)),
         ],
@@ -664,6 +674,17 @@ def rollout(receipt: RunReceipt, args: argparse.Namespace) -> bool:
 
 
 def finish(receipt: RunReceipt, success: bool, emit_json: bool) -> int:
+    deployment = receipt.deployments.get("SZLHOLDINGS/lyte", {})
+    if (
+        receipt.command == "deploy"
+        and isinstance(deployment, dict)
+        and deployment.get("requested_source_revision")
+        and deployment.get("publication_verified") is not True
+    ):
+        receipt.failures.append(
+            "canonical workflow dispatch is not release closure; "
+            "immutable publication receipt and live proof remain pending"
+        )
     receipt.completed_at = now()
     receipt.artifact_sha256 = artifact_digests()
     receipt.complete = success and not receipt.failures
@@ -698,6 +719,7 @@ def parser() -> argparse.ArgumentParser:
         sub.add_argument("--resume-from", type=Path)
         sub.add_argument("--max-retries", type=int, default=3)
         sub.add_argument("--source-revision")
+        sub.add_argument("--receipt-sha256")
         sub.add_argument("--base-url", default="https://szlholdings-lyte.hf.space")
         sub.add_argument("--json", action="store_true")
     return root
