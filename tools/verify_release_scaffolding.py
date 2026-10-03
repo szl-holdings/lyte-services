@@ -82,8 +82,20 @@ def verify() -> list[str]:
     missing_jobs = sorted(required_jobs - job_ids)
     if missing_jobs:
         failures.append("compiler.yml: required jobs missing: " + ", ".join(missing_jobs))
-    if "expected_revision:" not in compiler or "required: true" not in compiler:
-        failures.append("compiler.yml: manual live proof must require an expected revision")
+    if (
+        "expected_revision:" not in compiler
+        or "expected_receipt_sha256:" not in compiler
+        or compiler.count("required: true") < 2
+    ):
+        failures.append(
+            "compiler.yml: manual live proof must require exact revision and receipt digest"
+        )
+    if (
+        "tests/test_postgres_contract.py" not in compiler
+        or "postgres:17.6@sha256:" not in compiler
+        or "LYTE_TEST_POSTGRES_URL:" not in compiler
+    ):
+        failures.append("compiler.yml: database gate must exercise pinned PostgreSQL")
 
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     if re.search(r"^USER\s+10001:10001\s*$", dockerfile, re.MULTILINE) is None:
@@ -92,10 +104,16 @@ def verify() -> list[str]:
         failures.append("Dockerfile: exact source-revision build argument is missing")
     if "exact source revision is required" not in dockerfile:
         failures.append("Dockerfile: build does not reject an unavailable source revision")
+    if "python -m lyte.build_receipt generate" not in dockerfile:
+        failures.append("Dockerfile: immutable application payload receipt is not generated")
+    if "LYTE_REQUIRE_BUILD_RECEIPT=true" not in dockerfile:
+        failures.append("Dockerfile: runtime does not require the build receipt")
     if "COPY migrations ./migrations" not in dockerfile or "COPY alembic.ini" not in dockerfile:
         failures.append("Dockerfile: migration closure is incomplete")
 
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    if "image: postgres:17.6@sha256:" not in compose:
+        failures.append("docker-compose.yml: PostgreSQL image must be immutable")
     obsolete_names = {
         "LYTE_DATABASE_URL",
         "LYTE_ENVIRONMENT",

@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 
 from lyte.domain import TruthLabel
+from lyte.intelligence.living_anatomy import ANALYSIS_STAGES
 
 router = APIRouter(prefix="/api/lyte/v2", tags=["catalog"])
 
@@ -20,17 +21,7 @@ LENSES = (
     ("decision", "Decision", "Evidence, recommendation, owner, review, verification, and receipt."),
 )
 
-ANATOMY = (
-    ("sense", "Acquire an allowlisted source or explicit caller observation."),
-    ("normalize", "Validate schema, limits, identifiers, units, currency, and time."),
-    ("context", "Bind tenant, workspace, source, entities, journey, and outcome."),
-    ("formula", "Calculate reliability and economic results with explicit availability."),
-    ("policy", "Deny effectors, unsupported authority, and unsupported causality."),
-    ("decide", "Return REVIEW, ABSTAIN, or DENY for a human owner."),
-    ("verify", "Verify evidence, invariants, receipt chain, and source freshness."),
-    ("remember", "Persist scoped summaries and evidence references, never raw tokens."),
-    ("receipt", "Append a finite canonical record to the scoped hash chain."),
-)
+ANATOMY = tuple((spec.stage, spec.description) for spec in ANALYSIS_STAGES)
 
 FORMULAS = (
     ("lyte.availability_sli", "good_events / total_events", "MEASURED"),

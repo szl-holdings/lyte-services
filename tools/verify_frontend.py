@@ -50,6 +50,41 @@ def verify(mode: str) -> list[str]:
     if re.search(r"<style(?:\s[^>]*)?>", html, re.I):
         findings.append("inline-style")
 
+    required_scoped_apis = (
+        "/api/build-info",
+        "/api/lyte/v2/sources",
+        "/api/lyte/v2/services",
+        "/api/lyte/v2/journeys",
+        "/api/lyte/v2/outcomes",
+        "/api/lyte/v2/agents",
+        "/api/lyte/v2/incidents",
+        "/api/lyte/v2/decisions",
+        "/api/lyte/v2/playback",
+        "/api/lyte/v2/receipts",
+    )
+    for api in required_scoped_apis:
+        if f'"{api}"' not in js:
+            findings.append(f"missing-scoped-api:{api}")
+    for pseudo_receipt in ("rcpt-sample", "rcpt-model"):
+        if pseudo_receipt in html or pseudo_receipt in js:
+            findings.append(f"pseudo-receipt:{pseudo_receipt}")
+    if "$184" in html or "$184" in js or "184k" in html or "184k" in js:
+        findings.append("divergent-revenue-fixture")
+    if "REAL_ONLY; no sample fallback" not in js:
+        findings.append("missing-real-only-fail-closed-contract")
+    if "const HASH = /^[0-9a-f]{64}$/i" not in js:
+        findings.append("missing-persisted-hash-contract")
+    for target in (
+        "lattice-table-body",
+        "service-cards",
+        "journey-steps",
+        "agent-list",
+        "playback-events",
+        "evidence-tape",
+    ):
+        if f'id="{target}"' not in html:
+            findings.append(f"missing-hydration-target:{target}")
+
     if mode in {"all", "accessibility"}:
         tags = parser.tags
         if not any(

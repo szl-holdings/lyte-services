@@ -15,7 +15,6 @@ from lyte.domain import (
     ReceiptDraft,
     Scope,
     TruthLabel,
-    sha256_text,
 )
 from lyte.governance import MemoryDraft, MemoryKind
 from lyte.intelligence import CheckoutScenario, build_checkout_scenario
@@ -34,12 +33,13 @@ class _Seed:
     evidence_refs: tuple[str, ...]
 
 
-def sample_memory_digest(scope: Scope) -> str:
-    """Return a stable public-fixture scope digest; it is not an auth credential."""
-
-    return sha256_text(
-        f"szl.lyte.public-sample-memory/v1\x00{scope.tenant_id}\x00{scope.workspace_id}"
-    )
+def _untraced_anatomy() -> dict[str, Any]:
+    return {
+        "schema": "szl.lyte.anatomy-link/v1",
+        "trace_id": None,
+        "state": "NOT_EXECUTED",
+        "reason": "seeded fixture; no analysis execution trace exists",
+    }
 
 
 def _source_revision() -> str | None:
@@ -215,7 +215,12 @@ def _seed_rows(scenario: CheckoutScenario) -> tuple[_Seed, ...]:
         OperationalEntityKind.SIGNAL,
         "checkout-burn-14x",
         "Checkout error-budget burn",
-        {"service_id": "checkout-api", "burn_rate": 14.0, "state": "BREACHED"},
+        {
+            "service_id": "checkout-api",
+            "burn_rate": 14.0,
+            "state": "BREACHED",
+            "living_anatomy": _untraced_anatomy(),
+        },
         TruthLabel.SAMPLE,
         "sample:service-window:checkout:20260904t1200z",
     )
@@ -227,6 +232,7 @@ def _seed_rows(scenario: CheckoutScenario) -> tuple[_Seed, ...]:
             "recommended_next_review": "Validate payment latency and deployment evidence",
             "can_authorize": False,
             "causality_claimed": False,
+            "living_anatomy": _untraced_anatomy(),
         },
         TruthLabel.MODELED,
         "sample:service-window:checkout:20260904t1200z",
@@ -250,7 +256,7 @@ def _seed_rows(scenario: CheckoutScenario) -> tuple[_Seed, ...]:
             OperationalEntityKind.ACTION_REQUEST,
             request.request_id,
             "Simulated rollback request",
-            request.to_dict(),
+            {**request.to_dict(), "living_anatomy": _untraced_anatomy()},
             request.truth_label,
             *request.evidence_refs,
         )
@@ -372,12 +378,10 @@ def seed_demo(store: LyteStore, scope: Scope) -> dict[str, Any]:
     )
     rows = _seed_rows(scenario)
     _upsert_rows(store, scope, rows, observed_at=scenario.generated_at)
-    digest = sample_memory_digest(scope)
-    if not store.list_memory(scope, scope_digest=digest, limit=1):
+    if not store.list_memory(scope, limit=1).items:
         store.append_memory(
             scope,
             MemoryDraft(
-                scope_digest=digest,
                 kind=MemoryKind.OBSERVATION,
                 summary=(
                     "SAMPLE checkout degradation connects a deployment window, payment "
@@ -386,6 +390,13 @@ def seed_demo(store: LyteStore, scope: Scope) -> dict[str, Any]:
                 truth_label=TruthLabel.SAMPLE,
                 evidence_refs=(receipt.record_hash,),
                 subjects=("checkout-api", "payment-api", "checkout", "checkout-revenue"),
+                subject_dimensions={
+                    "service": ("checkout-api", "payment-api"),
+                    "journey": ("checkout",),
+                    "outcome": ("checkout-revenue",),
+                    "incident": ("incident-checkout-20260904",),
+                    "decision": ("hatun-checkout-review-1",),
+                },
                 metadata={"data_mode": "SAMPLE", "approved_knowledge": False},
             ),
             receipt_hash=receipt.record_hash,
@@ -399,4 +410,4 @@ def seed_demo(store: LyteStore, scope: Scope) -> dict[str, Any]:
     }
 
 
-__all__ = ["sample_memory_digest", "seed_demo"]
+__all__ = ["seed_demo"]

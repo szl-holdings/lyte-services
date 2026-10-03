@@ -83,11 +83,14 @@ def test_five_scene_product_shell_is_semantic_and_reference_complete() -> None:
     assert 'id="ask-dialog"' in html
     assert "Evidence receipt tape" in html
     assert "Truth language" in html
-    assert "SAMPLE workspace" in html
-    assert "Revenue / currently at risk" in html
-    assert "Cost / AI agent retries" in html
-    assert "Service / critical journey availability" in html
-    assert "Risk / material incidents" in html
+    assert 'id="workspace-coverage"' in html
+    assert 'id="scope-form"' in html
+    assert 'id="scope-token" type="password"' in html
+    assert "Revenue outcome" in html
+    assert "Agent operations" in html
+    assert "Service availability" in html
+    assert "Incident posture" in html
+    assert "Waiting for the outcomes API" in html
 
 
 def test_frontend_has_no_inline_csp_exceptions_or_external_runtime_assets() -> None:
@@ -122,7 +125,7 @@ def test_local_controller_wires_real_endpoints_and_all_interactions() -> None:
         "ArrowDown",
         "visibilitychange",
         "prefers-reduced-motion: reduce",
-        "causality is not claimed",
+        "chronology alone is not a causal",
         "No answer was fabricated",
     }
     for contract in required_contracts:
