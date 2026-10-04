@@ -12,7 +12,13 @@ from .auth import (
     TokenVerifier,
 )
 from .hatun import HatunDecision, HatunRequest, HatunReview, evaluate_hatun, labels
-from .second_brain import MemoryDraft, MemoryKind, digest_scope_token
+from .second_brain import (
+    SUBJECT_DIMENSIONS,
+    MemoryDraft,
+    MemoryKind,
+    digest_scope_token,
+    enterprise_memory_partition,
+)
 
 __all__ = [
     "AuthenticationError",
@@ -28,8 +34,10 @@ __all__ = [
     "OIDCJWTVerifier",
     "Principal",
     "RBAC_ROLES",
+    "SUBJECT_DIMENSIONS",
     "TokenVerifier",
     "digest_scope_token",
+    "enterprise_memory_partition",
     "evaluate_hatun",
     "labels",
 ]

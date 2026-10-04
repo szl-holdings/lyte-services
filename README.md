@@ -66,6 +66,14 @@ docker build --build-arg "LYTE_SOURCE_REVISION=${revision}" -t "szl-lyte:${revis
 docker run --rm -p 7860:7860 -v lyte-data:/data "szl-lyte:${revision}"
 ```
 
+The image stamps the exact 40-character source revision, generates a canonical
+`/app/build-receipt.json` over the closed application payload, and runs with
+`LYTE_REQUIRE_BUILD_RECEIPT=true`. Runtime readiness rehashes that payload; a
+missing, malformed, stale, or source-mismatched receipt returns HTTP 503. The
+receipt covers application files copied by the Dockerfile, not installed
+dependency bytes or the entire OCI image. Publication evidence must separately
+bind its receipt digest and provider commit to the admitted source revision.
+
 Production requires `DATABASE_URL` with PostgreSQL plus `OIDC_ISSUER`,
 `OIDC_AUDIENCE`, and `OIDC_JWKS_URL`. Run `alembic upgrade head` before the
 application and set `LYTE_ENV=production`, `LYTE_DEMO_MODE=false`, and
@@ -82,7 +90,11 @@ forbidden in production.
 
 Operations and proof:
 
-- `/healthz`, `/readyz`, `/metrics`
+- `/healthz` for process liveness
+- `/readyz` for fail-closed source, payload-receipt, route, database, and schema readiness
+- `/api/live` for application-owned live attestation
+- `/build-receipt.json` for the exact immutable application payload receipt
+- `/metrics` and `/api/lyte/v2/metrics` for the application metrics registry
 - `/api/build-info`, `/.well-known/szl-source.json`
 
 Lyte v2:
@@ -91,6 +103,7 @@ Lyte v2:
 - governed GitHub Actions, OTLP JSON subset, and signed-event ingestion
 - services, journeys, outcomes, agents, incidents, decisions, and playback
 - deterministic Ask Lyte, tenant-scoped Second Brain, receipts, and Hatun review
+- administrator-only exact-scope provisioning with an atomic creation receipt
 
 The fixed public `SAMPLE` scope is read-only. Every durable mutation requires a
 verified tenant/workspace principal and an operator or administrator role.

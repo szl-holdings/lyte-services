@@ -815,6 +815,10 @@ main {
 .truth-unavailable { color: #abb5b2; background: rgba(171, 181, 178, 0.05); }
 .truth-measured { color: var(--cyan); background: rgba(85, 239, 208, 0.06); }
 .truth-reported { color: var(--blue); background: rgba(118, 186, 255, 0.06); }
+.truth-roadmap, .truth-declared, .truth-unknown, .truth-blocked { color: #abb5b2; background: rgba(171, 181, 178, 0.05); }
+.truth-simulated { color: var(--violet); background: rgba(170, 140, 255, 0.07); }
+
+.workspace-coverage { margin: 0.6rem 0 1rem; color: var(--muted); font-size: 0.68rem; overflow-wrap: anywhere; }
 
 .executive-grid,
 .service-layout,
@@ -2166,6 +2170,14 @@ dialog::backdrop {
   color: var(--text-soft);
   font-size: 0.72rem;
 }
+
+.scope-form fieldset { min-width: 0; margin: 1rem 0; padding: 1rem; border: 1px solid var(--line); border-radius: 10px; }
+.scope-form legend { padding: 0 0.4rem; font-size: 0.85rem; }
+.scope-form label { display: block; margin-top: 0.65rem; font-size: 0.72rem; }
+.scope-form input { display: block; width: 100%; min-width: 0; min-height: 48px; margin-top: 0.3rem; padding: 0.6rem; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--ink-1); }
+.scope-form p { color: var(--text-soft); font-size: 0.7rem; overflow-wrap: anywhere; }
+.scope-actions { display: flex; margin-top: 0.8rem; gap: 0.5rem; flex-wrap: wrap; }
+.scope-actions button { min-height: 48px; padding: 0.6rem; border: 1px solid var(--line-strong); border-radius: 7px; }
 
 .source-list {
   display: grid;

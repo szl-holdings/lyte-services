@@ -4,10 +4,19 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
 ShortText = Annotated[str, Field(min_length=1, max_length=256)]
 EvidenceRef = Annotated[str, Field(min_length=1, max_length=512)]
+ReceiptHash = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+UUIDText = Annotated[
+    str,
+    Field(pattern=r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"),
+]
+SlugText = Annotated[
+    str,
+    Field(min_length=3, max_length=64, pattern=r"^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"),
+]
 EvidenceTruthLabel = Literal[
     "MEASURED",
     "REPORTED",
@@ -32,6 +41,36 @@ class AskRequest(StrictModel):
         if not normalized:
             raise ValueError("question cannot be blank")
         return normalized
+
+
+class SecondBrainMemoryRequest(StrictModel):
+    """Bounded summary-only input for durable enterprise memory."""
+
+    summary: Annotated[str, Field(min_length=1, max_length=2_000)]
+    truth_label: EvidenceTruthLabel
+    evidence_refs: list[EvidenceRef] = Field(min_length=1, max_length=64)
+    receipt_hash: ReceiptHash
+    subjects: list[ShortText] = Field(default_factory=list, max_length=100)
+    subject_dimensions: dict[
+        Literal["service", "journey", "outcome", "incident", "decision"],
+        list[EvidenceRef],
+    ] = Field(default_factory=dict)
+    metadata: dict[str, JsonValue] = Field(default_factory=dict)
+
+    @field_validator("summary")
+    @classmethod
+    def normalize_summary(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if not normalized:
+            raise ValueError("summary cannot be blank")
+        return normalized
+
+    @field_validator("metadata")
+    @classmethod
+    def bound_metadata(cls, value: dict[str, JsonValue]) -> dict[str, JsonValue]:
+        if len(value) > 100:
+            raise ValueError("metadata permits at most 100 fields")
+        return value
 
 
 class HatunEvaluationRequest(StrictModel):
@@ -66,4 +105,29 @@ class AnalysisRequest(StrictModel):
     input_truth_label: Literal["MEASURED", "REPORTED", "SAMPLE"] = "REPORTED"
 
 
-__all__ = ["AnalysisRequest", "AskRequest", "HatunEvaluationRequest"]
+class ProvisionScopeRequest(StrictModel):
+    """Exact identities used for an idempotent production scope bootstrap."""
+
+    tenant_id: UUIDText
+    tenant_slug: SlugText
+    tenant_name: Annotated[str, Field(min_length=1, max_length=200)]
+    workspace_id: UUIDText
+    workspace_slug: SlugText
+    workspace_name: Annotated[str, Field(min_length=1, max_length=200)]
+
+    @field_validator("tenant_name", "workspace_name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if not normalized:
+            raise ValueError("name cannot be blank")
+        return normalized
+
+
+__all__ = [
+    "AnalysisRequest",
+    "AskRequest",
+    "HatunEvaluationRequest",
+    "ProvisionScopeRequest",
+    "SecondBrainMemoryRequest",
+]

@@ -1,6 +1,6 @@
 """Public persistence API."""
 
-from .database import Database
+from .database import EXPECTED_SCHEMA_REVISIONS, Database, SchemaReadiness
 from .models import (
     AnatomyTraceRecord,
     Base,
@@ -19,27 +19,35 @@ from .store import (
     STREAM_MEMORY,
     STREAM_OPERATIONAL,
     STREAM_RECEIPTS,
+    AnalysisBundle,
     ChainVerification,
     IdempotencyConflict,
     LyteStore,
+    MemoryQueryResult,
     OperationalConflict,
     PersistenceError,
+    ProvisioningConflict,
     ScopeNotFound,
+    ScopeProvisioning,
 )
 
 __all__ = [
     "AnatomyTraceRecord",
+    "AnalysisBundle",
     "Base",
     "ChainVerification",
     "Database",
+    "EXPECTED_SCHEMA_REVISIONS",
     "IdempotencyConflict",
     "IdempotencyRecord",
     "ImmutableRecordError",
     "LyteStore",
+    "MemoryQueryResult",
     "MemoryRecord",
     "OperationalRecord",
     "OperationalConflict",
     "PersistenceError",
+    "ProvisioningConflict",
     "ReceiptRecord",
     "STREAM_ANATOMY",
     "STREAM_IDEMPOTENCY",
@@ -47,6 +55,8 @@ __all__ = [
     "STREAM_OPERATIONAL",
     "STREAM_RECEIPTS",
     "ScopeNotFound",
+    "SchemaReadiness",
+    "ScopeProvisioning",
     "StreamHeadRecord",
     "TenantRecord",
     "WorkspaceRecord",

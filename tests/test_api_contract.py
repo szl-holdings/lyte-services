@@ -7,7 +7,13 @@ from urllib.parse import urlsplit
 from fastapi.testclient import TestClient
 
 from lyte.app import create_app
-from lyte.connectors import sign_governed_event
+from lyte.connectors import (
+    ConnectorState,
+    GitHubActionsResult,
+    GitHubWorkflowRun,
+    sign_governed_event,
+)
+from lyte.domain import OperationalEntityKind, ReceiptDraft, TruthLabel, sha256_text
 
 TENANT_ID = "11111111-1111-4111-8111-111111111111"
 WORKSPACE_ID = "22222222-2222-4222-8222-222222222222"
@@ -39,6 +45,8 @@ def _base_environment(monkeypatch: object, *, auth: bool = False) -> None:
         "SOURCE_REVISION",
         "GITHUB_SHA",
         "LYTE_REQUIRE_SOURCE_BINDING",
+        "LYTE_REQUIRE_BUILD_RECEIPT",
+        "SPACE_ID",
     ):
         monkeypatch.delenv(name, raising=False)
     if auth:
@@ -113,6 +121,80 @@ def _otlp_body() -> bytes:
         },
         separators=(",", ":"),
     ).encode()
+
+
+def _github_result(
+    state: ConnectorState,
+    *,
+    run_id: int = 1842,
+    etag: str = '"lyte-actions-etag"',
+) -> GitHubActionsResult:
+    runs = (
+        (
+            GitHubWorkflowRun(
+                run_id=run_id,
+                workflow_name="Lyte compiler",
+                status="completed",
+                conclusion="success",
+                duration_ms=45_000,
+                branch="main",
+                event="push",
+                head_sha="a" * 40,
+                created_at="2026-09-04T12:00:00Z",
+                run_started_at="2026-09-04T12:00:01Z",
+                updated_at="2026-09-04T12:00:46Z",
+            ),
+        )
+        if state is ConnectorState.OBSERVED
+        else ()
+    )
+    receipt = ReceiptDraft(
+        kind="source.github_actions.observed",
+        subject_type="repository",
+        subject_id="szl-holdings/lyte-services",
+        payload={
+            "source_id": "github_actions",
+            "state": state.value,
+            "run_count": len(runs),
+            "pages_fetched": 1,
+            "complete": True,
+            "etag_sha256": sha256_text(etag),
+            "read_only": True,
+        },
+        truth_label=TruthLabel.REPORTED,
+        evidence_refs=("github:szl-holdings/lyte-services",),
+    )
+    return GitHubActionsResult(
+        repository="szl-holdings/lyte-services",
+        state=state,
+        runs=runs,
+        receipt=receipt,
+        etag=etag,
+        pages_fetched=1,
+        complete=True,
+    )
+
+
+def _analysis_payload(*, service_id: str = "orders-api") -> dict[str, object]:
+    return {
+        "service_id": service_id,
+        "good_events": 99_500,
+        "total_events": 100_000,
+        "slo_target": 0.999,
+        "requests": 100_000,
+        "window_seconds": 300.0,
+        "failed_changes": 1,
+        "total_changes": 20,
+        "cost_usd": 200.0,
+        "successful_outcomes": 99_500,
+        "revenue_volume": 100_000,
+        "baseline_conversion_rate": 0.72,
+        "observed_conversion_rate": 0.70,
+        "average_order_value": 84.0,
+        "currency": "USD",
+        "evidence_refs": ["reported:test-window"],
+        "input_truth_label": "REPORTED",
+    }
 
 
 def test_public_sample_routes_are_complete_persisted_and_truth_labeled(monkeypatch) -> None:
@@ -409,7 +491,17 @@ def test_authenticated_otlp_analysis_and_event_are_durable_and_idempotent(
         analysis_body = analysis.json()
         assert len(analysis_body["receipt_id"]) == 64
         assert len(analysis_body["anatomy_trace"]) == 9
-        assert all(stage["state"] == "COMPLETE" for stage in analysis_body["anatomy_trace"])
+        assert [stage["state"] for stage in analysis_body["anatomy_trace"]] == [
+            "OBSERVED",
+            "VALIDATED",
+            "BOUND",
+            "CALCULATED",
+            "ENFORCED",
+            "REVIEW",
+            "PARTIAL",
+            "PERSISTED",
+            "APPENDED",
+        ]
         assert analysis_body["causality_claimed"] is False
         assert analysis_body["can_authorize"] is False
 
@@ -459,6 +551,227 @@ def test_authenticated_otlp_analysis_and_event_are_durable_and_idempotent(
             headers=event_headers,
         )
         assert replay_event.status_code == 409
+
+
+def test_mutation_idempotency_replays_or_returns_deterministic_conflict(monkeypatch) -> None:
+    _base_environment(monkeypatch, auth=True)
+    conflict_detail = "Idempotency-Key was already used for a different request"
+    otlp_headers = {
+        **_auth_headers(),
+        "Idempotency-Key": "otlp-conflict-contract-0001",
+        "Content-Type": "application/json",
+    }
+    analysis_headers = {
+        **_auth_headers(),
+        "Idempotency-Key": "analysis-conflict-contract-0001",
+    }
+    with TestClient(create_app()) as client:
+        first_otlp = client.post(
+            "/api/lyte/v2/ingest/otlp",
+            content=_otlp_body(),
+            headers=otlp_headers,
+        )
+        assert first_otlp.status_code == 200, first_otlp.text
+        replay_otlp = client.post(
+            "/api/lyte/v2/ingest/otlp",
+            content=_otlp_body(),
+            headers=otlp_headers,
+        )
+        assert replay_otlp.status_code == 200
+        assert replay_otlp.json()["receipt_id"] == first_otlp.json()["receipt_id"]
+        different_otlp = json.loads(_otlp_body())
+        different_otlp["resourceSpans"][0]["scopeSpans"][0]["spans"][0]["name"] = "orders.changed"
+        otlp_conflict = client.post(
+            "/api/lyte/v2/ingest/otlp",
+            json=different_otlp,
+            headers=otlp_headers,
+        )
+        assert otlp_conflict.status_code == 409
+        assert otlp_conflict.json()["detail"] == conflict_detail
+
+        analysis_payload = _analysis_payload()
+        first_analysis = client.post(
+            "/api/lyte/v2/analyze",
+            json=analysis_payload,
+            headers=analysis_headers,
+        )
+        assert first_analysis.status_code == 200, first_analysis.text
+        replay_analysis = client.post(
+            "/api/lyte/v2/analyze",
+            json=analysis_payload,
+            headers=analysis_headers,
+        )
+        assert replay_analysis.status_code == 200
+        assert replay_analysis.json()["receipt_id"] == first_analysis.json()["receipt_id"]
+        analysis_conflict = client.post(
+            "/api/lyte/v2/analyze",
+            json=_analysis_payload(service_id="payments-api"),
+            headers=analysis_headers,
+        )
+        assert analysis_conflict.status_code == 409
+        assert analysis_conflict.json()["detail"] == conflict_detail
+
+        timestamp = str(int(datetime.now(UTC).timestamp()))
+        nonce = "event-persistence-conflict-0001"
+        event_body = json.dumps(
+            {
+                "schema_version": "lyte.event.v1",
+                "event_id": "orders-event-conflict-0001",
+                "source_id": "lyte-test-source",
+                "event_type": "orders.degraded",
+                "subject_type": "service",
+                "subject_id": "orders-api",
+                "occurred_at": "2026-09-04T12:00:00Z",
+                "truth_label": "REPORTED",
+                "attributes": {"error_count": 501},
+                "evidence_refs": [first_otlp.json()["receipt_id"]],
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+        event_conflict = client.post(
+            "/api/lyte/v2/ingest/event",
+            content=event_body,
+            headers={
+                **_auth_headers(),
+                "Idempotency-Key": otlp_headers["Idempotency-Key"],
+                "X-Lyte-Signature": sign_governed_event(
+                    WEBHOOK_SECRET.encode(),
+                    timestamp=timestamp,
+                    nonce=nonce,
+                    body=event_body,
+                ),
+                "X-Lyte-Timestamp": timestamp,
+                "X-Lyte-Nonce": nonce,
+                "Content-Type": "application/json",
+            },
+        )
+        assert event_conflict.status_code == 409
+        assert event_conflict.json()["detail"] == conflict_detail
+
+
+def test_github_ingest_idempotency_replays_and_conflicts(monkeypatch) -> None:
+    from lyte.api import routes_ingest
+
+    _base_environment(monkeypatch, auth=True)
+    active_result = [_github_result(ConnectorState.OBSERVED)]
+    monkeypatch.setattr(
+        routes_ingest,
+        "_fetch_github",
+        lambda *args, **kwargs: active_result[0],
+    )
+    headers = {
+        **_auth_headers(),
+        "Idempotency-Key": "github-conflict-contract-0001",
+    }
+    path = "/api/lyte/v2/ingest/github/szl-holdings/lyte-services"
+    with TestClient(create_app()) as client:
+        first = client.post(path, headers=headers)
+        assert first.status_code == 200, first.text
+        assert first.json()["projection_updated"] is True
+        replay = client.post(path, headers=headers)
+        assert replay.status_code == 200
+        assert replay.json()["receipt_id"] == first.json()["receipt_id"]
+        assert replay.json()["projection_id"] == first.json()["projection_id"]
+        assert replay.json()["projection_updated"] is False
+
+        active_result[0] = _github_result(
+            ConnectorState.OBSERVED,
+            run_id=1843,
+            etag='"changed-actions-etag"',
+        )
+        conflict = client.post(path, headers=headers)
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"] == (
+            "Idempotency-Key was already used for a different request"
+        )
+        projection = client.app.state.runtime.store.get_operational(
+            client.app.state.runtime.demo_scope,
+            OperationalEntityKind.SOURCE,
+            "github:szl-holdings/lyte-services",
+        )
+        assert projection is not None
+        assert projection.id == first.json()["projection_id"]
+        assert projection.version == 1
+        assert projection.body_json["runs"][0]["run_id"] == 1842
+
+
+def test_github_not_modified_retains_projection_and_appends_audit_receipt(monkeypatch) -> None:
+    from lyte.api import routes_ingest
+
+    _base_environment(monkeypatch, auth=True)
+    active_result = [_github_result(ConnectorState.OBSERVED)]
+    monkeypatch.setattr(
+        routes_ingest,
+        "_fetch_github",
+        lambda *args, **kwargs: active_result[0],
+    )
+    path = "/api/lyte/v2/ingest/github/szl-holdings/lyte-services"
+    with TestClient(create_app()) as client:
+        first = client.post(
+            path,
+            headers={
+                **_auth_headers(),
+                "Idempotency-Key": "github-observed-contract-0001",
+            },
+        )
+        assert first.status_code == 200, first.text
+        runtime = client.app.state.runtime
+        scope = runtime.demo_scope
+        before = runtime.store.get_operational(
+            scope,
+            OperationalEntityKind.SOURCE,
+            "github:szl-holdings/lyte-services",
+        )
+        assert before is not None
+        before_body = dict(before.body_json)
+        before_evidence = list(before.evidence_refs)
+        receipt_count = client.get("/api/lyte/v2/receipts").json()["count"]
+
+        active_result[0] = _github_result(ConnectorState.NOT_MODIFIED)
+        unchanged = client.post(
+            path,
+            headers={
+                **_auth_headers(),
+                "Idempotency-Key": "github-not-modified-contract-0001",
+                "If-None-Match": '"lyte-actions-etag"',
+            },
+        )
+        assert unchanged.status_code == 200, unchanged.text
+        unchanged_body = unchanged.json()
+        assert unchanged_body["state"] == "NOT_MODIFIED"
+        assert unchanged_body["runs"] == []
+        assert unchanged_body["receipt_persisted"] is True
+        assert unchanged_body["receipt_id"] != first.json()["receipt_id"]
+        assert unchanged_body["projection_id"] == before.id
+        assert unchanged_body["projection_version"] == before.version
+        assert unchanged_body["projection_updated"] is False
+        assert unchanged_body["prior_projection_retained"] is True
+
+        after = runtime.store.get_operational(
+            scope,
+            OperationalEntityKind.SOURCE,
+            "github:szl-holdings/lyte-services",
+        )
+        assert after is not None
+        assert after.id == before.id
+        assert after.version == before.version == 1
+        assert after.body_json == before_body
+        assert after.evidence_refs == before_evidence
+        assert (
+            runtime.store.get_operational(
+                scope,
+                OperationalEntityKind.SOURCE,
+                "github:szl-holdings/lyte-services",
+                version=2,
+            )
+            is None
+        )
+        assert client.get("/api/lyte/v2/receipts").json()["count"] == receipt_count + 1
+        audit = client.get(f"/api/lyte/v2/receipts/{unchanged_body['receipt_id']}").json()
+        assert audit["payload"]["state"] == "NOT_MODIFIED"
+        assert audit["payload"]["run_count"] == 0
+        assert audit["payload"]["read_only"] is True
 
 
 def test_body_and_pagination_limits_are_enforced(monkeypatch) -> None:

@@ -11,6 +11,10 @@ on:
         description: Exact merged Lyte revision for post-publication live proof
         required: true
         type: string
+      expected_receipt_sha256:
+        description: Exact receipt digest from independent publication evidence
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -131,8 +135,23 @@ jobs:
   database-migrations:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.6@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
+        env:
+          POSTGRES_DB: lyte
+          POSTGRES_USER: lyte
+          POSTGRES_PASSWORD: lyte-ci-contract-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lyte -d lyte"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
     env:
-      DATABASE_URL: sqlite+pysqlite:///./migration-gate.db
+      DATABASE_URL: postgresql+psycopg://lyte:lyte-ci-contract-only@127.0.0.1:5432/lyte
+      LYTE_TEST_POSTGRES_URL: postgresql+psycopg://lyte:lyte-ci-contract-only@127.0.0.1:5432/lyte
       LYTE_ENV: test
     steps:
       - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1
@@ -146,10 +165,13 @@ jobs:
         with:
           python-version: "3.12.10"
           cache: pip
-          cache-dependency-path: requirements.txt
-      - run: python -m pip install --requirement requirements.txt --editable . && python -m pip check
+          cache-dependency-path: |
+            requirements.txt
+            requirements-test.txt
+      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
       - run: alembic upgrade head
       - run: alembic current | grep 20260904_0001
+      - run: python -m pytest -q tests/test_postgres_contract.py
 
   connector-contract:
     runs-on: ubuntu-latest
@@ -342,11 +364,20 @@ jobs:
           assert ready["build"]["revision"] == os.environ["GITHUB_SHA"]
           assert ready["source_binding"]["bindings_agree"] is True
           assert ready["source_binding"]["required"] is True
+          assert ready["checks"]["public_routes"] == "READY"
+          assert ready["checks"]["build_receipt"] == "READY"
+          assert ready["build_receipt"]["state"] == "VERIFIED"
+          assert ready["build_receipt"]["required"] is True
           assert ready["effectors_enabled"] is False
           PY
+          receipt_sha256="$(docker exec lyte-smoke sha256sum /app/build-receipt.json | awk '{print $1}')"
+          test "${#receipt_sha256}" -eq 64
+          docker exec lyte-smoke python -c \
+            "import os; assert not os.access('/app/build-receipt.json', os.W_OK)"
           python -m tools.probe_live \
             --base-url http://127.0.0.1:7860 \
-            --revision "$GITHUB_SHA"
+            --revision "$GITHUB_SHA" \
+            --receipt-sha256 "$receipt_sha256"
 
   source-binding:
     runs-on: ubuntu-latest
@@ -373,6 +404,7 @@ jobs:
     timeout-minutes: 10
     env:
       EXPECTED_REVISION: ${{ inputs.expected_revision }}
+      EXPECTED_RECEIPT_SHA256: ${{ inputs.expected_receipt_sha256 }}
     steps:
       - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1
         with:
@@ -388,4 +420,9 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: python -m pip install --requirement requirements.txt --editable . && python -m pip check
       - run: python -m tools.verify_source_binding --revision "$EXPECTED_REVISION"
-      - run: python -m tools.probe_live --revision "$EXPECTED_REVISION" --retries 30 --wait-seconds 10
+      - run: >-
+          python -m tools.probe_live
+          --revision "$EXPECTED_REVISION"
+          --receipt-sha256 "$EXPECTED_RECEIPT_SHA256"
+          --retries 30
+          --wait-seconds 10

@@ -4,17 +4,20 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 import time
 import urllib.error
 import urllib.request
-from re import fullmatch
 from typing import Any
 from urllib.parse import urlsplit
 
 READ_ROUTES = (
     "/healthz",
     "/readyz",
+    "/api/live",
+    "/build-receipt.json",
     "/api/build-info",
     "/api/source",
     "/.well-known/szl-source.json",
@@ -31,6 +34,18 @@ READ_ROUTES = (
     "/api/lyte/v2/playback",
     "/api/lyte/v2/second-brain",
 )
+
+DENIED_MUTATION_ROUTES = (
+    "/api/lyte/v2/admin/scopes",
+    "/api/lyte/v2/ingest/otlp",
+    "/api/lyte/v2/ingest/event",
+    "/api/lyte/v2/ingest/github/szl-holdings/lyte-services",
+    "/api/lyte/v2/analyze",
+    "/api/lyte/v2/second-brain/observations",
+    "/api/lyte/v2/second-brain/approved-knowledge",
+)
+
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 class _RejectRedirects(urllib.request.HTTPRedirectHandler):
@@ -73,7 +88,7 @@ def validate_base_url(value: str) -> str:
     return base
 
 
-def fetch(url: str, data: dict[str, Any] | None = None) -> tuple[int, Any]:
+def fetch(url: str, data: dict[str, Any] | None = None) -> tuple[int, Any, bytes]:
     body = None if data is None else json.dumps(data, separators=(",", ":")).encode()
     request = urllib.request.Request(  # noqa: S310 -- base URL is validated before calls
         url,
@@ -86,14 +101,14 @@ def fetch(url: str, data: dict[str, Any] | None = None) -> tuple[int, Any]:
             raw = response.read(2_000_001)
             if len(raw) > 2_000_000:
                 raise RuntimeError("response body exceeds probe limit")
-            return response.status, json.loads(raw)
+            return response.status, json.loads(raw), raw
     except urllib.error.HTTPError as exc:
         raw = exc.read(200_000)
         try:
             payload = json.loads(raw)
         except json.JSONDecodeError:
             payload = {"detail": "non-JSON error body"}
-        return exc.code, payload
+        return exc.code, payload, raw
     except (
         json.JSONDecodeError,
         OSError,
@@ -102,7 +117,7 @@ def fetch(url: str, data: dict[str, Any] | None = None) -> tuple[int, Any]:
         urllib.error.URLError,
         ValueError,
     ) as exc:
-        return 0, {"detail": f"probe transport failed: {type(exc).__name__}"}
+        return 0, {"detail": f"probe transport failed: {type(exc).__name__}"}, b""
 
 
 def _verify_source_contract(
@@ -161,26 +176,173 @@ def _verify_runtime_identity(
         failures.append(f"{route}: human approval boundary is not explicit")
 
 
-def probe(base: str, expected_revision: str) -> dict[str, Any]:
+def _canonical_receipt_bytes(payload: dict[str, Any]) -> bytes:
+    return json.dumps(
+        payload,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8") + b"\n"
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    document: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in document:
+            raise ValueError("duplicate JSON key")
+        document[key] = value
+    return document
+
+
+def _verify_build_receipt(
+    *,
+    status: int,
+    payload: Any,
+    raw: bytes,
+    expected_revision: str,
+    expected_receipt_sha256: str,
+    failures: list[str],
+) -> str | None:
+    route = "/build-receipt.json"
+    if status != 200 or not isinstance(payload, dict):
+        failures.append(f"{route}: immutable receipt is unavailable")
+        return None
+    try:
+        wire_payload = json.loads(raw, object_pairs_hook=_reject_duplicate_keys)
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+        failures.append(f"{route}: receipt JSON is malformed or ambiguous")
+        return None
+    if not isinstance(wire_payload, dict) or wire_payload != payload:
+        failures.append(f"{route}: receipt wire document does not match parsed response")
+        return None
+    canonical = _canonical_receipt_bytes(wire_payload)
+    if raw != canonical:
+        failures.append(f"{route}: receipt response is not canonical stored bytes")
+    if hashlib.sha256(raw).hexdigest() != expected_receipt_sha256:
+        failures.append(f"{route}: receipt digest does not match independent publication evidence")
+    if payload.get("schema") != "szl.lyte-build-receipt/v1":
+        failures.append(f"{route}: receipt schema is not supported")
+    if payload.get("service") != "lyte-signal-lattice":
+        failures.append(f"{route}: receipt service identity is invalid")
+    source = payload.get("source")
+    if not isinstance(source, dict) or source != {
+        "repository": "szl-holdings/lyte-services",
+        "revision": expected_revision,
+    }:
+        failures.append(f"{route}: receipt source binding does not match the release")
+    manifest = payload.get("payload")
+    payload_sha256: str | None = None
+    if not isinstance(manifest, dict):
+        failures.append(f"{route}: payload manifest is unavailable")
+    else:
+        payload_sha256 = manifest.get("sha256")
+        if (
+            manifest.get("scope") != "lyte-application-files/v1"
+            or manifest.get("algorithm") != "sha256"
+            or not isinstance(manifest.get("files"), list)
+            or not manifest["files"]
+            or not isinstance(payload_sha256, str)
+            or _SHA256.fullmatch(payload_sha256) is None
+        ):
+            failures.append(f"{route}: payload manifest contract is invalid")
+    return payload_sha256
+
+
+def _verify_live_contract(
+    *,
+    route: str,
+    status: int,
+    payload: Any,
+    expected_revision: str,
+    expected_receipt_sha256: str,
+    expected_payload_sha256: str | None,
+    failures: list[str],
+) -> tuple[str | None, str | None]:
+    if status != 200 or not isinstance(payload, dict):
+        failures.append(f"{route}: live application attestation is unavailable")
+        return None, None
+    if payload.get("schema") != "szl.lyte-live/v1":
+        failures.append(f"{route}: live schema is not supported")
+    if payload.get("observation_state") != "VERIFIED" or payload.get("ready") is not True:
+        failures.append(f"{route}: live observation did not verify")
+    _verify_runtime_identity(
+        route=route,
+        status=status,
+        payload=payload,
+        expected_revision=expected_revision,
+        failures=failures,
+    )
+    checks = payload.get("checks")
+    if not isinstance(checks, dict) or any(
+        checks.get(name) != "READY"
+        for name in ("source_binding", "public_routes", "build_receipt", "database")
+    ):
+        failures.append(f"{route}: required live checks are not ready")
+    receipt = payload.get("build_receipt")
+    if not isinstance(receipt, dict):
+        failures.append(f"{route}: receipt observation is unavailable")
+        return None, None
+    live_receipt_sha256 = receipt.get("receipt_sha256")
+    live_payload_sha256 = receipt.get("payload_sha256")
+    if (
+        receipt.get("state") != "VERIFIED"
+        or receipt.get("valid") is not True
+        or receipt.get("required") is not True
+        or receipt.get("source_revision") != expected_revision
+        or live_receipt_sha256 != expected_receipt_sha256
+    ):
+        failures.append(f"{route}: receipt observation does not match publication evidence")
+    if expected_payload_sha256 is not None and live_payload_sha256 != expected_payload_sha256:
+        failures.append(f"{route}: payload digest disagrees with the immutable receipt")
+    return (
+        live_receipt_sha256 if isinstance(live_receipt_sha256, str) else None,
+        live_payload_sha256 if isinstance(live_payload_sha256, str) else None,
+    )
+
+
+def probe(
+    base: str,
+    expected_revision: str,
+    expected_receipt_sha256: str,
+) -> dict[str, Any]:
     routes: dict[str, Any] = {}
     failures: list[str] = []
     expected_revision = expected_revision.strip().lower()
-    if fullmatch(r"[0-9a-f]{40}", expected_revision) is None:
+    expected_receipt_sha256 = expected_receipt_sha256.strip().lower()
+    if re.fullmatch(r"[0-9a-f]{40}", expected_revision) is None:
         failures.append("expected revision must be an exact 40-character lowercase Git SHA")
         return {
-            "schema": "szl.lyte-live-probe/v2",
+            "schema": "szl.lyte-live-probe/v3",
             "base_url": base,
             "expected_revision": expected_revision,
+            "expected_receipt_sha256": expected_receipt_sha256,
             "routes": routes,
             "effectors_enabled": False,
             "secret_values_recorded": False,
+            "independent_receipt_binding": False,
+            "complete": False,
+            "failures": failures,
+        }
+    if _SHA256.fullmatch(expected_receipt_sha256) is None:
+        failures.append("expected receipt digest must be 64 lowercase hexadecimal characters")
+        return {
+            "schema": "szl.lyte-live-probe/v3",
+            "base_url": base,
+            "expected_revision": expected_revision,
+            "expected_receipt_sha256": expected_receipt_sha256,
+            "routes": routes,
+            "effectors_enabled": False,
+            "secret_values_recorded": False,
+            "independent_receipt_binding": False,
             "complete": False,
             "failures": failures,
         }
     payloads: dict[str, Any] = {}
+    raw_payloads: dict[str, bytes] = {}
     for route in READ_ROUTES:
-        status, payload = fetch(base + route)
+        status, payload, raw = fetch(base + route)
         payloads[route] = payload
+        raw_payloads[route] = raw
         routes[route] = {"status": status}
         if status != 200:
             failures.append(f"{route}: expected 200, received {status}")
@@ -196,6 +358,7 @@ def probe(base: str, expected_revision: str) -> dict[str, Any]:
     for route in (
         "/healthz",
         "/readyz",
+        "/api/live",
         "/api/build-info",
         "/api/source",
         "/.well-known/szl-source.json",
@@ -207,6 +370,23 @@ def probe(base: str, expected_revision: str) -> dict[str, Any]:
             expected_revision=expected_revision,
             failures=failures,
         )
+    receipt_payload_sha256 = _verify_build_receipt(
+        status=routes["/build-receipt.json"]["status"],
+        payload=payloads["/build-receipt.json"],
+        raw=raw_payloads["/build-receipt.json"],
+        expected_revision=expected_revision,
+        expected_receipt_sha256=expected_receipt_sha256,
+        failures=failures,
+    )
+    first_receipt_sha256, first_payload_sha256 = _verify_live_contract(
+        route="/api/live",
+        status=routes["/api/live"]["status"],
+        payload=payloads["/api/live"],
+        expected_revision=expected_revision,
+        expected_receipt_sha256=expected_receipt_sha256,
+        expected_payload_sha256=receipt_payload_sha256,
+        failures=failures,
+    )
     for route in ("/api/build-info", "/api/source", "/.well-known/szl-source.json"):
         _verify_source_contract(
             route=route,
@@ -223,7 +403,7 @@ def probe(base: str, expected_revision: str) -> dict[str, Any]:
             "requests_execution": False,
         },
     }.items():
-        status, response_payload = fetch(base + route, payload)
+        status, response_payload, _ = fetch(base + route, payload)
         routes[route] = {"status": status}
         if status != 200:
             failures.append(f"{route}: expected 200, received {status}")
@@ -240,18 +420,36 @@ def probe(base: str, expected_revision: str) -> dict[str, Any]:
             "DENY",
         }:
             failures.append(f"{route}: decision escaped the human-sovereign boundary")
-    for route in ("/api/lyte/v2/ingest/otlp", "/api/lyte/v2/ingest/event"):
-        status, _ = fetch(base + route, {})
+    for route in DENIED_MUTATION_ROUTES:
+        status, _, _ = fetch(base + route, {})
         routes[route] = {"status": status, "expected": "anonymous mutation denied"}
         if status not in {401, 403, 503}:
             failures.append(f"{route}: anonymous mutation did not fail closed")
+    second_status, second_live, _ = fetch(base + "/api/live")
+    routes["/api/live#post"] = {"status": second_status}
+    second_receipt_sha256, second_payload_sha256 = _verify_live_contract(
+        route="/api/live#post",
+        status=second_status,
+        payload=second_live,
+        expected_revision=expected_revision,
+        expected_receipt_sha256=expected_receipt_sha256,
+        expected_payload_sha256=receipt_payload_sha256,
+        failures=failures,
+    )
+    if (first_receipt_sha256, first_payload_sha256) != (
+        second_receipt_sha256,
+        second_payload_sha256,
+    ):
+        failures.append("/api/live: deployment identity changed during the proof sequence")
     return {
-        "schema": "szl.lyte-live-probe/v2",
+        "schema": "szl.lyte-live-probe/v3",
         "base_url": base,
         "expected_revision": expected_revision,
+        "expected_receipt_sha256": expected_receipt_sha256,
         "routes": routes,
         "effectors_enabled": False,
         "secret_values_recorded": False,
+        "independent_receipt_binding": True,
         "complete": not failures,
         "failures": failures,
     }
@@ -261,6 +459,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="https://szlholdings-lyte.hf.space")
     parser.add_argument("--revision", required=True)
+    parser.add_argument("--receipt-sha256", required=True)
     parser.add_argument("--retries", type=int, default=1)
     parser.add_argument("--wait-seconds", type=int, default=10)
     args = parser.parse_args()
@@ -272,7 +471,7 @@ def main() -> int:
     result: dict[str, Any] = {}
     attempts = max(1, min(args.retries, 120))
     for attempt in range(1, attempts + 1):
-        result = probe(base, args.revision)
+        result = probe(base, args.revision, args.receipt_sha256)
         result["attempt"] = attempt
         if result["complete"]:
             break

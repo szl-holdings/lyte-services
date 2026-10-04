@@ -15,6 +15,7 @@ from lyte.governance import (
 )
 
 _MUTATION_ROLES = frozenset({"operator", "admin"})
+_ADMIN_ROLES = frozenset({"admin"})
 
 
 def get_runtime(request: Request) -> Any:
@@ -131,4 +132,21 @@ def get_mutation_scope(
     )
 
 
-__all__ = ["get_mutation_scope", "get_read_scope", "get_runtime"]
+def get_admin_scope(
+    request: Request,
+    authorization: str | None = Header(default=None),
+    tenant_id: str | None = Header(default=None, alias="X-Lyte-Tenant-ID"),
+    workspace_id: str | None = Header(default=None, alias="X-Lyte-Workspace-ID"),
+) -> Scope:
+    """Require verified administrator authority for approved knowledge."""
+
+    return _authenticated_scope(
+        request,
+        authorization=authorization,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        required_roles=_ADMIN_ROLES,
+    )
+
+
+__all__ = ["get_admin_scope", "get_mutation_scope", "get_read_scope", "get_runtime"]

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from lyte.api.dependencies import get_mutation_scope, get_runtime
 from lyte.connectors import (
     ConnectorPolicyError,
+    ConnectorState,
     GitHubActionsConnector,
     GitHubActionsResult,
     GovernedEventError,
@@ -24,10 +25,11 @@ from lyte.connectors import (
 from lyte.domain import (
     OperationalEntityKind,
     OperationalRecordDraft,
+    ReceiptDraft,
     Scope,
     sha256_json,
 )
-from lyte.persistence import OperationalConflict
+from lyte.persistence import IdempotencyConflict, OperationalConflict
 
 router = APIRouter(prefix="/api/lyte/v2", tags=["sources"])
 MutationScope = Annotated[Scope, Depends(get_mutation_scope)]
@@ -52,6 +54,7 @@ _GOVERNED_SOURCES = frozenset(
         "servicenow",
     }
 )
+_IDEMPOTENCY_CONFLICT_DETAIL = "Idempotency-Key was already used for a different request"
 
 
 async def _bounded_body(request: Request, maximum: int) -> bytes:
@@ -95,6 +98,23 @@ def _persist_projection(
         return raced
 
 
+def _append_receipt(
+    runtime: Any,
+    scope: Scope,
+    draft: ReceiptDraft,
+    *,
+    idempotency_key: str,
+) -> Any:
+    try:
+        return runtime.store.append_receipt(
+            scope,
+            draft,
+            idempotency_key=idempotency_key,
+        )
+    except IdempotencyConflict as exc:
+        raise HTTPException(status_code=409, detail=_IDEMPOTENCY_CONFLICT_DETAIL) from exc
+
+
 @router.post("/ingest/otlp")
 async def ingest_otlp(
     request: Request,
@@ -109,7 +129,12 @@ async def ingest_otlp(
     except PayloadValidationError as exc:
         runtime.metrics.record_ingest("otlp", "rejected", record_count=1)
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    receipt = runtime.store.append_receipt(scope, batch.receipt, idempotency_key=key)
+    receipt = _append_receipt(
+        runtime,
+        scope,
+        batch.receipt,
+        idempotency_key=key,
+    )
     runtime.metrics.record_receipt(batch.receipt.kind)
     projection = _persist_projection(
         runtime,
@@ -185,7 +210,12 @@ async def ingest_event(
         runtime.metrics.record_ingest("event", "rejected", record_count=1)
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    receipt = runtime.store.append_receipt(scope, verified.receipt, idempotency_key=key)
+    receipt = _append_receipt(
+        runtime,
+        scope,
+        verified.receipt,
+        idempotency_key=key,
+    )
     runtime.metrics.record_receipt(verified.receipt.kind)
     projection = _persist_projection(
         runtime,
@@ -261,25 +291,45 @@ def ingest_github_actions(
     runtime = get_runtime(request)
     result = _fetch_github(runtime, repository, etag=etag)
     response = result.to_dict()
-    receipt = runtime.store.append_receipt(scope, result.receipt, idempotency_key=key)
-    runtime.metrics.record_receipt(result.receipt.kind)
-    projection = _persist_projection(
+    receipt = _append_receipt(
         runtime,
         scope,
-        OperationalRecordDraft(
-            entity_kind=OperationalEntityKind.SOURCE,
-            entity_id=f"github:{result.repository}",
-            name=f"GitHub Actions {result.repository}",
-            body=response,
-            truth_label=result.truth_label,
-            evidence_refs=(receipt.record_hash,),
-            metadata={
-                "durable": True,
-                "read_only_source": True,
-                "arbitrary_url_fetch": False,
-                "response_sha256": sha256_json(response),
-            },
-        ),
+        result.receipt,
+        idempotency_key=key,
+    )
+    runtime.metrics.record_receipt(result.receipt.kind)
+    entity_id = f"github:{result.repository}"
+    previous_projection = runtime.store.get_operational(
+        scope,
+        OperationalEntityKind.SOURCE,
+        entity_id,
+    )
+    if result.state is ConnectorState.NOT_MODIFIED:
+        # A 304 proves only that the caller's ETag is still current. Its empty
+        # response is not a new source snapshot, so retain any prior projection
+        # while the NOT_MODIFIED receipt remains independently auditable.
+        projection = previous_projection
+    else:
+        projection = _persist_projection(
+            runtime,
+            scope,
+            OperationalRecordDraft(
+                entity_kind=OperationalEntityKind.SOURCE,
+                entity_id=entity_id,
+                name=f"GitHub Actions {result.repository}",
+                body=response,
+                truth_label=result.truth_label,
+                evidence_refs=(receipt.record_hash,),
+                metadata={
+                    "durable": True,
+                    "read_only_source": True,
+                    "arbitrary_url_fetch": False,
+                    "response_sha256": sha256_json(response),
+                },
+            ),
+        )
+    projection_updated = projection is not None and (
+        previous_projection is None or projection.id != previous_projection.id
     )
     return {
         "schema": "szl.lyte.github-actions/v1",
@@ -287,7 +337,12 @@ def ingest_github_actions(
         "receipt_id": receipt.record_hash,
         "receipt_sequence": receipt.sequence,
         "receipt_persisted": True,
-        "projection_id": projection.id,
+        "projection_id": projection.id if projection is not None else None,
+        "projection_version": projection.version if projection is not None else None,
+        "projection_updated": projection_updated,
+        "prior_projection_retained": (
+            result.state is ConnectorState.NOT_MODIFIED and projection is not None
+        ),
         "durable": True,
         "arbitrary_url_fetch": False,
         "read_only": True,

@@ -18,10 +18,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from opentelemetry import trace
-from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from lyte import __version__
+from lyte.api.routes_admin import router as admin_router
 from lyte.api.routes_analysis import router as analysis_router
 from lyte.api.routes_ask import router as ask_router
 from lyte.api.routes_catalog import router as catalog_router
@@ -67,6 +67,7 @@ class Runtime:
     metrics: LyteMetrics
     replay_protector: ReplayProtector
     require_source_binding: bool
+    require_build_receipt: bool
     demo_seed: dict[str, Any] | None = None
 
     @property
@@ -81,11 +82,25 @@ class Runtime:
     def persistence_contract(self) -> dict[str, Any]:
         dialect = self.database.engine.dialect.name
         try:
-            with self.database.session() as session:
-                session.execute(text("SELECT 1 FROM lyte_workspaces LIMIT 1"))
-            state = "READY"
+            self.database.ping()
+            schema = self.database.schema_readiness(
+                require_migration_revision=self.settings.is_production
+            )
+            schema_contract = schema.to_dict()
+            state = "READY" if schema.ready else "UNAVAILABLE"
         except Exception:
             state = "UNAVAILABLE"
+            schema_contract = {
+                "ready": False,
+                "state": "UNAVAILABLE",
+                "expected_revisions": [],
+                "observed_revisions": [],
+                "missing_tables": [],
+                "validation_mode": (
+                    "ALEMBIC_EXACT_HEAD" if self.settings.is_production else "LOCAL_SCHEMA"
+                ),
+                "truth_label": "UNAVAILABLE",
+            }
         return {
             "backend": dialect,
             "state": state,
@@ -93,6 +108,7 @@ class Runtime:
                 "DEPLOYMENT_MANAGED" if dialect == "postgresql" else "FILE_OR_PROCESS_SCOPED"
             ),
             "tenant_workspace_scoped": True,
+            "schema": schema_contract,
             "truth_label": "MEASURED" if state == "READY" else "UNAVAILABLE",
         }
 
@@ -165,6 +181,7 @@ def _make_runtime(application: FastAPI) -> Runtime:
         raise ConfigurationError(
             "LYTE_DEMO_MODE is forbidden in production; sample data cannot be implicit"
         )
+    hosted_lyte = os.getenv("SPACE_ID", "").strip().casefold() == "szlholdings/lyte"
     runtime = Runtime(
         settings=settings,
         database=database,
@@ -176,6 +193,11 @@ def _make_runtime(application: FastAPI) -> Runtime:
         replay_protector=ReplayProtector(),
         require_source_binding=(
             settings.is_production or _env_bool("LYTE_REQUIRE_SOURCE_BINDING", False)
+        ),
+        require_build_receipt=(
+            settings.is_production
+            or hosted_lyte
+            or _env_bool("LYTE_REQUIRE_BUILD_RECEIPT", False)
         ),
     )
     if runtime.demo_mode:
@@ -254,6 +276,7 @@ def create_app() -> FastAPI:
             "/healthz",
             "/readyz",
             "/metrics",
+            "/build-receipt.json",
         }:
             response.headers["Cache-Control"] = "no-store"
         response.headers["Content-Security-Policy"] = (
@@ -281,6 +304,7 @@ def create_app() -> FastAPI:
         return response
 
     application.include_router(health_router)
+    application.include_router(admin_router)
     application.include_router(catalog_router)
     application.include_router(entities_router)
     application.include_router(ask_router)

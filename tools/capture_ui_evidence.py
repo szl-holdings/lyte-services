@@ -17,12 +17,14 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory, gettempdir
 from typing import Any
 
+from websockets.exceptions import ConnectionClosed
 from websockets.sync.client import connect
 
 VIEWPORTS = (
@@ -113,6 +115,22 @@ class CdpSession:
         return remote.get("value")
 
 
+@contextmanager
+def _closing_cdp(websocket, *, close_on_exit: bool = True):
+    """Request complete browser shutdown while its control connection is still open."""
+    cdp = CdpSession(websocket)
+    try:
+        yield cdp
+    finally:
+        if close_on_exit:
+            try:
+                cdp.call("Browser.close")
+            except (ConnectionClosed, OSError, RuntimeError, TimeoutError):
+                # Browser.close may terminate its own connection before replying.
+                # The outer finally still waits for or terminates the owned process.
+                pass
+
+
 def _wait_for_debug_port(profile: Path, process: subprocess.Popen[bytes]) -> int:
     marker = profile / "DevToolsActivePort"
     deadline = time.monotonic() + 20
@@ -123,8 +141,16 @@ def _wait_for_debug_port(profile: Path, process: subprocess.Popen[bytes]) -> int
             )
             raise RuntimeError(f"browser exited before CDP became ready: {stderr[-1000:]}")
         if marker.is_file():
-            first_line = marker.read_text(encoding="utf-8").splitlines()[0]
-            return int(first_line)
+            # Chromium can create this file before releasing its Windows write handle.
+            try:
+                first_line = marker.read_text(encoding="utf-8").splitlines()[0]
+                port = int(first_line)
+                if 1 <= port <= 65535:
+                    return port
+            except (PermissionError, FileNotFoundError, IndexError, ValueError):
+                # The marker can be locked, removed, or partly written at startup.
+                # Retry within the fixed deadline instead of accepting partial data.
+                pass
         time.sleep(0.05)
     raise TimeoutError("browser CDP port was not ready within 20 seconds")
 
@@ -134,15 +160,19 @@ def _stop_browser_process(
     *,
     graceful_close_requested: bool,
     platform_name: str | None = None,
+    browser_pid: int | None = None,
 ) -> None:
     """Close Chromium without orphaning profile-locking child processes on Windows."""
 
     platform_name = platform_name or os.name
-    if platform_name == "nt" and process.poll() is None:
+    if platform_name == "nt" and (browser_pid is not None or process.poll() is None):
         taskkill = shutil.which("taskkill")
         if taskkill:
-            subprocess.run(  # noqa: S603 -- exact PID belongs to the spawned browser
-                [taskkill, "/PID", str(process.pid), "/T", "/F"],
+            target_pid = browser_pid if browser_pid is not None else process.pid
+            if not isinstance(target_pid, int) or isinstance(target_pid, bool) or target_pid <= 0:
+                raise RuntimeError("refusing to stop a browser without an exact observed PID")
+            subprocess.run(  # noqa: S603 -- PID comes from this spawned browser's own CDP
+                [taskkill, "/PID", str(target_pid), "/T", "/F"],
                 check=False,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -186,15 +216,16 @@ def _remove_browser_profile(profile: Path) -> None:
 
 
 def _wait_for_document(cdp: CdpSession, expected_url: str) -> None:
-    deadline = time.monotonic() + 20
+    deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
         state = cdp.evaluate(
-            "JSON.stringify({ready:document.readyState,url:location.href,app:Boolean(document.querySelector('[data-scene=executive]'))})"
+            "JSON.stringify({ready:document.readyState,url:location.href,app:Boolean(document.querySelector('[data-scene=executive]')),workspace:document.documentElement?.dataset.workspaceState})"
         )
         parsed = json.loads(state) if isinstance(state, str) else {}
         if (
             parsed.get("ready") == "complete"
             and parsed.get("app") is True
+            and parsed.get("workspace") == "settled"
             and str(parsed.get("url", "")).startswith(expected_url)
         ):
             time.sleep(0.25)
@@ -310,10 +341,14 @@ def _keyboard_evidence(cdp: CdpSession, base_url: str) -> dict[str, Any]:
     _dispatch_key(cdp, "Escape")
     time.sleep(0.3)
     drawer_closed = bool(cdp.evaluate("document.querySelector('#signal-drawer').hidden"))
+    restored_focus = _focus(cdp)
+    focus_restored = bool(
+        after_node and restored_focus and after_node.get("nodeId") == restored_focus.get("nodeId")
+    )
     record(
-        "close lattice evidence with Escape",
-        drawer_closed,
-        {"drawerClosed": drawer_closed, "focus": _focus(cdp)},
+        "close lattice evidence with Escape and restore graph focus",
+        drawer_closed and focus_restored,
+        {"drawerClosed": drawer_closed, "focusRestored": focus_restored, "focus": restored_focus},
     )
 
     cdp.evaluate("document.querySelector('#ask-open').focus()")
@@ -444,6 +479,7 @@ def capture(
             "--disable-background-networking",
             "--disable-component-update",
             "--disable-default-apps",
+            "--disable-extensions",
             "--disable-sync",
             "--metrics-recording-only",
             "--no-first-run",
@@ -459,9 +495,26 @@ def capture(
             stderr=subprocess.PIPE,
         )
         graceful_close_requested = False
+        browser_pid = None
         try:
             port = _wait_for_debug_port(profile, process)
             root = f"http://127.0.0.1:{port}"
+            browser_target = _http_json(f"{root}/json/version")
+            with connect(
+                browser_target["webSocketDebuggerUrl"], open_timeout=10, close_timeout=5
+            ) as browser_socket:
+                process_info = CdpSession(browser_socket).call("SystemInfo.getProcessInfo")
+                browser_process = next(
+                    (
+                        row
+                        for row in process_info.get("processInfo", [])
+                        if row.get("type") == "browser"
+                    ),
+                    None,
+                )
+                if not browser_process or not isinstance(browser_process.get("id"), int):
+                    raise RuntimeError("the spawned browser did not expose its exact process ID")
+                browser_pid = browser_process["id"]
             targets = _http_json(f"{root}/json/list")
             target = next((row for row in targets if row.get("type") == "page"), None)
             if target is None:
@@ -470,8 +523,10 @@ def capture(
                     method="PUT",
                 )
             websocket_url = target["webSocketDebuggerUrl"]
-            with connect(websocket_url, open_timeout=10, close_timeout=5) as websocket:
-                cdp = CdpSession(websocket)
+            with (
+                connect(websocket_url, open_timeout=10, close_timeout=5) as websocket,
+                _closing_cdp(websocket, close_on_exit=os.name != "nt") as cdp,
+            ):
                 cdp.call("Page.enable")
                 cdp.call("Runtime.enable")
                 version = cdp.call("Browser.getVersion")
@@ -530,17 +585,13 @@ def capture(
                     ],
                 }
                 json_output.write_text(_json_text(document), encoding="utf-8")
-                # POSIX Chromium closes its complete process tree through CDP. On Windows,
-                # retain the live parent until the finally block can terminate its exact
-                # PID tree; closing only the launcher can orphan profile-locking children.
-                if os.name != "nt":
-                    graceful_close_requested = True
-                    cdp.call("Browser.close")
+                graceful_close_requested = os.name != "nt"
                 return document
         finally:
             _stop_browser_process(
                 process,
                 graceful_close_requested=graceful_close_requested,
+                browser_pid=browser_pid,
             )
             _remove_browser_profile(profile)
 
