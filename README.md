@@ -18,6 +18,28 @@ tags:
   - governed-ai
 ---
 
+<p><a href="https://huggingface.co/spaces/SZLHOLDINGS/szl-command-lab"><img src="https://raw.githubusercontent.com/szl-holdings/.github/main/profile/assets/szl/logos/szl_mark_holographic.svg" alt="SZL Holdings" width="112" /></a></p>
+
+# Lyte Enterprise
+
+Explore service, delivery, cost and risk signals through an auditable evidence and decision chain.
+
+**Artifact:** Enterprise signal application · **Stage:** Sample and real-data modes separated
+
+[Explore in Command Lab](https://huggingface.co/spaces/SZLHOLDINGS/szl-command-lab) · [Build](https://github.com/szl-holdings/lyte-services) · [Evidence](https://github.com/szl-holdings/lyte-services/blob/a456ac76d6fb2162981669cfe297b16bfcd9322d/README.md)
+
+## Before you use it
+
+- The public enterprise scenario is SAMPLE / MODELED; real-data mode must not silently substitute it.
+- Verify source coverage, readiness and each result’s truth label before operational use.
+
+<details>
+<summary>Technical details and original evidence</summary>
+
+The retained source below is exact and may contain historical observations. Its dates, use restrictions, licenses and evidence boundaries continue to apply.
+
+<!-- SZL-PRESERVED-TECHNICAL-BODY:START -->
+
 # Lyte Enterprise Signal Lattice
 
 **See what is changing. Know what it costs. Act with proof.**
@@ -128,3 +150,7 @@ revision; provider readiness alone is not product-operational proof.
 See [`docs/enterprise/ARCHITECTURE.md`](docs/enterprise/ARCHITECTURE.md),
 [`docs/enterprise/DEPLOYMENT.md`](docs/enterprise/DEPLOYMENT.md), and
 [`docs/enterprise/PROOF_BEFORE_PITCH.md`](docs/enterprise/PROOF_BEFORE_PITCH.md).
+
+<!-- SZL-PRESERVED-TECHNICAL-BODY:END -->
+
+</details>
