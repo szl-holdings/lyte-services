@@ -1,0 +1,36 @@
+{
+  "schema": "szl.source-card-presentation/v1",
+  "source_repository": "szl-holdings/lyte-services",
+  "source_revision": "a456ac76d6fb2162981669cfe297b16bfcd9322d",
+  "shared_mark_dependency": "https://github.com/szl-holdings/.github/pull/860",
+  "publication_boundary": "This source review is not evidence of Hub publication or runtime qualification. The existing canonical writer retains all exact-source, credential, entitlement, target, and readiness gates.",
+  "cards": [
+    {
+      "kind": "spaces",
+      "repo_id": "SZLHOLDINGS/lyte",
+      "source_path": "README.md",
+      "source_url": "https://github.com/szl-holdings/lyte-services/blob/a456ac76d6fb2162981669cfe297b16bfcd9322d/README.md",
+      "observed_hub_revision": "23be6e83f7252f1951a0580693c1a9261073306e",
+      "observed_hub_card_sha256": "dabd333ecd4120d7741354da8bd881c86e3c3d9f2a1f7ff3e075472f94129dcf",
+      "observed_at": "2026-10-04T16:10:58.930580+00:00",
+      "canonical_publisher": "https://github.com/szl-holdings/a11oy/blob/5e014855a274825f4d46ce91cb3396cabd20f99a/scripts/hf_publish_lyte_enterprise.py",
+      "publication_trigger": "MANUAL_EXISTING_A11OY_EXACT_MAIN_SCOPE_LYTE",
+      "publication_state": "SOURCE_REVIEW_PENDING",
+      "artifact": "Enterprise signal application",
+      "stage": "Sample and real-data modes separated",
+      "before_sha256": "00aa5e8098b6d8035498bbdcd4bf583f0fda4b4048ab91d1101a24e70ef0f417",
+      "after_sha256": "b2b2d397b62271652747d338313317e86409856c46398dd9e059170da92cfbf5",
+      "front_matter_sha256": "3879e60d9bd1e6d84cd1650986f5a8a171d9153eed09625764bc389ab26b6b13",
+      "preserved_body_sha256": "bbb49e549b40a672b1adb10be8a76d21b1507ef28b402f347e55252f394a5c20",
+      "bytes_before": 5661,
+      "bytes_after": 6916,
+      "front_matter_preserved": true,
+      "original_body_preserved": true,
+      "provider_or_runtime_promotion": false,
+      "delegated_publisher_repository": "szl-holdings/a11oy",
+      "delegated_workflow": ".github/workflows/hf-publish-vertical-flagships.yml",
+      "manual_scope": "lyte",
+      "source_contract": "Publisher resolves and verifies current lyte-services main and includes its exact root README in the closed Docker source manifest."
+    }
+  ]
+}
