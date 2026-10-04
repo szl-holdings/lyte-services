@@ -409,7 +409,11 @@ def test_checkout_scenario_and_ask_are_deterministic_citation_first() -> None:
     assert "a witnessed execution receipt" in unavailable.missing_evidence
 
 
-def test_prometheus_and_opentelemetry_instrumentation_are_bounded_and_redacted() -> None:
+def test_prometheus_and_opentelemetry_instrumentation_are_bounded_and_redacted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Inspect every test span even when the host configures sampled production telemetry.
+    monkeypatch.setenv("OTEL_TRACES_SAMPLER", "always_on")
     metrics = LyteMetrics()
     metrics.record_connector("github_actions", "success", 0.25)
     metrics.record_ingest("traces", "rejected", record_count=2)

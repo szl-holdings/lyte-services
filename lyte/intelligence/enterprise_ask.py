@@ -145,7 +145,7 @@ def _number(body: Mapping[str, Any], *names: str) -> float | None:
     if isinstance(value, bool) or not isinstance(value, int | float):
         return None
     result = float(value)
-    return result if result == result and result not in {float("inf"), float("-inf")} else None
+    return result if math.isfinite(result) else None
 
 
 def _strings(body: Mapping[str, Any], name: str) -> tuple[str, ...]:

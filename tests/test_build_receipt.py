@@ -17,6 +17,7 @@ from lyte.build_receipt import (
     PAYLOAD_FILES,
     PAYLOAD_ROOTS,
     SCHEMA,
+    BuildReceiptError,
     build_receipt_document,
     generate_build_receipt,
     observe_build_receipt,
@@ -175,7 +176,7 @@ def test_malformed_or_ambiguous_receipt_contracts_fail_closed(
     assert observed.valid is False
 
 
-def test_duplicate_json_keys_and_symlinks_are_rejected(tmp_path: Path) -> None:
+def test_duplicate_json_keys_are_rejected(tmp_path: Path) -> None:
     root = _payload_root(tmp_path)
     (root / "build-receipt.json").write_bytes(
         b'{"schema":"one","schema":"two"}\n'
@@ -187,14 +188,33 @@ def test_duplicate_json_keys_and_symlinks_are_rejected(tmp_path: Path) -> None:
     )
     assert duplicate.state == "INVALID"
 
-    (root / "build-receipt.json").unlink()
+
+@pytest.mark.parametrize("target_kind", ("file", "directory", "dangling"))
+def test_payload_symlinks_are_rejected(tmp_path: Path, target_kind: str) -> None:
+    root = _payload_root(tmp_path)
+    target = tmp_path / "outside-payload"
+    if target_kind == "file":
+        target.write_text("outside the receipt scope\n", encoding="utf-8")
+    elif target_kind == "directory":
+        target.mkdir()
+        (target / "outside.txt").write_text("outside the receipt scope\n", encoding="utf-8")
     link = root / "lyte" / "linked.txt"
     try:
-        os.symlink(root / "README.md", link)
+        os.symlink(target, link, target_is_directory=target_kind == "directory")
     except OSError:
         pytest.skip("symlink creation is unavailable on this host")
-    with pytest.raises(Exception, match="symlinks are forbidden"):
+    with pytest.raises(BuildReceiptError, match="payload symlinks are forbidden"):
         generate_build_receipt(root, source_revision=REVISION)
+    assert not (root / "build-receipt.json").exists()
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="FIFO creation is unavailable")
+def test_non_regular_payload_file_is_rejected_without_opening_it(tmp_path: Path) -> None:
+    root = _payload_root(tmp_path)
+    os.mkfifo(root / "lyte" / "pipe")
+    with pytest.raises(BuildReceiptError, match="payload must contain regular files only"):
+        generate_build_receipt(root, source_revision=REVISION)
+    assert not (root / "build-receipt.json").exists()
 
 
 def test_local_absence_is_explicit_but_live_attestation_requires_receipt(

@@ -126,6 +126,8 @@ def _closing_cdp(websocket, *, close_on_exit: bool = True):
             try:
                 cdp.call("Browser.close")
             except (ConnectionClosed, OSError, RuntimeError, TimeoutError):
+                # Browser.close may terminate its own connection before replying.
+                # The outer finally still waits for or terminates the owned process.
                 pass
 
 
@@ -146,6 +148,8 @@ def _wait_for_debug_port(profile: Path, process: subprocess.Popen[bytes]) -> int
                 if 1 <= port <= 65535:
                     return port
             except (PermissionError, FileNotFoundError, IndexError, ValueError):
+                # The marker can be locked, removed, or partly written at startup.
+                # Retry within the fixed deadline instead of accepting partial data.
                 pass
         time.sleep(0.05)
     raise TimeoutError("browser CDP port was not ready within 20 seconds")

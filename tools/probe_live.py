@@ -10,7 +10,6 @@ import re
 import time
 import urllib.error
 import urllib.request
-from re import fullmatch
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -310,7 +309,7 @@ def probe(
     failures: list[str] = []
     expected_revision = expected_revision.strip().lower()
     expected_receipt_sha256 = expected_receipt_sha256.strip().lower()
-    if fullmatch(r"[0-9a-f]{40}", expected_revision) is None:
+    if re.fullmatch(r"[0-9a-f]{40}", expected_revision) is None:
         failures.append("expected revision must be an exact 40-character lowercase Git SHA")
         return {
             "schema": "szl.lyte-live-probe/v3",

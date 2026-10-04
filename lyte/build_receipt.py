@@ -110,7 +110,9 @@ def _walk_payload_root(application_root: Path, relative_root: str) -> list[Path]
         directory_names[:] = kept_directories
         for name in sorted(file_names):
             candidate = current / name
-            if candidate.is_symlink() or not candidate.is_file():
+            if candidate.is_symlink():
+                raise BuildReceiptError("payload symlinks are forbidden")
+            if not candidate.is_file():
                 raise BuildReceiptError("payload must contain regular files only")
             files.append(candidate)
     return files
