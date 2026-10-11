@@ -254,6 +254,7 @@ time,
 .brand {
   display: inline-flex;
   width: max-content;
+  min-height: 44px;
   color: var(--text);
   gap: 0.7rem;
   text-decoration: none;
@@ -869,6 +870,10 @@ main {
   border-radius: 9px;
   background: var(--ink-1);
   gap: 2px;
+}
+
+.segmented-control button {
+  min-width: 44px;
 }
 
 .segmented-control button,
