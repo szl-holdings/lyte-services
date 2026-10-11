@@ -73,7 +73,9 @@ def run(output: Path) -> int:
             try:
                 self.wfile.write(body)
             except (BrokenPipeError, ConnectionResetError):
-                pass
+                # Navigation can cancel a pending local fixture response.
+                # Close this disconnected client rather than reuse its socket.
+                self.close_connection = True
 
         def do_POST(self):
             writes.append(self.path)
