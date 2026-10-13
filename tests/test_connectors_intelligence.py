@@ -102,6 +102,34 @@ def test_github_actions_remote_failures_are_unavailable_without_sample_fallback(
     client.close()
 
 
+def test_github_actions_default_page_fits_observed_full_run_objects() -> None:
+    # GitHub returns full run objects (repository, head_commit, actor and more);
+    # their measured mean on 2026-10-13 was about 21.5 KB per run. A default
+    # page of such runs must stay inside the default body bound, otherwise the
+    # public observation degrades to UNAVAILABLE / response_body_overflow.
+    limits = GitHubActionsLimits()
+    padding = "x" * 21_600
+
+    def full_run(index: int) -> dict[str, object]:
+        return {**_github_run(), "id": 1842 + index, "head_commit": {"message": padding}}
+
+    runs = [full_run(index) for index in range(limits.per_page)]
+    client = httpx.Client(
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(
+                200, json={"total_count": len(runs), "workflow_runs": runs}
+            )
+        )
+    )
+    result = GitHubActionsConnector({"szl-holdings/lyte"}, client=client).fetch_workflow_runs(
+        "szl-holdings/lyte"
+    )
+    client.close()
+    assert result.reason != "response_body_overflow"
+    assert result.state is ConnectorState.OBSERVED
+    assert len(result.runs) == limits.per_page
+
+
 def test_github_actions_rejects_body_overflow_and_marks_page_bound_partial() -> None:
     overflow_client = httpx.Client(
         transport=httpx.MockTransport(lambda _: httpx.Response(200, content=b"x" * 1_025))
