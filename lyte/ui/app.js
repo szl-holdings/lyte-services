@@ -1311,7 +1311,7 @@
   function renderReceipts() {
     const tape = one("#evidence-tape");
     if (!tape) return;
-    text("#receipt-count", workspace.receipts.length);
+    text("#receipt-count", workspace.mode === "UNAVAILABLE" || workspace.failures.has("receipts") ? "—" : workspace.receipts.length);
     if (!workspace.receipts.length) {
       tape.replaceChildren(unavailableListItem("UNAVAILABLE; receipts API unavailable or empty. No pseudo-receipt was substituted."));
       return;
@@ -1343,10 +1343,15 @@
       ...workspace.playback,
       ...workspace.receipts,
     ].filter((record) => validHash(record.record_hash));
-    text("#proof-coverage-summary", `${records.length} persisted hash${records.length === 1 ? "" : "es"}`);
+    const available = workspace.mode !== "UNAVAILABLE";
+    text("#proof-coverage-summary", available
+      ? `${records.length} loaded hash${records.length === 1 ? "" : "es"}`
+      : "UNAVAILABLE");
     const ring = one("#proof-coverage-ring");
     if (ring) {
-      ring.setAttribute("aria-label", `${records.length} API records have persisted 64-character hashes; no completeness percentage is asserted`);
+      ring.setAttribute("aria-label", available
+        ? `${records.length} loaded API records have persisted 64-character hashes; no completeness percentage is asserted`
+        : "Proof coverage unavailable; no completeness percentage is asserted");
       text("span", "—", ring);
     }
     const counts = new Map();
