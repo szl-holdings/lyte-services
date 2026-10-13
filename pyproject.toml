@@ -7,7 +7,7 @@ name = "szl-lyte-enterprise"
 version = "4.0.0"
 description = "Governed business-observability Signal Lattice"
 readme = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.15"
 license = { text = "Apache-2.0" }
 authors = [{ name = "SZL Holdings" }]
 dependencies = [
