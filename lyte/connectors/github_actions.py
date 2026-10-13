@@ -22,7 +22,10 @@ _SHA = re.compile(r"^[0-9a-fA-F]{40}$")
 @dataclass(frozen=True, slots=True)
 class GitHubActionsLimits:
     max_pages: int = 3
-    per_page: int = 50
+    # Full GitHub run objects average about 21.5 KB each, so a 50-run page
+    # (1,075,131 bytes for lyte-services on 2026-10-13) overflows the 1 MB
+    # body bound. 25 runs keeps one page near half of that bound.
+    per_page: int = 25
     max_body_bytes: int = 1_000_000
     connect_timeout_seconds: float = 3.0
     read_timeout_seconds: float = 8.0
