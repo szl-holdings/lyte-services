@@ -44,6 +44,12 @@ byte. Backend code, tenant and workspace rules, request expressions, receipts,
 formula and signal calculations, publisher authority, source marker, Docker
 closure, and the existing tests were not changed.
 
+This section, including every count below, records that qualification of
+source revision `b7bfc276cf9c8578e1e443e7a79c19594e1276de` only. It was not
+rerun on the current accepted bytes; see
+[Historical qualification (2026-10-11)](#historical-qualification-2026-10-11)
+and [Current accepted source digests](#current-accepted-source-digests).
+
 - **36 tests passed** from `test_frontend_contract.py`,
   `test_frontend_script.py`, and `test_build_receipt.py`, using Python 3.12 and
   the pinned `requirements-test.txt` closure. The local test process used an
@@ -74,6 +80,21 @@ CHROME_PATH=/path/to/chromium python tools/verify_native_frontdoor.py \
   --output /path/to/new-evidence-directory
 ```
 
+### Historical qualification (2026-10-11)
+
+Qualified revision: `b7bfc276cf9c8578e1e443e7a79c19594e1276de`
+
+That revision is the first commit of the superseded pull request #42, which
+was closed unmerged (its commits remain fetchable through
+`refs/pull/42/head`). Its parent
+is the base named above, and its three frontend files hash to the values
+below. The pull request's final head,
+`9e21ffe51005bec94084e29ef49f33524ac9823e`, changed only
+`tools/verify_native_frontdoor.py` and carries the same three file blobs. The
+92 browser checks and the other results above apply to this revision only. The
+values below are kept verbatim from that qualification; they are not the
+current accepted bytes.
+
 The existing closed payload enumerator includes all three frontend files
 within its 82-file application closure. The rendered bytes matched these
 SHA-256 values:
@@ -82,6 +103,25 @@ SHA-256 values:
 | --- | --- |
 | `lyte/ui/index.html` | `bc502c820271ee42324d286ea35f36171e70ecf16f99fbe3a281978c962b2068` |
 | `lyte/ui/styles.css` | `9ba3fb23e664c19f464c643082c137d6690ced6d55a37a72cc074bb3954d5c3e` |
+| `lyte/ui/app.js` | `e46203fc2c1670069c70bb3ca72e3d30566f5f51c21f060dc7a6a999fcd3b7ba` |
+
+### Current accepted source digests
+
+Pull request #49 integrated this presentation onto main together with the
+accepted page marker and 44-pixel target sizes from #43, which changed
+`index.html` (one line) and `styles.css` (five added lines); `app.js` is
+unchanged. The table below records the SHA-256 of the current accepted source
+bytes. It is a source digest record only: no new browser qualification was
+run on these bytes, and the 2026-10-11 results above do not carry over to
+them. `tests/test_frontdoor_doc_digests.py` fails when a listed file's raw
+bytes stop matching its row, when a row is missing or duplicated, and when the
+historical values stop matching the files at the qualified revision (that
+check runs only where the revision's commit is available locally).
+
+| Current accepted source | SHA-256 |
+| --- | --- |
+| `lyte/ui/index.html` | `28212a879661184d31e693412c639c243d14d7277a8d21e47a5e3741f97395bb` |
+| `lyte/ui/styles.css` | `c151fb90baae5d95b20b5b34fe0f450b5ff2cfe204bec327f367192f9395fc98` |
 | `lyte/ui/app.js` | `e46203fc2c1670069c70bb3ca72e3d30566f5f51c21f060dc7a6a999fcd3b7ba` |
 
 ## Publication
