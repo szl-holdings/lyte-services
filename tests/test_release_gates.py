@@ -6,6 +6,7 @@ import hashlib
 import importlib
 import json
 import re
+import tomllib
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -14,6 +15,7 @@ import pytest
 import yaml
 from alembic import command
 from alembic.config import Config
+from packaging.specifiers import SpecifierSet
 from pydantic import ValidationError
 from sqlalchemy import create_engine, text
 
@@ -85,10 +87,41 @@ def test_workflow_yaml_is_valid_and_action_refs_are_immutable() -> None:
     )
     assert "run: pytest" not in text
     assert "python tools/" not in text
-    assert text.count("python -m pytest") == 6
+    assert text.count("python -m pytest") == 7
     assert text.count("--editable .") >= 9
     assert "python -m tools.verify_source_binding" in text
     assert verify() == []
+
+
+def test_container_python_is_declared_supported_and_runs_the_full_suite_in_ci() -> None:
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    supported = SpecifierSet(project["project"]["requires-python"])
+    bases = re.findall(
+        r"^FROM\s+python:(\d+\.\d+)[^@\s]*@sha256:[0-9a-f]{64}\s*$",
+        (ROOT / "Dockerfile").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    assert len(bases) == 1, bases
+    runtime_minor = bases[0]
+    assert f"{runtime_minor}.0" in supported, (runtime_minor, str(supported))
+
+    workflow = ROOT / ".github" / "workflows" / "compiler.yml"
+    jobs = yaml.safe_load(workflow.read_text(encoding="utf-8"))["jobs"]
+    full_suite_versions: set[str] = set()
+    for job in jobs.values():
+        steps = job.get("steps", [])
+        versions = [
+            str(step["with"]["python-version"])
+            for step in steps
+            if str(step.get("uses", "")).startswith("actions/setup-python@")
+        ]
+        for version in versions:
+            assert version in supported, (version, str(supported))
+        if any(step.get("run") == "python -m pytest -q tests" for step in steps):
+            full_suite_versions.update(versions)
+    assert any(
+        version.rsplit(".", 1)[0] == runtime_minor for version in full_suite_versions
+    ), (runtime_minor, sorted(full_suite_versions))
 
 
 @pytest.mark.parametrize(
