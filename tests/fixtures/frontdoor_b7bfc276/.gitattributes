@@ -1,0 +1,2 @@
+# Canonical git objects: hashed byte for byte, never converted or diffed as text.
+objects/* binary

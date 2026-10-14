@@ -115,8 +115,13 @@ bytes. It is a source digest record only: no new browser qualification was
 run on these bytes, and the 2026-10-11 results above do not carry over to
 them. `tests/test_frontdoor_doc_digests.py` fails when a listed file's raw
 bytes stop matching its row, when a row is missing or duplicated, and when the
-historical values stop matching the files at the qualified revision (that
-check runs only where the revision's commit is available locally).
+historical values stop matching the files at the qualified revision. That
+revision is outside main's history, so its commit, the trees on the path to
+`lyte/ui/` and the three file blobs are preserved as canonical git objects in
+`tests/fixtures/frontdoor_b7bfc276/objects/`. The test re-hashes every object
+against its id, from the commit down to each blob, so the historical check runs
+in every checkout and fails, rather than skips, when an object is missing or
+altered.
 
 | Current accepted source | SHA-256 |
 | --- | --- |
