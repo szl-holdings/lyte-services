@@ -91,7 +91,7 @@ class InstalledWheelIsolationTests(TestCase):
                 with zipfile.ZipFile(command[-1]) as archive:
                     archive.extractall(site)
                 return
-            subprocess.run(
+            subprocess.run(  # noqa: S603
                 command,
                 check=True,
                 text=True,
