@@ -5,13 +5,13 @@ import contextlib
 import importlib.util
 import io
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from unittest import TestCase, main, mock, SkipTest
 import venv
 import zipfile
+from pathlib import Path
+from unittest import SkipTest, TestCase, main, mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,8 @@ def load(name, path):
     return module
 
 
-if sys.version_info < (3, 11):
+# The release workflow runs Python 3.12; retain the guard for direct older-runtime use.
+if sys.version_info < (3, 11):  # noqa: UP036
     raise SkipTest(
         "Release-gate regression requires Python 3.11+ stdlib tomllib; "
         "the canonical release workflow runs Python 3.12. "
@@ -44,7 +45,9 @@ class InstalledWheelIsolationTests(TestCase):
         source.mkdir()
         failure = 'raise RuntimeError("SYNTHETIC_BROKEN_MODULE")\n'
         healthy = 'origin = "synthetic healthy module"\n'
-        (source / "__init__.py").write_text(failure if checkout_broken else healthy, encoding="utf-8")
+        (source / "__init__.py").write_text(
+            failure if checkout_broken else healthy, encoding="utf-8"
+        )
         (checkout / "README.md").write_text("Synthetic package fixture.\n", encoding="utf-8")
         (checkout / "pyproject.toml").write_text(
             '[build-system]\nbuild-backend = "setuptools.build_meta"\n'
@@ -63,13 +66,18 @@ class InstalledWheelIsolationTests(TestCase):
                 stage = Path(command[command.index("--outdir") + 1])
                 wheel = stage / "shadow_probe-1.2.3-py3-none-any.whl"
                 with zipfile.ZipFile(wheel, "w") as archive:
-                    archive.writestr("shadow_probe/__init__.py", failure if wheel_broken else healthy)
+                    archive.writestr(
+                        "shadow_probe/__init__.py",
+                        failure if wheel_broken else healthy,
+                    )
                     archive.writestr(
                         "shadow_probe-1.2.3.dist-info/METADATA",
                         "Metadata-Version: 2.1\nName: shadow-probe\nVersion: 1.2.3\n"
                         "Project-URL: Source, https://github.com/szl-holdings/shadow-repo\n\n",
                     )
-                (stage / "shadow_probe-1.2.3.tar.gz").write_bytes(b"synthetic sdist; not built or published")
+                (stage / "shadow_probe-1.2.3.tar.gz").write_bytes(
+                    b"synthetic sdist; not built or published"
+                )
                 return
             if command[1:3] == ["-m", "twine"]:
                 return
@@ -84,8 +92,15 @@ class InstalledWheelIsolationTests(TestCase):
                 with zipfile.ZipFile(command[-1]) as archive:
                     archive.extractall(site)
                 return
-            subprocess.run(command, check=True, text=True, capture_output=True,
-                           cwd=checkout, timeout=20, **kwargs)
+            subprocess.run(  # noqa: S603
+                command,
+                check=True,
+                text=True,
+                capture_output=True,
+                cwd=checkout,
+                timeout=20,
+                **kwargs,
+            )
             return
 
         package = {"name": "shadow-probe", "dir": str(checkout), "environment": "pypi"}
@@ -105,7 +120,9 @@ class InstalledWheelIsolationTests(TestCase):
 
     def test_healthy_installed_wheel_is_not_shadowed_by_broken_checkout(self):
         with tempfile.TemporaryDirectory(prefix="szl-pypi-isolation-") as directory:
-            receipt, commands = self.run_gate(Path(directory), wheel_broken=False, checkout_broken=True)
+            receipt, commands = self.run_gate(
+                Path(directory), wheel_broken=False, checkout_broken=True
+            )
             self.assertEqual(receipt["package"], "shadow-probe")
             self.assertEqual(receipt["version"], "1.2.3")
             venv_commands = [command for command in commands if "venv-shadow-probe" in command[0]]
