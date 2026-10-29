@@ -13,7 +13,6 @@ import zipfile
 from pathlib import Path
 from unittest import SkipTest, TestCase, main, mock
 
-
 ROOT = Path(__file__).resolve().parents[1]
 GATE = ROOT / ".github/scripts/szl_pypi_release_gate.py"
 
@@ -92,7 +91,7 @@ class InstalledWheelIsolationTests(TestCase):
                 with zipfile.ZipFile(command[-1]) as archive:
                     archive.extractall(site)
                 return
-            subprocess.run(  # noqa: S603
+            subprocess.run(
                 command,
                 check=True,
                 text=True,
