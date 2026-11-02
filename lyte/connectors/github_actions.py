@@ -190,6 +190,7 @@ class GitHubActionsConnector:
             raise ConnectorPolicyError("ETag must contain 1-256 characters")
 
         runs: list[GitHubWorkflowRun] = []
+        seen_run_ids: set[int] = set()
         total_count: int | None = None
         first_etag: str | None = None
         pages_fetched = 0
@@ -258,7 +259,12 @@ class GitHubActionsConnector:
                         raise PayloadValidationError("github_response must be an object")
                     raw_runs = decoded.get("workflow_runs")
                     count = decoded.get("total_count")
-                    if not isinstance(raw_runs, list) or not isinstance(count, int) or count < 0:
+                    if (
+                        not isinstance(raw_runs, list)
+                        or isinstance(count, bool)
+                        or not isinstance(count, int)
+                        or count < 0
+                    ):
                         raise PayloadValidationError(
                             "github_response requires workflow_runs and non-negative total_count"
                         )
@@ -269,13 +275,23 @@ class GitHubActionsConnector:
                         first_etag = response.headers.get("etag")
                     elif count != total_count:
                         raise PayloadValidationError("GitHub total_count changed during pagination")
-                    runs.extend(self._parse_run(item, normalized) for item in raw_runs)
-                    if len(raw_runs) < self.limits.per_page or len(runs) >= count:
+                    if len(runs) + len(raw_runs) > count:
+                        raise PayloadValidationError("GitHub returned more runs than total_count")
+                    for item in raw_runs:
+                        run = self._parse_run(item, normalized)
+                        # Offset pages can overlap while the upstream list changes.
+                        # Repeated identities must not count as complete coverage,
+                        # even when the repeated payload is otherwise identical.
+                        if run.run_id in seen_run_ids:
+                            raise PayloadValidationError("GitHub repeated a workflow run id")
+                        seen_run_ids.add(run.run_id)
+                        runs.append(run)
+                    if len(raw_runs) < self.limits.per_page or len(runs) == count:
                         break
         except (httpx.HTTPError, PayloadValidationError, UnicodeError, ValueError):
             return self._unavailable(normalized, "transport_or_payload_failure", pages_fetched)
 
-        complete = total_count is not None and len(runs) >= total_count
+        complete = total_count is not None and len(runs) == total_count
         state = ConnectorState.OBSERVED if complete else ConnectorState.OBSERVED_PARTIAL
         receipt = self._receipt(
             normalized,
