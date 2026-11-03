@@ -28,10 +28,30 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Opt-in lanes: `import lyte` needs only the dependencies above. Extras are pinned like core,
+# at the versions installed and tested together on 2026-11-03.
+# tests/test_dependency_contract.py maps every third-party import to core, test or an extra.
+# browser: playwright for tools/forecast_workbench_browser.py and
+# tools/verify_native_frontdoor.py; websockets (also pulled in by uvicorn[standard]) for
+# tools/capture_ui_evidence.py. Chromium is not a Python package: install it separately.
+browser = [
+  "playwright==1.64.1",
+  "websockets==17.4",
+]
+# granite: lyte/intelligence/granite_timeseries.py (lazy, guarded imports) and
+# benchmarks/granite_checkpoint_probe.py. granite-tsfm provides the tsfm_public module and
+# requires Python <3.14 and torch <2.12, so this extra cannot install on Python 3.14.
+# For a CPU-only torch, install it from https://download.pytorch.org/whl/cpu first.
+granite = [
+  "granite-tsfm==0.3.12",
+  "pandas==3.1.0",
+  "torch==2.11.0",
+]
 test = [
   "pytest==9.1.1",
   "pytest-asyncio==1.4.0",
   "pytest-cov==7.1.0",
+  "packaging==26.3",
   "PyYAML==6.0.3",
   "ruff==0.17.2",
 ]
