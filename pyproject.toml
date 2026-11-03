@@ -45,7 +45,7 @@ browser = [
 granite = [
   "granite-tsfm==0.3.12",
   "pandas==3.1.0",
-  "torch==2.11.0",
+  "torch==2.13.0",
 ]
 test = [
   "pytest==9.2.0",
