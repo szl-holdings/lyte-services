@@ -1,0 +1,9 @@
+# Hash-locked runtime + test closure for every test, lint and migration job in
+# .github/workflows/compiler.yml. The top-level pins stay in
+# requirements-test.txt, which mirrors [project.optional-dependencies].test.
+# Regenerate test.txt whenever requirements.txt or requirements-test.txt
+# changes (tests/test_ci_requirements_lock.py fails on drift):
+#   uv pip compile --universal --generate-hashes --python-version 3.12 \
+#     --constraint requirements/ci/runtime.txt \
+#     requirements/ci/test.in -o requirements/ci/test.txt
+-r ../../requirements-test.txt

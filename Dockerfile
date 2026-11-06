@@ -19,9 +19,15 @@ RUN groupadd --system --gid 10001 lyte \
     && mkdir -p /data /tmp/lyte-cache \
     && chown 10001:10001 /data /tmp/lyte-cache
 
+# requirements.txt (top-level pins, covered by the build receipt) stays in the
+# image; the complete hash-locked closure is installed from outside /app so the
+# receipt's closed payload is unchanged.
 COPY requirements.txt ./requirements.txt
-RUN python -m pip install --requirement requirements.txt \
-    && python -m pip check
+COPY requirements/ci/runtime.txt /tmp/lyte-runtime-requirements.txt
+RUN python -m pip install --require-hashes --only-binary=:all: \
+      --requirement /tmp/lyte-runtime-requirements.txt \
+    && python -m pip check \
+    && rm /tmp/lyte-runtime-requirements.txt
 
 COPY lyte ./lyte
 COPY lyte_engine ./lyte_engine

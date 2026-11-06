@@ -46,9 +46,9 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements-test.txt
+          cache-dependency-path: requirements/ci/test.txt
       - name: Install and verify the complete dependency and package closure
-        run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+        run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: >-
           python -I -B -m compileall -q
           a11oy_factory lyte lyte_engine lyte_api space benchmarks frontier migrations
@@ -70,8 +70,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: ruff check lyte lyte_engine lyte_api tests tools
 
   unit:
@@ -89,8 +89,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - name: Run the complete test closure
         run: python -m pytest -q tests
 
@@ -111,8 +111,8 @@ jobs:
         with:
           python-version: "3.14.8"
           cache: pip
-          cache-dependency-path: requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - name: Run the complete test closure on the container Python
         run: python -m pytest -q tests
 
@@ -131,8 +131,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: python -m pytest -q tests/test_api_contract.py
 
   release-gates:
@@ -150,8 +150,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: python -m pytest -q tests/test_release_gates.py
 
   database-migrations:
@@ -187,10 +187,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: alembic upgrade head
       - run: alembic current | grep 20260904_0001
       - run: python -m pytest -q tests/test_postgres_contract.py tests/test_database_preservation.py
@@ -210,8 +208,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: python -m pytest -q tests/test_connectors_intelligence.py
 
   truth-and-governance:
@@ -229,8 +227,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements-test.txt
-      - run: python -m pip install --requirement requirements-test.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/test.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: python -m pytest -q tests/test_domain_persistence.py -k "truth or formula or receipt or hatun or auth or isolation"
 
   security-scan:
@@ -416,8 +414,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements.txt
-      - run: python -m pip install --requirement requirements.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/runtime.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/runtime.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: python -m tools.verify_source_binding --revision "$GITHUB_SHA"
 
   live-probe:
@@ -439,8 +437,8 @@ jobs:
         with:
           python-version: "3.12.14"
           cache: pip
-          cache-dependency-path: requirements.txt
-      - run: python -m pip install --requirement requirements.txt --editable . && python -m pip check
+          cache-dependency-path: requirements/ci/runtime.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/runtime.txt && python -m pip install --no-deps --editable . && python -m pip check"
       - run: python -m tools.verify_source_binding --revision "$EXPECTED_REVISION"
       - run: >-
           python -m tools.probe_live
