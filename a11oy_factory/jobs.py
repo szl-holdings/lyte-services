@@ -115,7 +115,9 @@ JOBS: tuple[Job, ...] = (
         id="lattice",
         title="Defense overlay",
         leader="immune-lattice",
-        url="https://github.com/szl-holdings/immune-lattice",
+        # immune-lattice is archived; its kernel lives on in immune/python, whose
+        # deploy-hf-space.yml publishes the SZLHOLDINGS/immune-lattice Space.
+        url="https://github.com/szl-holdings/immune/tree/main/python",
         organ="immune",
         cell="N5",
         honesty="ROADMAP",
@@ -220,7 +222,10 @@ def _cell_blob(cell: Cell) -> str:
 
 
 def search_jobs(q: str) -> dict:
-    """Local catalog search. Empty query returns the full table. Unknown query is empty hits, not an error."""
+    """Local catalog search. Empty query returns the full table.
+
+    An unknown query returns empty hits, not an error.
+    """
     needle = (q or "").strip().lower()
     jobs = [asdict(j) for j in JOBS if not needle or needle in _blob(j)]
     cells = [c.__dict__ for c in (LYTE, *FRONTIERS) if not needle or needle in _cell_blob(c)]

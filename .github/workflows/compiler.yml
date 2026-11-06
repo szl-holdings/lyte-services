@@ -72,7 +72,7 @@ jobs:
           cache: pip
           cache-dependency-path: requirements/ci/test.txt
       - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt && python -m pip install --no-deps --editable . && python -m pip check"
-      - run: ruff check lyte lyte_engine lyte_api tests tools
+      - run: ruff check a11oy_factory lyte lyte_engine lyte_api space migrations tests tools lyte_runtime.py
 
   unit:
     runs-on: ubuntu-latest
