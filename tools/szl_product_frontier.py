@@ -402,6 +402,7 @@ def test(receipt: RunReceipt, args: argparse.Namespace) -> bool:
         "pytest": [python, "-m", "pytest", "-q"],
         "security": [python, "tools/security_gate.py"],
         "secret-scan": [python, "tools/secret_scan.py"],
+        "forbidden-domain": [python, "tools/forbidden_domain.py"],
         "frontend": [python, "tools/verify_frontend.py", "--mode", "all"],
     }
     ok = True

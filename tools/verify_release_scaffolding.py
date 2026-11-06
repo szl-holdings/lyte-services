@@ -69,6 +69,7 @@ def verify() -> list[str]:
         "truth-and-governance",
         "security-scan",
         "secret-scan",
+        "forbidden-domain",
         "frontend-static-contract",
         "accessibility",
         "responsive-overflow",

@@ -261,6 +261,21 @@ jobs:
         with: {python-version: "3.12.14"}
       - run: python -m tools.secret_scan
 
+  forbidden-domain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with: {python-version: "3.12.14"}
+      - run: python -m tools.forbidden_domain
+
   frontend-static-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 5
