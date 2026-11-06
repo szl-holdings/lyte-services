@@ -62,6 +62,7 @@ def verify() -> list[str]:
         "python-compile",
         "lint",
         "unit",
+        "granite-adapter",
         "api-contract",
         "release-gates",
         "database-migrations",

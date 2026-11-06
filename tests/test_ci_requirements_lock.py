@@ -2,7 +2,7 @@
 
 requirements.txt and requirements-test.txt carry the top-level pins (they mirror
 pyproject.toml, which tools/verify_release_scaffolding.py checks). CI and the
-Dockerfile install from requirements/ci/runtime.txt and requirements/ci/test.txt
+Dockerfile install from requirements/ci/{runtime,test,granite-adapter}.txt
 instead: complete closures compiled by ``uv pip compile --universal
 --generate-hashes`` and installed with ``pip install --require-hashes``. This
 contract fails when a lock drifts from the top-level pins (for example after a
@@ -14,6 +14,7 @@ Standard library and pytest only; executes no repository code.
 from __future__ import annotations
 
 import re
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_LOCK = "requirements/ci/runtime.txt"
 TEST_LOCK = "requirements/ci/test.txt"
+GRANITE_ADAPTER_LOCK = "requirements/ci/granite-adapter.txt"
 _TOP_LEVEL = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?==([^\s;]+)$")
 _LOCKED = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;\\]+)\s*(?:;\s*([^\\]+?))?\s*\\?$")
 _HASH = re.compile(r"^\s+--hash=sha256:[0-9a-f]{64}(?:\s*\\)?$")
@@ -96,15 +98,32 @@ def test_test_lock_matches_runtime_and_test_requirements() -> None:
     assert drift(pins, locked_entries(_read(TEST_LOCK))) == []
 
 
-def test_runtime_closure_is_identical_inside_the_test_closure() -> None:
-    # One runtime closure: the image and the test jobs must resolve shared
-    # packages to the same versions and markers.
-    runtime = locked_entries(_read(RUNTIME_LOCK))
-    test = locked_entries(_read(TEST_LOCK))
-    assert {name: entry[:2] for name, entry in runtime.items()} == {
-        name: test[name][:2] for name in runtime if name in test
+def test_granite_adapter_lock_adds_the_granite_pandas_pin() -> None:
+    # The granite-adapter job needs pandas only; tsfm_public and torch are doubles.
+    project = tomllib.loads(_read("pyproject.toml"))["project"]
+    granite = top_level_pins("\n".join(project["optional-dependencies"]["granite"]))
+    pins = {**top_level_pins(_read("requirements.txt")),
+            **top_level_pins(_read("requirements-test.txt")),
+            "pandas": granite["pandas"]}
+    lock = locked_entries(_read(GRANITE_ADAPTER_LOCK))
+    assert drift(pins, lock) == []
+    assert "torch" not in lock and "granite-tsfm" not in lock
+
+
+@pytest.mark.parametrize(("inner", "outer"), [
+    (RUNTIME_LOCK, TEST_LOCK),
+    (TEST_LOCK, GRANITE_ADAPTER_LOCK),
+])
+def test_smaller_closures_are_identical_inside_larger_ones(inner: str, outer: str) -> None:
+    # One closure: the image, the test jobs and the granite lane must resolve
+    # shared packages to the same versions. Markers may widen in a larger
+    # closure (python-dateutil needs tzdata everywhere; psycopg only on win32).
+    small = locked_entries(_read(inner))
+    large = locked_entries(_read(outer))
+    assert set(small) <= set(large)
+    assert {name: entry[0] for name, entry in small.items()} == {
+        name: large[name][0] for name in small
     }
-    assert set(runtime) <= set(test)
 
 
 def test_ci_installs_only_hashed_closures_and_the_package_without_deps() -> None:
@@ -114,6 +133,7 @@ def test_ci_installs_only_hashed_closures_and_the_package_without_deps() -> None
     allowed = (
         ["--require-hashes", "--only-binary=:all:", "--requirement", TEST_LOCK],
         ["--require-hashes", "--only-binary=:all:", "--requirement", RUNTIME_LOCK],
+        ["--require-hashes", "--only-binary=:all:", "--requirement", GRANITE_ADAPTER_LOCK],
         ["--no-deps", "--editable", "."],
     )
     assert [args for args in installs if args not in allowed] == []

@@ -1,0 +1,10 @@
+# Hash-locked closure for the granite-adapter job in .github/workflows/compiler.yml:
+# the test closure plus pandas, pinned as in [project.optional-dependencies].granite.
+# tsfm_public and torch are test doubles in tests/test_granite_pinned_adapter.py,
+# so they are not installed. Regenerate whenever requirements-test.txt or the
+# granite pandas pin changes (tests/test_ci_requirements_lock.py fails on drift):
+#   uv pip compile --universal --generate-hashes --python-version 3.12 \
+#     --constraint requirements/ci/test.txt \
+#     requirements/ci/granite-adapter.in -o requirements/ci/granite-adapter.txt
+-r ../../requirements-test.txt
+pandas==3.1.0

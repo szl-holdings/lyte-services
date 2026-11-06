@@ -38,8 +38,8 @@ contribution to this repository:
   output).
 - CI must be green: every job in `lyte-enterprise-gates`
   (`.github/workflows/compiler.yml`) and CodeQL. The ruleset requires 17 of
-  those jobs as status checks; `forbidden-domain` and `unit-py314` run on
-  every pull request as well.
+  those jobs as status checks; `unit-py314`, `granite-adapter` and
+  `forbidden-domain` run on every pull request as well.
 - If the change alters a governed surface, attach the receipt that proves it.
 - If you change `requirements.txt` or `requirements-test.txt`, regenerate the
   hash-locked closures with the commands in `requirements/ci/*.in`.

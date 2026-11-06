@@ -116,6 +116,31 @@ jobs:
       - name: Run the complete test closure on the container Python
         run: python -m pytest -q tests
 
+  # tests/test_granite_pinned_adapter.py runs "wherever the Granite lane dependencies
+  # exist": pandas from the granite extra. tsfm_public and torch are test doubles, so
+  # no model weights are fetched. Without this lane its pandas-dependent tests skip
+  # in every other job.
+  granite-adapter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: "3.12.14"
+          cache: pip
+          cache-dependency-path: requirements/ci/granite-adapter.txt
+      - run: "python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/granite-adapter.txt && python -m pip install --no-deps --editable . && python -m pip check"
+      - name: Fail closed if pandas cannot import (importorskip would otherwise skip)
+        run: python -c "import pandas"
+      - run: python -m pytest -q tests/test_granite_pinned_adapter.py
+
   api-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 10
