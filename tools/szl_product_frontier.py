@@ -398,10 +398,14 @@ def test(receipt: RunReceipt, args: argparse.Namespace) -> bool:
         "LYTE_DEMO_MODE": "true",
     }
     commands = {
-        "ruff": [python, "-m", "ruff", "check", "lyte", "tests", "tools"],
+        "ruff": [
+            python, "-m", "ruff", "check", "a11oy_factory", "lyte", "lyte_engine", "lyte_api",
+            "space", "migrations", "tests", "tools", "lyte_runtime.py",
+        ],
         "pytest": [python, "-m", "pytest", "-q"],
         "security": [python, "tools/security_gate.py"],
         "secret-scan": [python, "tools/secret_scan.py"],
+        "forbidden-domain": [python, "tools/forbidden_domain.py"],
         "frontend": [python, "tools/verify_frontend.py", "--mode", "all"],
     }
     ok = True

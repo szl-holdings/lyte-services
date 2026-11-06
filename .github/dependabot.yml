@@ -30,6 +30,25 @@ updates:
         patterns:
           - "*"
 
+  # Hash-locked closures (requirements/ci/runtime.txt, requirements/ci/test.txt)
+  # that CI and the Dockerfile install with --require-hashes. Their top-level
+  # pins come from requirements.txt / requirements-test.txt (updated by the "/"
+  # entry above); tests/test_ci_requirements_lock.py fails on any drift.
+  - package-ecosystem: "pip"
+    directory: "/requirements/ci"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "America/New_York"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 5
+    groups:
+      pip-ci:
+        patterns:
+          - "*"
+
   - package-ecosystem: "docker"
     directory: "/"
     schedule:

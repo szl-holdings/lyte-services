@@ -1,4 +1,9 @@
-"""Fail-closed Decision Cell Compiler. Hash is tamper-EVIDENT, not a signature."""
+"""Fail-closed Decision Cell Compiler. Hash is tamper-EVIDENT, not a signature.
+
+``hash`` is the SHA-256 of the canonical JSON of every other receipt field, so
+anyone holding a receipt can recompute it (:func:`verify_receipt`). The raw
+signal is never stored; only its digest, bound to the cell, is.
+"""
 
 from __future__ import annotations
 
@@ -6,9 +11,11 @@ import hashlib
 import json
 import time
 import uuid
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from typing import Any
 
-from .cells import ADMITTED, CELLS, Cell
+from .cells import CELLS, Cell
 
 BLOCKED = "BLOCKED"
 ALLOW = "ALLOW"
@@ -34,14 +41,23 @@ class CompileReceipt:
     lock: str
     flagship: str
     note: str
+    signal_digest: str
 
     def as_dict(self) -> dict:
         return asdict(self)
 
 
-def _sha256(payload: dict) -> str:
+def _sha256(payload: Mapping[str, Any]) -> str:
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(blob).hexdigest()
+
+
+def verify_receipt(receipt: Mapping[str, Any]) -> bool:
+    """Recompute ``hash`` over every other field. Tamper-evident, not a signature."""
+    if set(receipt) != set(CompileReceipt.__dataclass_fields__):
+        return False
+    body = {key: value for key, value in receipt.items() if key != "hash"}
+    return receipt["hash"] == _sha256(body)
 
 
 def compile_cell(cell_id: str, *, prev_hash: str = GENESIS, signal: str = "") -> CompileReceipt:
@@ -88,4 +104,5 @@ def compile_cell(cell_id: str, *, prev_hash: str = GENESIS, signal: str = "") ->
         "signal_digest": _sha256({"signal": signal, "cell": cid}),
     }
     digest = _sha256(body)
-    return CompileReceipt(**{k: body[k] for k in CompileReceipt.__dataclass_fields__ if k != "hash"}, hash=digest)
+    fields = {k: body[k] for k in CompileReceipt.__dataclass_fields__ if k != "hash"}
+    return CompileReceipt(**fields, hash=digest)

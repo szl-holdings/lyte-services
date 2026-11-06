@@ -32,7 +32,6 @@ tags:
 <!-- /szl:header -->
 
 <!-- Native identity: szl-brand@4309f6fce89179331b0b3ed8c99494e76c5be256; Orbit v2 icon sha256 6e2b7d72a3af3d9602b79de41df0194ede6496a9661f057108ec224c0efc92e6. -->
-<p><a href="https://github.com/szl-holdings"><img src="https://raw.githubusercontent.com/szl-holdings/szl-brand/4309f6fce89179331b0b3ed8c99494e76c5be256/kit/logos/orbit-v2/suite/szl-icon-32.svg" alt="SZL Holdings — Orbit v2" width="32" height="32" /></a></p>
 
 # Lyte Enterprise
 
@@ -46,6 +45,31 @@ Explore service, delivery, cost and risk signals through an auditable evidence a
 
 - The public enterprise scenario is SAMPLE / MODELED; real-data mode must not silently substitute it.
 - Verify source coverage, readiness and each result’s truth label before operational use.
+
+## Verify locally
+
+CI and the container install complete hash-locked dependency closures
+(`requirements/ci/test.txt`, `requirements/ci/runtime.txt`); the same commands
+work locally on Python 3.12–3.14:
+
+```bash
+python -m venv .venv
+. .venv/bin/activate   # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install --require-hashes --only-binary=:all: --requirement requirements/ci/test.txt
+python -m pip install --no-deps --editable .
+python -m pytest
+LYTE_ENV=development LYTE_DEMO_MODE=true uvicorn lyte.app:app --host 127.0.0.1 --port 7860
+```
+
+Six PostgreSQL contract tests skip unless `LYTE_TEST_POSTGRES_URL` is set
+(CI's `database-migrations` job sets it), and seven Granite adapter tests skip
+unless pandas is installed (`requirements/ci/granite-adapter.txt`, CI's
+`granite-adapter` job). Outside the container image, `/api/live`
+and `/build-receipt.json` answer HTTP 503 by design: no build receipt exists
+until the image build generates one, and `/readyz` reports it as
+`MISSING_OPTIONAL_LOCAL`. The retained technical body below documents the
+original flow with `requirements-test.txt`, which pins the same top-level
+versions without hashes.
 
 <details>
 <summary>Technical details and original evidence</summary>

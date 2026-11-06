@@ -83,7 +83,10 @@ FRONTIERS: tuple[Cell, ...] = (
             "SGLang (RadixAttention prefix reuse, agentic/structured); "
             "Ollama (local DX wrapping llama.cpp)"
         ),
-        szl="receipted fail-closed serving with schema outside the weights. Not a vLLM/SGLang/Ollama rehost.",
+        szl=(
+            "receipted fail-closed serving with schema outside the weights. "
+            "Not a vLLM/SGLang/Ollama rehost."
+        ),
     ),
     _frontier(
         2,
@@ -112,7 +115,10 @@ FRONTIERS: tuple[Cell, ...] = (
         title="Mosaic",
         organ="circulatory",
         job="data mosaic",
-        cite="MosaicML / Databricks Mosaic AI (train, customize, and deploy on own data, lakehouse)",
+        cite=(
+            "MosaicML / Databricks Mosaic AI "
+            "(train, customize, and deploy on own data, lakehouse)"
+        ),
         szl="receipted mosaic with UNSIGNED-honest lineage. Not a Databricks rehost.",
     ),
     _frontier(
@@ -120,8 +126,14 @@ FRONTIERS: tuple[Cell, ...] = (
         title="Lattice",
         organ="immune",
         job="defense overlay",
-        cite="immune-lattice COP (SENTRA/YAWAR). Hub vertical may be LIVE; this frontier bind is not.",
-        szl="defense overlay on every cell. Hunt, isolate, deceive. Never strike people. Bind stays ROADMAP.",
+        cite=(
+            "immune-lattice COP (SENTRA/YAWAR). "
+            "Hub vertical may be LIVE; this frontier bind is not."
+        ),
+        szl=(
+            "defense overlay on every cell. Hunt, isolate, deceive. "
+            "Never strike people. Bind stays ROADMAP."
+        ),
     ),
     _frontier(
         6,
@@ -144,7 +156,10 @@ FRONTIERS: tuple[Cell, ...] = (
         title="Title",
         organ="skeleton",
         job="property records",
-        cite="Zillow (residential listings and records). szl-real-estate is a LIVE Hub vertical; this frontier bind is not.",
+        cite=(
+            "Zillow (residential listings and records). "
+            "szl-real-estate is a LIVE Hub vertical; this frontier bind is not."
+        ),
         szl="receipted title/underwrite bind. Not a Zillow rehost. Bind stays ROADMAP.",
     ),
 )
