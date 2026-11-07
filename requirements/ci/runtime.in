@@ -1,0 +1,8 @@
+# Hash-locked runtime closure: the container image (Dockerfile) and the
+# source-binding / live-probe jobs in .github/workflows/compiler.yml.
+# The top-level pins stay in requirements.txt, which mirrors
+# [project].dependencies in pyproject.toml. Regenerate runtime.txt whenever
+# requirements.txt changes (tests/test_ci_requirements_lock.py fails on drift):
+#   uv pip compile --universal --generate-hashes --python-version 3.12 \
+#     requirements/ci/runtime.in -o requirements/ci/runtime.txt
+-r ../../requirements.txt

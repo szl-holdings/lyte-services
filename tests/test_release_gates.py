@@ -87,7 +87,7 @@ def test_workflow_yaml_is_valid_and_action_refs_are_immutable() -> None:
     )
     assert "run: pytest" not in text
     assert "python tools/" not in text
-    assert text.count("python -m pytest") == 7
+    assert text.count("python -m pytest") == 8
     assert text.count("--editable .") >= 9
     assert "python -m tools.verify_source_binding" in text
     assert verify() == []

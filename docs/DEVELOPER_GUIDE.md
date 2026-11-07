@@ -10,7 +10,7 @@ Before a PR, run:
 
 ```bash
 python -m compileall -q lyte lyte_engine lyte_api
-ruff check lyte tests tools
+ruff check a11oy_factory lyte lyte_engine lyte_api space migrations tests tools lyte_runtime.py
 python -m pytest
 python -m tools.szl_product_frontier test --product lyte --json
 ```
