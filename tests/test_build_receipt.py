@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 from copy import deepcopy
@@ -14,6 +15,7 @@ from fastapi.testclient import TestClient
 from lyte.api import routes_health
 from lyte.app import create_app
 from lyte.build_receipt import (
+    MAX_RECEIPT_BYTES,
     PAYLOAD_FILES,
     PAYLOAD_ROOTS,
     SCHEMA,
@@ -187,6 +189,56 @@ def test_duplicate_json_keys_are_rejected(tmp_path: Path) -> None:
         required=True,
     )
     assert duplicate.state == "INVALID"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    (
+        b'{"value":' + b"9" * 20_000 + b"}\n",
+        b'{"value":' + b"[" * 20_000 + b"0" + b"]" * 20_000 + b"}\n",
+    ),
+    ids=("integer-limit", "nesting-limit"),
+)
+def test_parser_resource_limits_return_unavailable_on_operational_routes(
+    raw: bytes,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = _payload_root(tmp_path)
+    (root / "build-receipt.json").write_bytes(raw)
+    _runtime_environment(monkeypatch)
+    monkeypatch.setattr(routes_health, "_ROOT", root)
+    with TestClient(create_app()) as client:
+        for route in ("/readyz", "/api/live", "/build-receipt.json"):
+            response = client.get(route)
+            assert response.status_code == 503
+            assert response.json()["build_receipt"]["state"] == "INVALID"
+            assert response.json()["build_receipt"]["failures"] == ["BUILD_RECEIPT_INVALID"]
+
+
+def test_oversized_receipt_is_rejected_with_a_bounded_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = _payload_root(tmp_path)
+    receipt = root / "build-receipt.json"
+    receipt.write_bytes(b"{}\n")
+    real_open = Path.open
+
+    class OversizedReceipt(io.BytesIO):
+        def read(self, size: int = -1) -> bytes:
+            assert 0 <= size <= MAX_RECEIPT_BYTES + 1
+            return super().read(size)
+
+    def open_receipt(path: Path, *args: object, **kwargs: object) -> object:
+        if path == receipt:
+            return OversizedReceipt(b" " * (MAX_RECEIPT_BYTES + 2))
+        return real_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", open_receipt)
+    observed = observe_build_receipt(root, expected_source_revision=REVISION, required=True)
+    assert observed.state == "INVALID"
+    assert observed.valid is False
+    assert observed.raw is None
 
 
 @pytest.mark.parametrize("target_kind", ("file", "directory", "dangling"))
