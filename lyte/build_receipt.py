@@ -235,11 +235,12 @@ def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 def _parse_document(raw: bytes) -> dict[str, Any]:
     try:
         document = json.loads(raw, object_pairs_hook=_reject_duplicate_keys)
-    except (BuildReceiptError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        canonical = _canonical_json(document) + b"\n"
+    except (BuildReceiptError, ValueError, RecursionError) as exc:
         raise BuildReceiptError("receipt is not unambiguous UTF-8 JSON") from exc
     if not isinstance(document, dict):
         raise BuildReceiptError("receipt root must be a JSON object")
-    if raw != _canonical_json(document) + b"\n":
+    if raw != canonical:
         raise BuildReceiptError("receipt bytes are not canonical JSON")
     return document
 
@@ -320,7 +321,9 @@ def observe_build_receipt(
             failures=("BUILD_RECEIPT_NOT_REGULAR_FILE",),
         )
     try:
-        raw = path.read_bytes()
+        # Bound allocation before parsing, including when the file grows while read.
+        with path.open("rb") as stream:
+            raw = stream.read(MAX_RECEIPT_BYTES + 1)
         if not raw or len(raw) > MAX_RECEIPT_BYTES:
             raise BuildReceiptError("receipt size is outside the accepted bounds")
         receipt_sha256 = _sha256_bytes(raw)
