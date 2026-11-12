@@ -34,18 +34,18 @@ classifiers = [
 ]
 dependencies = [
   "alembic==1.20.1",
-  "fastapi==0.162.0",
+  "fastapi==0.162.2",
   "httpx==0.28.1",
   "opentelemetry-api==1.45.2",
   "opentelemetry-instrumentation-fastapi==0.66b2",
   "opentelemetry-sdk==1.45.2",
   "orjson==3.13.0",
   "prometheus-client==0.26.0",
-  "psycopg[binary]==3.3.6",
-  "pydantic==2.14.2",
+  "psycopg[binary]==3.3.8",
+  "pydantic==2.14.3",
   "pydantic-settings==2.16.2",
   "PyJWT[crypto]==2.15.1",
-  "SQLAlchemy==2.1.6",
+  "SQLAlchemy==2.1.8",
   "uvicorn[standard]==0.54.0",
 ]
 
@@ -66,16 +66,16 @@ browser = [
 # For a CPU-only torch, install it from https://download.pytorch.org/whl/cpu first.
 granite = [
   "granite-tsfm==0.3.12",
-  "pandas==3.1.0",
-  "torch==2.13.0",
+  "pandas==3.1.1",
+  "torch==2.11.0",
 ]
 test = [
   "pytest==9.2.0",
-  "pytest-asyncio==1.4.1",
+  "pytest-asyncio==1.4.1.post1",
   "pytest-cov==7.1.0",
   "packaging==26.3",
   "PyYAML==6.0.3",
-  "ruff==0.17.3",
+  "ruff==0.17.4",
 ]
 
 [project.scripts]
