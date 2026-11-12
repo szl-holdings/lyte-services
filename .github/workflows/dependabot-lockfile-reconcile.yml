@@ -1,0 +1,100 @@
+# Dependabot lockfile reconcile
+#
+# WHY THIS EXISTS
+#   A Dependabot "/" pip bump edits requirements.txt / requirements-test.txt /
+#   pyproject.toml but does NOT regenerate the hash-locked closures in
+#   requirements/ci/*.txt. CI and the Dockerfile install those with
+#   `pip --require-hashes`, so the PR goes red: pip check mismatch, and
+#   tests/test_ci_requirements_lock.py fails on the drift (e.g. PR #76).
+#
+#   This job regenerates each closure exactly the way its own header documents
+#   (`uv pip compile --universal --generate-hashes ...`) and commits the result
+#   back onto the Dependabot PR branch, so the bump can go green on its own.
+#
+# REVIEW NOTES (this is proposed as a draft):
+#   1. Re-trigger: a push made with the default GITHUB_TOKEN does not start a new
+#      workflow run, so required checks will not re-run automatically after the
+#      reconcile commit. To close that loop, push with a PAT or GitHub App token
+#      stored as a secret (uncomment the `token:` lines below). With the default
+#      token the fix still lands; you just re-run checks once.
+#   2. DCO / signatures: the commit is signed off (-s). Confirm the bot identity
+#      satisfies this repo's DCO and commit-signature rules.
+#   3. Governance gates: it only touches generated lockfiles under
+#      requirements/ci; confirm release-gates / truth-and-governance /
+#      source-binding accept a bot reconcile commit.
+
+name: dependabot-lockfile-reconcile
+
+on:
+  pull_request:
+    paths:
+      - requirements.txt
+      - requirements-test.txt
+      - pyproject.toml
+      - requirements/ci/*.in
+      # Intentionally NOT requirements/ci/*.txt, so the reconcile commit does
+      # not re-trigger this workflow.
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lockfile-reconcile-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  reconcile:
+    # Dependabot bumps only; never act on human PRs.
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout the pull request branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+          # To make required checks re-run after the reconcile push, swap the
+          # default token for a PAT/App token with `contents: write`:
+          # token: ${{ secrets.DEPENDABOT_RECONCILE_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+
+      - name: Regenerate each hash-locked closure from its own header command
+        run: |
+          set -euo pipefail
+          # runtime.txt is a constraint for the others, so refresh it first.
+          order="requirements/ci/runtime.txt"
+          for txt in requirements/ci/*.txt; do
+            [ "$txt" = "requirements/ci/runtime.txt" ] && continue
+            order="$order $txt"
+          done
+          for txt in $order; do
+            [ -f "$txt" ] || continue
+            cmd="$(sed -n 's/^#[[:space:]]*\(uv pip compile .*\)$/\1/p' "$txt" | head -n1)"
+            if [ -z "$cmd" ]; then
+              echo "::warning::no uv header command in $txt; skipping"
+              continue
+            fi
+            echo "Reconciling $txt via: $cmd"
+            eval "$cmd"
+          done
+
+      - name: Commit and push if the closures changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- requirements/ci; then
+            echo "Closures already in sync; nothing to reconcile."
+            exit 0
+          fi
+          git config user.name  'dependabot[bot]'
+          git config user.email '49699333+dependabot[bot]@users.noreply.github.com'
+          git add requirements/ci
+          git commit -s -m "chore(ci): reconcile hash-locked closures with bumped pins"
+          git push origin "HEAD:${{ github.head_ref }}"
