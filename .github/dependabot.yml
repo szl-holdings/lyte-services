@@ -25,6 +25,12 @@ updates:
     labels:
       - "dependencies"
     open-pull-requests-limit: 5
+    # granite-tsfm 0.3.12 requires torch <2.12 (tests/test_granite_extra_constraints.py).
+    # Dependabot cannot see that range: its torch 2.13.0 bump (#62) left the granite
+    # extra unresolvable. Raise this bound together with the granite-tsfm pin.
+    ignore:
+      - dependency-name: "torch"
+        versions: [">=2.12"]
     groups:
       pip:
         patterns:
