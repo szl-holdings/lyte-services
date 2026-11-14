@@ -192,3 +192,5 @@ See [`docs/enterprise/ARCHITECTURE.md`](docs/enterprise/ARCHITECTURE.md),
 <!-- SZL-PRESERVED-TECHNICAL-BODY:END -->
 
 </details>
+
+Estate on Hugging Face: models, datasets and Spaces are published under the [SZLHOLDINGS](https://huggingface.co/SZLHOLDINGS) org.
