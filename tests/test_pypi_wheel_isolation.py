@@ -83,6 +83,11 @@ class InstalledWheelIsolationTests(TestCase):
             if command[1:3] == ["-m", "venv"]:
                 venv.EnvBuilder(with_pip=False).create(command[-1])
                 return
+            if "pip" in command and "check" in command:
+                # The v2 canonical gate adds an isolated `pip check` probe after
+                # wheel install. The synthetic stub venv is pip-less and declares
+                # no dependency closure, so the probe is stubbed to success here.
+                return
             if "pip" in command and "install" in command:
                 # No installer or network: lay out only our own two fixture files.
                 env = Path(command[0]).parents[1]
@@ -125,7 +130,7 @@ class InstalledWheelIsolationTests(TestCase):
             self.assertEqual(receipt["package"], "shadow-probe")
             self.assertEqual(receipt["version"], "1.2.3")
             venv_commands = [command for command in commands if "venv-shadow-probe" in command[0]]
-            self.assertEqual(len(venv_commands), 3)
+            self.assertEqual(len(venv_commands), 4)
             self.assertTrue(all(command[1] == "-I" for command in venv_commands))
 
 
