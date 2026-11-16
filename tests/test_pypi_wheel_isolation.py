@@ -83,7 +83,7 @@ class InstalledWheelIsolationTests(TestCase):
             if command[1:3] == ["-m", "venv"]:
                 venv.EnvBuilder(with_pip=False).create(command[-1])
                 return
-            if command[1:3] == ["-m", "pip"] and "check" in command:
+            if "pip" in command and "check" in command:
                 # The v2 canonical gate adds an isolated `pip check` probe after
                 # wheel install. The synthetic stub venv is pip-less and declares
                 # no dependency closure, so the probe is stubbed to success here.
