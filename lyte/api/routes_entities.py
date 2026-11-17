@@ -5,10 +5,12 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy.exc import SQLAlchemyError
 
 from lyte.api.dependencies import get_read_scope, get_runtime
 from lyte.api.responses import operational_page, operational_record, receipt_record
 from lyte.domain import OperationalEntityKind, Scope
+from lyte.persistence import PersistenceError
 
 router = APIRouter(prefix="/api/lyte/v2", tags=["intelligence"])
 
@@ -291,6 +293,25 @@ def receipt(
     if row is None:
         raise HTTPException(status_code=404, detail="receipt was not found in this workspace")
     return receipt_record(row)
+
+
+@router.get("/receipts/{record_hash}/inspection")
+def receipt_inspection(
+    record_hash: str,
+    request: Request,
+    scope: ReadScope,
+) -> dict[str, Any]:
+    """Inspect local canonical content and direct evidence without authorizing action."""
+    if len(record_hash) != 64 or any(c not in "0123456789abcdef" for c in record_hash):
+        raise HTTPException(status_code=400, detail="record_hash must be a lowercase SHA-256")
+    runtime = get_runtime(request)
+    try:
+        result = runtime.store.inspect_receipt(scope, record_hash)
+    except (PersistenceError, SQLAlchemyError) as exc:
+        raise HTTPException(status_code=503, detail="receipt inspection is unavailable") from exc
+    if result is None:
+        raise HTTPException(status_code=404, detail="receipt was not found in this workspace")
+    return {**result, "data_mode": _data_mode(runtime, scope)}
 
 
 __all__ = ["router"]

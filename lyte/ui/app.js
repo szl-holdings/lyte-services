@@ -48,6 +48,7 @@
   let graphNodes = [];
   let graphEdges = [];
   const receiptDetails = Object.create(null);
+  let receiptInspectionGeneration = 0;
   const decisionDetails = {
     checkout: unavailableDetail("Decision evidence unavailable", "The decisions API has not been verified."),
     agent: unavailableDetail("Agent evidence unavailable", "The agents API has not been verified."),
@@ -241,7 +242,117 @@
     element.textContent = truth;
   }
 
+  function resetReceiptInspection(message = "No receipt inspection requested.") {
+    const panel = one("#receipt-inspection");
+    if (!panel) return;
+    panel.hidden = true;
+    text("#receipt-inspection-status", message);
+    one("#receipt-inspection-checks")?.replaceChildren();
+    one("#receipt-inspection-references")?.replaceChildren();
+  }
+
+  function validateReceiptInspection(payload, hash) {
+    const states = new Set(["VERIFIED_LOCAL", "UNRESOLVED", "DUPLICATE", "FAILED"]);
+    if (!payload || payload.schema !== "szl.lyte.receipt-inspection/v1"
+      || validHash(payload.record_hash) !== hash
+      || !["PARTIAL", "FAILED"].includes(payload.status)
+      || !["VERIFIED_LOCAL", "FAILED"].includes(payload.record_integrity)
+      || payload.can_authorize !== false || payload.can_execute !== false
+      || payload.effectors_enabled !== false || payload.reference_limit !== 32
+      || !Array.isArray(payload.references) || payload.references.length > 32
+      || !Array.isArray(payload.limitations) || payload.limitations.length > 16
+      || payload.limitations.some((item) => typeof item !== "string" || item.length > 100)
+      || !["UNAVAILABLE", "EMPTY_POPULATION", "LIMIT_EXCEEDED", "COMPLETE_LOCAL", "INCOMPLETE"].includes(payload.coverage_state)) return false;
+    const expected = payload.expected_references;
+    const inspected = payload.inspected_references;
+    const verified = payload.verified_references;
+    if (!(expected === null || (Number.isSafeInteger(expected) && expected >= 0))
+      || !Number.isSafeInteger(inspected) || inspected < 0 || inspected > 32
+      || !Number.isSafeInteger(verified) || verified < 0 || verified > inspected
+      || (expected !== null && inspected > expected)) return false;
+    if (payload.references.some((row) => !row || !states.has(row.state)
+      || !validHash(row.reference_sha256)
+      || !(row.record_hash === null || validHash(row.record_hash))
+      || typeof row.reason !== "string" || row.reason.length > 100)) return false;
+    if (payload.references.filter((row) => row.state === "VERIFIED_LOCAL").length !== verified) return false;
+    if (payload.coverage_state === "COMPLETE_LOCAL"
+      && !(expected > 0 && expected <= 32 && verified === expected && payload.references.length === expected)) return false;
+    if (payload.coverage_state === "INCOMPLETE"
+      && !(expected > 0 && expected <= 32 && verified < expected && payload.references.length === expected)) return false;
+    if (["EMPTY_POPULATION", "LIMIT_EXCEEDED", "UNAVAILABLE"].includes(payload.coverage_state)
+      && (payload.references.length || inspected || verified || payload.coverage_fraction !== null)) return false;
+    if (payload.coverage_state === "EMPTY_POPULATION" && expected !== 0) return false;
+    if (payload.coverage_state === "LIMIT_EXCEEDED" && !(expected > 32)) return false;
+    if (payload.coverage_state === "UNAVAILABLE" && expected !== null) return false;
+    if (["COMPLETE_LOCAL", "INCOMPLETE"].includes(payload.coverage_state)
+      && (!Number.isFinite(payload.coverage_fraction)
+        || payload.coverage_fraction !== verified / expected)) return false;
+    if (payload.record_integrity === "FAILED"
+      && (payload.status !== "FAILED" || expected !== null)) return false;
+    return true;
+  }
+
+  function renderReceiptInspection(payload, hash) {
+    if (!validateReceiptInspection(payload, hash)) throw new Error("Inspection contract mismatch");
+    const panel = one("#receipt-inspection");
+    if (!panel) return;
+    panel.hidden = false;
+    text("#receipt-inspection-status", `${payload.status} — local integrity is not action approval`);
+    const checks = [
+      ["Stored content", payload.record_integrity],
+      ["Direct evidence", payload.coverage_state],
+      ["Referenced population", payload.expected_references === null ? "UNAVAILABLE" : String(payload.expected_references)],
+      ["Records actually inspected", String(payload.inspected_references)],
+      ["References matching canonical content", String(payload.verified_references)],
+      ["Local coverage", payload.expected_references > 0 && payload.coverage_fraction !== null
+        ? `${payload.verified_references} / ${payload.expected_references}` : "UNAVAILABLE"],
+      ["Observation", formatTime(payload.inspected_at, { includeDate: true })],
+    ];
+    const list = one("#receipt-inspection-checks");
+    list?.replaceChildren(...checks.map(([label, value]) => {
+      const row = createElement("li");
+      row.append(createElement("strong", `${label}: `), createElement("span", value));
+      return row;
+    }));
+    const references = one("#receipt-inspection-references");
+    references?.replaceChildren(...payload.references.map((item) => {
+      const row = createElement("li");
+      const identity = item.record_hash || item.reference_sha256;
+      row.append(createElement("strong", `${item.state} · `), createElement("code", shortHash(identity)),
+        createElement("span", ` — ${item.reason}`));
+      if (item.record_hash && item.state === "VERIFIED_LOCAL") {
+        const button = createElement("button", "Inspect referenced receipt");
+        button.type = "button";
+        button.addEventListener("click", () => openReceipt(item.record_hash, button));
+        row.append(button);
+      }
+      return row;
+    }));
+  }
+
+  async function loadReceiptInspection(hash, generation, workspaceGeneration) {
+    const panel = one("#receipt-inspection");
+    if (!panel) return;
+    panel.hidden = false;
+    text("#receipt-inspection-status", "Inspecting current scoped records…");
+    try {
+      const payload = await fetchJSON(`${API.receipts}/${hash}/inspection`, {
+        headers: scopeHeaders(), cache: "no-store",
+      });
+      if (generation !== receiptInspectionGeneration || workspaceGeneration !== workspaceLoadGeneration
+        || one("#signal-drawer")?.hidden) return;
+      renderReceiptInspection(payload, hash);
+    } catch (_error) {
+      if (generation !== receiptInspectionGeneration || workspaceGeneration !== workspaceLoadGeneration
+        || one("#signal-drawer")?.hidden) return;
+      resetReceiptInspection("UNAVAILABLE — current receipt integrity could not be inspected.");
+      panel.hidden = false;
+    }
+  }
+
   function openDrawer(rawDetail, trigger) {
+    const inspectionGeneration = ++receiptInspectionGeneration;
+    resetReceiptInspection();
     const detail = normalizeDetail(rawDetail);
     const drawer = one("#signal-drawer");
     const scrim = one("#drawer-scrim");
@@ -267,9 +378,14 @@
       one("#drawer-close")?.focus();
     });
     announce(`${detail.label} evidence opened. Truth label ${detail.truth}.`);
+    if (detail.type === "Receipt" && validHash(detail.receipt)) {
+      void loadReceiptInspection(validHash(detail.receipt), inspectionGeneration, workspaceLoadGeneration);
+    }
   }
 
   function closeDrawer({ restoreFocus = true } = {}) {
+    receiptInspectionGeneration += 1;
+    resetReceiptInspection();
     const drawer = one("#signal-drawer");
     const scrim = one("#drawer-scrim");
     if (!drawer || drawer.hidden) return;
