@@ -34,7 +34,7 @@ classifiers = [
 ]
 dependencies = [
   "alembic==1.20.1",
-  "fastapi==0.162.5",
+  "fastapi==0.162.7",
   "httpx==0.28.1",
   "opentelemetry-api==1.45.2",
   "opentelemetry-instrumentation-fastapi==0.66b2",
@@ -57,7 +57,7 @@ dependencies = [
 # tools/verify_native_frontdoor.py; websockets (also pulled in by uvicorn[standard]) for
 # tools/capture_ui_evidence.py. Chromium is not a Python package: install it separately.
 browser = [
-  "playwright==1.65.1",
+  "playwright==1.65.2",
   "websockets==17.4",
 ]
 # granite: lyte/intelligence/granite_timeseries.py (lazy, guarded imports) and
