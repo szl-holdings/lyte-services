@@ -83,10 +83,13 @@ def dependabot_problems(dependabot_text: str, pins: dict[str, str]) -> list[str]
     entries = [
         entry
         for entry in yaml.safe_load(dependabot_text)["updates"]
-        if entry.get("package-ecosystem") == "pip" and entry.get("directory") == "/"
+        if entry.get("package-ecosystem") == "pip"
+        and (entry.get("directory") == "/" or "/" in (entry.get("directories") or []))
     ]
     if len(entries) != 1:
         return ["dependabot.yml must have exactly one pip entry for directory '/'"]
+    # The consolidated pip entry may monitor / and /requirements/ci together.
+    # A duplicated root owner remains a hard failure, not a reason to drop the ignore.
     ignored = [
         rule.get("versions")
         for rule in entries[0].get("ignore") or []

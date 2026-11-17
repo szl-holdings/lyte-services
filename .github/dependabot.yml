@@ -15,8 +15,13 @@ updates:
         patterns:
           - "*"
 
+  # Keep the same dependency in top-level pins and all hash-locked CI
+  # manifests in ONE Dependabot proposal. Closure parity remains fail-closed;
+  # a proposal must still pass source and hashed-lock tests before admission.
   - package-ecosystem: "pip"
-    directory: "/"
+    directories:
+      - "/"
+      - "/requirements/ci"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -25,33 +30,13 @@ updates:
     labels:
       - "dependencies"
     open-pull-requests-limit: 5
-    # granite-tsfm 0.3.12 requires torch <2.12 (tests/test_granite_extra_constraints.py).
-    # Dependabot cannot see that range: its torch 2.13.0 bump (#62) left the granite
-    # extra unresolvable. Raise this bound together with the granite-tsfm pin.
+    # granite-tsfm 0.3.12 requires torch <2.12; don't silently break extras.
     ignore:
       - dependency-name: "torch"
         versions: [">=2.12"]
     groups:
       pip:
-        patterns:
-          - "*"
-
-  # Hash-locked closures (requirements/ci/runtime.txt, requirements/ci/test.txt)
-  # that CI and the Dockerfile install with --require-hashes. Their top-level
-  # pins come from requirements.txt / requirements-test.txt (updated by the "/"
-  # entry above); tests/test_ci_requirements_lock.py fails on any drift.
-  - package-ecosystem: "pip"
-    directory: "/requirements/ci"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:00"
-      timezone: "America/New_York"
-    labels:
-      - "dependencies"
-    open-pull-requests-limit: 5
-    groups:
-      pip-ci:
+        group-by: dependency-name
         patterns:
           - "*"
 
