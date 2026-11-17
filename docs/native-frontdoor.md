@@ -107,13 +107,21 @@ SHA-256 values:
 
 ### Current accepted source digests
 
-Pull request #49 integrated this presentation onto main together with the
-accepted page marker and 44-pixel target sizes from #43, which changed
-`index.html` (one line) and `styles.css` (five added lines); `app.js` is
-unchanged. The table below records the SHA-256 of the current accepted source
-bytes. It is a source digest record only: no new browser qualification was
-run on these bytes, and the 2026-10-11 results above do not carry over to
-them. `tests/test_frontdoor_doc_digests.py` fails when a listed file's raw
+Pull request #49 previously integrated the presentation, page marker and
+44-pixel target sizes. PR #86 proposes an additive receipt-inspection drawer
+and its existing scoped backend/API path. On this review branch, the table
+binds the exact candidate source bytes; it does not claim merge, deployment
+or independent approval. The prior #49 record remains in Git history, and the
+immutable 2026-10-11 qualification table above is unchanged.
+
+For this candidate, 25 local Edge checks against an ephemeral real API with
+SAMPLE data passed at 1440, 768 and 390 pixels, including exact reference
+navigation and detection of a newly corrupted cached record. This is a separate
+population from the 92 historical presentation checks; neither result is a
+production release certificate. See `docs/enterprise/RECEIPT_INSPECTION.md`
+and the dated `integration-frontier-20261116T234251Z` execution record.
+
+The table remains a source-byte binding, not a signature or full qualification. `tests/test_frontdoor_doc_digests.py` fails when a listed file's raw
 bytes stop matching its row, when a row is missing or duplicated, and when the
 historical values stop matching the files at the qualified revision. That
 revision is outside main's history, so its commit, the trees on the path to
@@ -125,9 +133,9 @@ altered.
 
 | Current accepted source | SHA-256 |
 | --- | --- |
-| `lyte/ui/index.html` | `28212a879661184d31e693412c639c243d14d7277a8d21e47a5e3741f97395bb` |
+| `lyte/ui/index.html` | `228d04c0c0ce571f15e0ea16d199e6615b0681defccb449c1f4b44cbfb651486` |
 | `lyte/ui/styles.css` | `c151fb90baae5d95b20b5b34fe0f450b5ff2cfe204bec327f367192f9395fc98` |
-| `lyte/ui/app.js` | `e46203fc2c1670069c70bb3ca72e3d30566f5f51c21f060dc7a6a999fcd3b7ba` |
+| `lyte/ui/app.js` | `f6709504461267ad9466e4f79cdcf8e1977399fd08bc2b0eea60e492d447b915` |
 
 ## Publication
 
