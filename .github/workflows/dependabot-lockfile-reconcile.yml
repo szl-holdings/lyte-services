@@ -1,32 +1,5 @@
-# Dependabot lockfile reconcile
-#
-# WHY THIS EXISTS
-#   A Dependabot "/" pip bump edits requirements.txt / requirements-test.txt /
-#   pyproject.toml but does NOT regenerate the hash-locked closures in
-#   requirements/ci/*.txt that CI and the Dockerfile install with
-#   `pip --require-hashes`. The PR then goes red (pip check mismatch;
-#   tests/test_ci_requirements_lock.py). This job regenerates each closure the
-#   way its own header documents and commits the result back onto the PR branch.
-#
-# REPRODUCIBILITY
-#   The closures are compiled with uv pinned to the version in uv.toml
-#   (required-version). setup-uv below installs that exact version, so the
-#   regenerated locks are byte-reproducible rather than churning with whatever
-#   uv a runner happens to have.
-#
-# KNOWN LIMITATION
-#   Explicit "==" pins inside requirements/ci/*.in (e.g. the granite pandas pin)
-#   are maintained by the "/requirements/ci" Dependabot stream, not here. When a
-#   "/" bump changes a pin that an .in file also carries, that pip-ci PR must be
-#   rebased/merged alongside this one (or grouped) for a fully consistent lock.
-#
-# REVIEW NOTE
-#   A push made with the default GITHUB_TOKEN does not start a new workflow run,
-#   so required checks will not re-run automatically after the reconcile commit.
-#   For a hands-off loop, push with a PAT/App token in
-#   secrets.DEPENDABOT_RECONCILE_TOKEN (see the commented token: line). With the
-#   default token the fix still lands; you re-run checks once.
-
+# Review-only proposals. Untrusted PR content never receives repository-write
+# authority, supplies executable header commands, or replaces the policy helper.
 name: dependabot-lockfile-reconcile
 
 on:
@@ -35,70 +8,74 @@ on:
       - requirements.txt
       - requirements-test.txt
       - pyproject.toml
-      - requirements/ci/*.in
-      # Not requirements/ci/*.txt, so the reconcile commit does not re-trigger.
+      - requirements/ci/**
+      - tools/propose_ci_locks.py
+      - tests/test_lock_proposal.py
+      - .github/workflows/dependabot-lockfile-reconcile.yml
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: lockfile-reconcile-${{ github.event.pull_request.number }}
+  group: lockfile-proposal-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  reconcile:
-    if: ${{ github.actor == 'dependabot[bot]' }}
+  proposal-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: Offline proposal contracts
+        run: python -I -B -m unittest discover -s tests -p test_lock_proposal.py -v
+
+  propose:
+    if: >-
+      github.actor == 'dependabot[bot]' &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - name: Checkout the pull request branch
+      - name: Checkout trusted base policy at immutable revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.head_ref }}
-          persist-credentials: true
-          # token: ${{ secrets.DEPENDABOT_RECONCILE_TOKEN }}  # to re-run checks
-
-      - name: Install uv (version pinned by uv.toml required-version)
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: trusted
+          persist-credentials: false
+      - name: Checkout exact candidate as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          version: "0.13.7"
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.13.7'
+          enable-cache: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-
-      - name: Regenerate each hash-locked closure from its own header command
+      - name: Produce bounded patch without executing candidate code
+        env:
+          SOURCE_HEAD: ${{ github.event.pull_request.head.sha }}
+          POLICY_HEAD: ${{ github.event.pull_request.base.sha }}
         run: |
-          set -euo pipefail
-          # Replay each closure's own "uv pip compile ..." header. Repeat full
-          # passes until nothing changes, so a closure that constrains another
-          # (runtime -> test -> granite) converges regardless of filename order.
-          prev=""
-          for pass in 1 2 3 4 5 6; do
-            for txt in requirements/ci/*.txt; do
-              [ -f "$txt" ] || continue
-              cmd="$(sed -n 's/^#[[:space:]]*\(uv pip compile .*\)$/\1/p' "$txt" | head -n1)"
-              if [ -z "$cmd" ]; then
-                echo "::warning::no uv header command in $txt; skipping"
-                continue
-              fi
-              eval "$cmd"
-            done
-            now="$(cat requirements/ci/*.txt | sha256sum)"
-            [ "$now" = "$prev" ] && break
-            prev="$now"
-          done
-
-      - name: Commit and push if the closures changed
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- requirements/ci; then
-            echo "Closures already in sync; nothing to reconcile."
-            exit 0
-          fi
-          git config user.name  'dependabot[bot]'
-          git config user.email '49699333+dependabot[bot]@users.noreply.github.com'
-          git add requirements/ci
-          git commit -s -m "chore(ci): reconcile hash-locked closures with bumped pins"
-          git push origin "HEAD:${{ github.head_ref }}"
+          python -I -B "$GITHUB_WORKSPACE/trusted/tools/propose_ci_locks.py" \
+            --root "$GITHUB_WORKSPACE/candidate" \
+            --output "$RUNNER_TEMP/lock-proposal" \
+            --source-head "$SOURCE_HEAD" --policy-head "$POLICY_HEAD"
+      - name: Preserve proposal for exact-head human review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lock-proposal-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            ${{ runner.temp }}/lock-proposal/lockfiles.patch
+            ${{ runner.temp }}/lock-proposal/proposal.json
+          if-no-files-found: error
+          retention-days: 7
