@@ -151,7 +151,16 @@ def test_container_installs_the_hashed_runtime_closure() -> None:
 
 def test_dependabot_keeps_the_hashed_closures_current() -> None:
     dependabot = _read(".github/dependabot.yml")
-    assert re.search(r'directory:\s*"/requirements/ci"', dependabot)
+    # Single cross-directory Python update prevents split/contradictory bot PRs.
+    # Lockfile closure tests above still fail closed if the generated closure
+    # does not match the proposed top-level metadata.
+    assert dependabot.count('package-ecosystem: "pip"') == 1
+    assert re.search(
+        r'package-ecosystem:\s*"pip"\s+directories:\s*'
+        r'-\s*"/"\s+-\s*"/requirements/ci"',
+        dependabot,
+    )
+    assert re.search(r'group-by:\s*dependency-name', dependabot)
 
 
 def test_negative_control_drift_and_unhashed_entries_fail() -> None:
