@@ -65,6 +65,12 @@ updates:
     labels:
       - "dependencies"
     open-pull-requests-limit: 5
+    # The Docker version matcher uses Bundler syntax. This repo supports
+    # Python >=3.12,<3.15; do not propose unsupported 3.15+ images before
+    # the full release/test and dependency contracts deliberately advance.
+    ignore:
+      - dependency-name: "python"
+        versions: [">= 3.15"]
     groups:
       docker:
         patterns:
