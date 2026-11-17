@@ -682,6 +682,144 @@ class LyteStore:
                 )
             )
 
+    def inspect_receipt(self, scope: Scope, record_hash: str) -> dict[str, Any] | None:
+        """Read one receipt and at most 32 direct references, never the whole graph.
+
+        Local canonical consistency is not a signature, factual truth, external
+        freshness, full-chain continuity, or permission to execute. No URL is fetched.
+        The inspection itself appends nothing and never calls the chain-head writer.
+        """
+        if len(record_hash) != 64 or any(c not in "0123456789abcdef" for c in record_hash):
+            raise ValueError("record_hash must be a lowercase SHA-256 digest")
+
+        def valid_projection(row: ReceiptRecord) -> bool:
+            try:
+                if type(row.sequence) is not int or row.sequence < 1:
+                    return False
+                if (not isinstance(row.payload_json, dict)
+                        or not isinstance(row.evidence_refs, list)):
+                    return False
+                if row.payload_sha256 != sha256_json(row.payload_json):
+                    return False
+                # Python mapping equality equates True with 1; compare serialized
+                # basis identity as well as the native projection contract.
+                if not isinstance(row.basis_json, dict):
+                    return False
+                if sha256_json(row.basis_json) != row.record_hash:
+                    return False
+                self._validate_canonical_projection(
+                    row, scope, schema="szl.lyte.receipt/v1", stream_kind=STREAM_RECEIPTS,
+                    data={
+                        "kind": row.kind, "subject_type": row.subject_type,
+                        "subject_id": row.subject_id, "truth_label": row.truth_label,
+                        "payload": row.payload_json, "payload_sha256": row.payload_sha256,
+                        "evidence_refs": row.evidence_refs,
+                    },
+                )
+            except (PersistenceError, TypeError, ValueError, RecursionError):
+                return False
+            return True
+
+        with self.database.session() as session:
+            self._assert_scope(session, scope)
+            row = session.scalar(
+                select(ReceiptRecord).where(
+                    ReceiptRecord.tenant_id == str(scope.tenant_id),
+                    ReceiptRecord.workspace_id == str(scope.workspace_id),
+                    ReceiptRecord.record_hash == record_hash,
+                )
+            )
+            if row is None:
+                return None
+            target_valid = valid_projection(row)
+            result: dict[str, Any] = {
+                "schema": "szl.lyte.receipt-inspection/v1",
+                "record_hash": record_hash,
+                "inspected_at": isoformat_z(utc_now()),
+                "status": "PARTIAL" if target_valid else "FAILED",
+                "record_integrity": "VERIFIED_LOCAL" if target_valid else "FAILED",
+                "record_truth_label": row.truth_label if target_valid else "UNAVAILABLE",
+                "dependency_scope": "DIRECT_SCOPED_RECEIPTS_ONLY",
+                "expected_references": None,
+                "inspected_references": 0,
+                "verified_references": 0,
+                "coverage_fraction": None,
+                "coverage_state": "UNAVAILABLE",
+                "reference_limit": 32,
+                "references": [],
+                "limitations": [
+                    "FULL_CHAIN_NOT_CHECKED", "SIGNATURE_NOT_VERIFIED",
+                    "EXTERNAL_FRESHNESS_NOT_ESTABLISHED", "FACTUAL_TRUTH_NOT_CHECKED",
+                    "INDEPENDENT_WITNESS_NOT_CHECKED", "EXECUTION_NOT_AUTHORIZED",
+                ],
+                "can_authorize": False,
+                "can_execute": False,
+                "effectors_enabled": False,
+                "human_approval_required": True,
+            }
+            if not target_valid:
+                return result
+            refs = row.evidence_refs
+            result["expected_references"] = len(refs)
+            if not refs:
+                result["coverage_state"] = "EMPTY_POPULATION"
+                return result
+            if len(refs) > result["reference_limit"]:
+                result["coverage_state"] = "LIMIT_EXCEEDED"
+                return result
+            # Count exact identities, not only equal-sized populations. Non-receipt
+            # references are opaque, unresolved provenance, never URL-fetch targets.
+            unique_hashes = {
+                ref for ref in refs
+                if isinstance(ref, str) and len(ref) == 64
+                and all(c in "0123456789abcdef" for c in ref)
+            }
+            found = {
+                item.record_hash: item for item in session.scalars(
+                    select(ReceiptRecord).where(
+                        ReceiptRecord.tenant_id == str(scope.tenant_id),
+                        ReceiptRecord.workspace_id == str(scope.workspace_id),
+                        ReceiptRecord.record_hash.in_(unique_hashes),
+                    ).limit(32)
+                )
+            } if unique_hashes else {}
+            seen: set[str] = set()
+            for ref in refs:
+                identity = sha256_json(ref)
+                entry = {
+                    "reference_sha256": identity,
+                    "record_hash": ref if isinstance(ref, str) and ref in unique_hashes else None,
+                    "state": "UNRESOLVED",
+                    "reason": "NOT_A_SCOPED_RECEIPT_HASH",
+                }
+                if identity in seen:
+                    entry.update(state="DUPLICATE", reason="DUPLICATE_REFERENCE")
+                    result["status"] = "FAILED"
+                elif ref == record_hash:
+                    entry.update(state="FAILED", reason="SELF_REFERENCE")
+                    result["status"] = "FAILED"
+                elif isinstance(ref, str) and ref in unique_hashes:
+                    referenced = found.get(ref)
+                    if referenced is None:
+                        entry["reason"] = "NOT_FOUND_IN_SCOPE"
+                    else:
+                        result["inspected_references"] += 1
+                        if valid_projection(referenced):
+                            entry.update(
+                                state="VERIFIED_LOCAL", reason="CANONICAL_PROJECTION_MATCHES",
+                            )
+                            result["verified_references"] += 1
+                        else:
+                            entry.update(state="FAILED", reason="CANONICAL_PROJECTION_MISMATCH")
+                            result["status"] = "FAILED"
+                seen.add(identity)
+                result["references"].append(entry)
+            result["coverage_fraction"] = result["verified_references"] / len(refs)
+            result["coverage_state"] = (
+                "COMPLETE_LOCAL" if result["verified_references"] == len(refs) else "INCOMPLETE"
+            )
+            return result
+
     def list_receipts(
         self, scope: Scope, *, limit: int = 100, offset: int = 0
     ) -> list[ReceiptRecord]:
