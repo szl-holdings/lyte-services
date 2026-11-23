@@ -87,7 +87,7 @@ def area_of(path: str) -> str | None:
     # Classify only its Python payload, not arbitrary HF metadata or other Spaces.
     if path.startswith("hf-spaces/lyte/snapshot/files/") and path.endswith(".py"):
         return "runtime"
-    if path.startswith("hf-spaces/lyte/snapshot/"):
+    if path.startswith("hf-spaces/"):
         return None
     top = path.split("/")[0]
     if top in RUNTIME:
