@@ -58,7 +58,7 @@ OPENTELEMETRY = {
     "opentelemetry.instrumentation.fastapi": "opentelemetry-instrumentation-fastapi",
 }
 # HF Space snapshots contain executable entrypoints and are validated as runtime code.
-RUNTIME = ("lyte", "lyte_engine", "lyte_api", "space", "migrations", "lyte_runtime.py", "hf-spaces")
+RUNTIME = ("lyte", "lyte_engine", "lyte_api", "space", "migrations", "lyte_runtime.py")
 TOOLING = ("tools", "benchmarks", "a11oy_factory")
 _STDLIB = frozenset(sys.stdlib_module_names)
 _GUARDS = {"ImportError", "ModuleNotFoundError", "Exception", "BaseException"}
