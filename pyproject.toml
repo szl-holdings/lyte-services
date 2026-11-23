@@ -75,7 +75,7 @@ test = [
   "pytest-cov==7.1.0",
   "packaging==26.3",
   "PyYAML==6.0.3",
-  "ruff==0.17.5",
+  "ruff==0.17.6",
 ]
 
 [project.scripts]
