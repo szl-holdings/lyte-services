@@ -1,0 +1,51 @@
+# Lyte Enterprise Signal Lattice. Runtime actions remain human-sovereign.
+FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    XDG_CACHE_HOME=/tmp/lyte-cache \
+    PORT=7860 \
+    LYTE_ENV=development \
+    DATABASE_URL=sqlite+pysqlite:////data/lyte.db \
+    LYTE_DEMO_MODE=true \
+    LYTE_REQUIRE_SOURCE_BINDING=true \
+    LYTE_REQUIRE_BUILD_RECEIPT=true
+
+WORKDIR /app
+RUN groupadd --system --gid 10001 lyte \
+    && useradd --system --uid 10001 --gid lyte --home-dir /nonexistent --shell /usr/sbin/nologin lyte \
+    && mkdir -p /data /tmp/lyte-cache \
+    && chown 10001:10001 /data /tmp/lyte-cache
+
+# requirements.txt (top-level pins, covered by the build receipt) stays in the
+# image; the complete hash-locked closure is installed from outside /app so the
+# receipt's closed payload is unchanged.
+COPY requirements.txt ./requirements.txt
+COPY requirements/ci/runtime.txt /tmp/lyte-runtime-requirements.txt
+RUN python -m pip install --require-hashes --only-binary=:all: \
+      --requirement /tmp/lyte-runtime-requirements.txt \
+    && python -m pip check \
+    && rm /tmp/lyte-runtime-requirements.txt
+
+COPY lyte ./lyte
+COPY lyte_engine ./lyte_engine
+COPY lyte_api ./lyte_api
+COPY space ./space
+COPY alembic.ini README.md LICENSE NOTICE ./
+COPY migrations ./migrations
+ARG LYTE_SOURCE_REVISION=UNAVAILABLE
+ENV LYTE_SOURCE_REVISION=${LYTE_SOURCE_REVISION}
+COPY source_revision.txt ./source_revision.txt
+RUN python -c "import os,pathlib,re; p=pathlib.Path('source_revision.txt'); marker=p.read_text(encoding='utf-8').strip().lower(); build=os.environ.get('LYTE_SOURCE_REVISION','').strip().lower(); valid=lambda value: re.fullmatch(r'[0-9a-f]{40}',value) is not None; assert valid(build) or valid(marker), 'exact source revision is required'; assert not (valid(build) and valid(marker) and build != marker), 'source revisions disagree'; p.write_text((build if valid(build) else marker)+'\n',encoding='utf-8')"
+RUN python -m lyte.build_receipt generate --root /app \
+    && chmod 0444 /app/build-receipt.json \
+    && find /app/lyte /app/lyte_engine /app/lyte_api /app/space /app/migrations \
+      -type f -exec chmod 0444 {} +
+
+USER 10001:10001
+EXPOSE 7860
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD python -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('PORT','7860')+'/readyz', timeout=3).read()"
+CMD ["python", "-m", "uvicorn", "lyte.app:app", "--host", "0.0.0.0", "--port", "7860", "--no-access-log"]

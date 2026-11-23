@@ -1,0 +1,16 @@
+{
+  "artifact_set_sha256": "c5f127409ca8ccce971211f0012979decf1310503a541bad7800c2c3975d9970",
+  "forge": null,
+  "hf_repository": "SZLHOLDINGS/lyte",
+  "landing_sha256": "fac45c81201d999aca5eb36c5d26a1c18410ba5cecd84d2ac982973ecde66639",
+  "panels_sha256": "fac45c81201d999aca5eb36c5d26a1c18410ba5cecd84d2ac982973ecde66639",
+  "product_source": "https://github.com/szl-holdings/lyte-lattice",
+  "public_experience": "4.0.0",
+  "slug": "lyte",
+  "source_repository": "szl-holdings/a11oy",
+  "source_revision": "ef66956734e8edb8bf02d10b6ea20785da5fe313",
+  "title": "Lyte",
+  "upstream": "https://szlholdings-a11oy.hf.space/api/a11oy/v1/observability/summary",
+  "vertical": "BUSINESS OBSERVABILITY",
+  "workflow_run_id": 33917813189
+}

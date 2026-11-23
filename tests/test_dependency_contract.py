@@ -57,7 +57,8 @@ OPENTELEMETRY = {
     "opentelemetry.sdk": "opentelemetry-sdk",
     "opentelemetry.instrumentation.fastapi": "opentelemetry-instrumentation-fastapi",
 }
-RUNTIME = ("lyte", "lyte_engine", "lyte_api", "space", "migrations", "lyte_runtime.py")
+# HF Space snapshots contain executable entrypoints and are validated as runtime code.
+RUNTIME = ("lyte", "lyte_engine", "lyte_api", "space", "migrations", "lyte_runtime.py", "hf-spaces")
 TOOLING = ("tools", "benchmarks", "a11oy_factory")
 _STDLIB = frozenset(sys.stdlib_module_names)
 _GUARDS = {"ImportError", "ModuleNotFoundError", "Exception", "BaseException"}
@@ -82,6 +83,12 @@ def distribution(requirement: str) -> str:
 
 
 def area_of(path: str) -> str | None:
+    # The pinned HF Space snapshot is source material for a deployed runtime.
+    # Classify only its Python payload, not arbitrary HF metadata or other Spaces.
+    if path.startswith("hf-spaces/lyte/snapshot/files/") and path.endswith(".py"):
+        return "runtime"
+    if path.startswith("hf-spaces/"):
+        return None
     top = path.split("/")[0]
     if top in RUNTIME:
         return "runtime"
@@ -262,6 +269,13 @@ def test_every_python_file_has_an_area() -> None:
     assert {area_of(path) for path in sources} == {"runtime", "test", "tooling"}
     wheel = tomllib.loads(_pyproject())["tool"]["hatch"]["build"]["targets"]["wheel"]
     assert set(wheel["packages"]) <= set(RUNTIME)
+
+
+def test_hf_snapshot_python_area_is_scoped_to_lyte_runtime() -> None:
+    assert area_of("hf-spaces/lyte/snapshot/files/app.py") == "runtime"
+    assert area_of("hf-spaces/lyte/snapshot/files/lyte_runtime.py") == "runtime"
+    assert area_of("hf-spaces/lyte/snapshot/delta.py") is None
+    assert area_of("hf-spaces/unreviewed/snapshot/files/app.py") is None
 
 
 def test_every_third_party_import_is_classified() -> None:
