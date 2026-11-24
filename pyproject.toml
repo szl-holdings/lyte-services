@@ -34,7 +34,7 @@ classifiers = [
 ]
 dependencies = [
   "alembic==1.20.1",
-  "fastapi==0.162.7",
+  "fastapi==0.165.0",
   "httpx==0.28.1",
   "opentelemetry-api==1.45.2",
   "opentelemetry-instrumentation-fastapi==0.66b2",
@@ -42,10 +42,10 @@ dependencies = [
   "orjson==3.13.0",
   "prometheus-client==0.26.0",
   "psycopg[binary]==3.3.9",
-  "pydantic==2.14.3",
+  "pydantic==2.14.4",
   "pydantic-settings==2.16.3",
   "PyJWT[crypto]==2.15.1",
-  "SQLAlchemy==2.1.8",
+  "SQLAlchemy==2.1.9",
   "uvicorn[standard]==0.54.0",
 ]
 
@@ -75,7 +75,7 @@ test = [
   "pytest-cov==7.1.0",
   "packaging==26.3",
   "PyYAML==6.0.3",
-  "ruff==0.17.5",
+  "ruff==0.17.6",
 ]
 
 [project.scripts]
