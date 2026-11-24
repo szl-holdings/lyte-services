@@ -30,12 +30,20 @@ def source_identity() -> dict[str, Any]:
         elif value and value not in {"unknown", "unavailable", "unbound"}:
             invalid_sources.append(name)
     marker = _ROOT / "source_revision.txt"
-    if marker.is_file():
-        value = marker.read_text(encoding="utf-8").strip().lower()
-        if _SHA.fullmatch(value):
-            candidates["source_revision.txt"] = value
-        elif value and value not in {"unknown", "unavailable", "unbound"}:
-            invalid_sources.append("source_revision.txt")
+    try:
+        if marker.is_file():
+            with marker.open("rb") as stream:
+                raw = stream.read(4097)
+            if len(raw) > 4096:
+                invalid_sources.append("source_revision.txt")
+            else:
+                value = raw.decode("utf-8").strip().lower()
+                if _SHA.fullmatch(value):
+                    candidates["source_revision.txt"] = value
+                elif value and value not in {"unknown", "unavailable", "unbound"}:
+                    invalid_sources.append("source_revision.txt")
+    except (OSError, UnicodeError):
+        invalid_sources.append("source_revision.txt")
     revisions = sorted(set(candidates.values()))
     if invalid_sources or len(revisions) > 1:
         state = "MISMATCH"
