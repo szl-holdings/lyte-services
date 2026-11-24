@@ -350,6 +350,50 @@ def test_source_identity_mismatch_fails_required_readiness(monkeypatch) -> None:
             assert _identity_tuple(response.json()) == expected_identity
 
 
+def test_invalid_source_marker_fails_closed(monkeypatch, tmp_path) -> None:
+    from lyte.api import routes_health
+
+    _base_environment(monkeypatch)
+    monkeypatch.setattr(routes_health, "_ROOT", tmp_path)
+    monkeypatch.setenv("LYTE_REQUIRE_SOURCE_BINDING", "true")
+    monkeypatch.setenv("LYTE_SOURCE_REVISION", "c" * 40)
+    marker = tmp_path / "source_revision.txt"
+    for malformed in (bytes([255]), b" " * 4097):
+        marker.write_bytes(malformed)
+        identity = routes_health.source_identity()
+        assert identity["state"] == "MISMATCH"
+        assert identity["revision"] is None
+        assert identity["invalid_sources"] == ["source_revision.txt"]
+        with TestClient(create_app()) as client:
+            response = client.get("/readyz")
+            assert response.status_code == 503
+            assert response.json()["checks"]["source_binding"] == "MISMATCH"
+    marker.write_text("c" * 40, encoding="utf-8")
+    assert routes_health.source_identity()["state"] == "OBSERVED"
+    marker.unlink()
+    assert routes_health.source_identity()["state"] == "OBSERVED"
+
+
+def test_unreadable_source_marker_fails_closed(monkeypatch, tmp_path) -> None:
+    from lyte.api import routes_health
+
+    _base_environment(monkeypatch)
+    monkeypatch.setattr(routes_health, "_ROOT", tmp_path)
+    monkeypatch.setenv("LYTE_SOURCE_REVISION", "c" * 40)
+    marker = tmp_path / "source_revision.txt"
+    marker.write_text("c" * 40, encoding="utf-8")
+
+    def unreadable(*args, **kwargs):
+        raise PermissionError("test-only")
+
+    with monkeypatch.context() as context:
+        context.setattr(type(marker), "open", unreadable)
+        identity = routes_health.source_identity()
+    assert identity["state"] == "MISMATCH"
+    assert identity["revision"] is None
+    assert identity["invalid_sources"] == ["source_revision.txt"]
+
+
 def test_source_identity_tuple_is_exact_on_every_operational_surface(monkeypatch) -> None:
     _base_environment(monkeypatch)
     revision = "c" * 40
